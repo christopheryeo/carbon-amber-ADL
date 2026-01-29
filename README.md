@@ -296,8 +296,10 @@ January 28, 2026
 
 ---
 
-## Change Log
+## Version History
 
-| Date | Change |
-|------|--------|
-| 2026-01-28 | Updated Executional Core agent list to match DSTA Video Analysis application (perception, interpretation, action agents) |
+| Version | Date     |Description                                                           |
+|:--------|:---------|:---------------------------------------------------------------------|
+| v1.0.0  | 2026-01-29 | Initial Release: Sentient Agentic AI Platform                                            |
+| v0.9.0  | 2026-01-28 | Updated Executional Core agent list to match DSTA Video Analysis application             |
+|         |            | (perception, interpretation, action agents)                                              |
