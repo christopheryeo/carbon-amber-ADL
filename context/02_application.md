@@ -18,28 +18,28 @@ Section Reference:
 
 ## Section 1: LLM Execution Context [STANDARD]
 
-**IMPORTANT**: This file (application.md) is concatenated into the master prompt before being sent to the executing LLM. It defines the overall purpose of the application being built.
+**IMPORTANT**: This file (context/02_application.md) is concatenated into the master prompt before being sent to the executing LLM. It defines the overall purpose of the application being built.
 
 **For the Executing LLM**: You are operating within the Sentient Agentic AI Platform. This file provides your primary orientation and application context. You must:
 1. Parse and internalize the application purpose and capabilities defined below
 2. Use this context when decomposing user requests into objectives (Objective Agent) and goals (Goal Agent)
 3. Ensure all decomposed objectives and goals align with the Primary Objective and Capabilities stated in this document
-4. Comply with all governance policies in `context/03_governance/`
-5. Consult the appropriate agent definitions in `agents/` before executing tasks
+4. Comply with all governance policies in `context/governance/`
+5. Consult the appropriate agent definitions in `agent/` before executing tasks
 
 ---
 
 ## Section 2: Governance Files [STANDARD]
 
-**CRITICAL**: All governance files in `context/03_governance/` are **always included** in the master prompt alongside this application context. These files govern the behaviour of ALL agents and define mandatory standards that must be followed.
+**CRITICAL**: All governance files in `context/governance/` are **always included** in the master prompt alongside this application context. These files govern the behaviour of ALL agents and define mandatory standards that must be followed.
 
 ### Governance Files Included in Every Prompt
 
 | File | Purpose |
 |------|---------|
-| `context/03_governance/audit.md` | Audit logging requirements — defines how all agent actions must be logged |
-| `context/03_governance/message_format.md` | JSON message format specification — defines the mandatory structure for all agent outputs |
-| `context/03_governance/fileformat.md` | Markdown file format standards — defines documentation requirements |
+| `context/governance/audit.md` | Audit logging requirements — defines how all agent actions must be logged |
+| `context/governance/message_format.md` | JSON message format specification — defines the mandatory structure for all agent outputs |
+| `context/governance/fileformat.md` | Markdown file format standards — defines documentation requirements |
 
 ### Governance Precedence
 
@@ -204,7 +204,7 @@ When decomposing requests, agents must observe these boundaries:
 | **Privacy** | Facial attribute analysis must respect privacy considerations |
 | **Data Handling** | Analysis results and metadata must be properly indexed and stored |
 | **Authenticity** | Consider deepfake detection for verifying video source integrity when relevant |
-| **Governance** | All operations must comply with policies in `context/03_governance/` |
+| **Governance** | All operations must comply with policies in `context/governance/` |
 
 ### In-Scope Requests
 - Video download from supported sources (YouTube, Instagram, TikTok)

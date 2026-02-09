@@ -23,7 +23,7 @@ The Objective Agent receives user requests and translates them into strategic ob
 Upon receiving a user request, the Objective Agent is required to generate and output one or more strategic objectives. This output is mandatory and serves as the input for the Goal Agent.
 
 **Output Specification:**
-- **Format**: JSON message format as defined in `context/03_governance/message_format.md`
+- **Format**: JSON message format as defined in `context/governance/message_format.md`
 - **Content**: Strategic objectives defining *what* needs to be achieved
 - **Minimum**: At least one objective must be output for every valid user request
 - **Destination**: Output is passed to the Goal Agent for decomposition into goals
@@ -38,15 +38,15 @@ Upon receiving a user request, the Objective Agent is required to generate and o
 
 As the first agent in the processing chain, the Objective Agent is responsible for:
 
-1. **Initializing the Message Structure**: When processing a user request, the Objective Agent creates the first message in the standard JSON format defined in `context/03_governance/message_format.md`
+1. **Initializing the Message Structure**: When processing a user request, the Objective Agent creates the first message in the standard JSON format defined in `context/governance/message_format.md`
 
 2. **Setting Session Metadata**: The Objective Agent generates the `session_id` and `request_id` that will be used by all subsequent agents in the chain
 
 3. **Establishing the Chain**: The Objective Agent sets `sequence_number: 1` and `parent_message_id: null`, marking the start of the agent chain
 
-4. **Format Compliance**: All subsequent agents (Goal Agent, Planning Agent, Executional Agents, Communication Agent) must use the same message format established by the Objective Agent
+4. **Format Compliance**: All subsequent agents (Goal Agent, Planning Agent, Executional Agents) must use the same message format established by the Objective Agent
 
-**Reference**: See `context/03_governance/message_format.md` for the complete message format specification, field definitions, and examples.
+**Reference**: See `context/governance/message_format.md` for the complete message format specification, field definitions, and examples.
 
 **Example Objective Agent Output (JSON Message Format):**
 
@@ -94,8 +94,8 @@ As the first agent in the processing chain, the Objective Agent is responsible f
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request within video analysis scope per application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-    "governance_files_consulted": ["application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Request within video analysis scope per context/02_application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
+    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
   }
 }
 ```
@@ -119,7 +119,7 @@ The Objective Agent must analyze user requests and generate one or more strategi
 - Each objective must represent a strategic outcome (*what* to achieve)
 - Objectives define the "what", not the "how" (goals define the "how")
 - Complex requests may require multiple objectives
-- Objectives must map to the Video Analysis Capabilities defined in `application.md`
+- Objectives must map to the Video Analysis Capabilities defined in `context/02_application.md`
 - Objectives are output as plain text, one per line, with no metadata
 
 **Video Analysis Capability Mapping:**
@@ -183,7 +183,7 @@ Each example shows how the Objective Agent produces strategic objectives, which 
 
 **The Objective Agent MUST produce an output for every user request.**
 
-**GOVERNANCE COMPLIANCE**: The Objective Agent output MUST use the JSON message format defined in `context/03_governance/message_format.md`. This is a mandatory governance requirement that cannot be overridden.
+**GOVERNANCE COMPLIANCE**: The Objective Agent output MUST use the JSON message format defined in `context/governance/message_format.md`. This is a mandatory governance requirement that cannot be overridden.
 
 **Output Structure:**
 
@@ -217,7 +217,7 @@ The agent outputs a JSON message where objectives are placed in the `output.cont
 - Headers, descriptions, or formatting elements
 - Explanatory text or commentary
 
-**See `context/03_governance/message_format.md` for the complete JSON message structure including all required fields (message_id, timestamp, agent, input, output, next_agent, status, error, metadata, audit).**
+**See `context/governance/message_format.md` for the complete JSON message structure including all required fields (message_id, timestamp, agent, input, output, next_agent, status, error, metadata, audit).**
 
 ### 5. Scope Validation
 
@@ -283,7 +283,7 @@ The Objective Agent is successful when:
 
 ## Governance Compliance
 
-- All objectives must comply with governance policies in `context/03_governance/`
+- All objectives must comply with governance policies in `context/governance/`
 - Objective creation must be logged to daily audit files
 - Objectives violating privacy constraints (facial analysis) must include appropriate caveats
 - Out-of-scope requests must be rejected with explanation

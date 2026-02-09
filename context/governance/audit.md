@@ -37,11 +37,11 @@ The `audit` field is part of the standard message format defined in `message_for
 | Field | Required | Description |
 |-------|----------|-------------|
 | `audit.compliance_notes` | Yes | Governance compliance observations, validations performed, scope confirmations, and any flags or concerns |
-| `audit.governance_files_consulted` | Yes | Array of governance file names referenced during processing (e.g., `["application.md", "message_format.md", "audit.md"]`) |
+| `audit.governance_files_consulted` | Yes | Array of governance file names referenced during processing (e.g., `["context/02_application.md", "message_format.md", "audit.md"]`) |
 
 ### What to Include in compliance_notes
 
-- Confirmation that the request is within platform scope (per `application.md`)
+- Confirmation that the request is within platform scope (per `context/02_application.md`)
 - Validation that output aligns with platform capabilities
 - Any governance concerns or flags identified
 - Reason for rejection (if status is `failed` or `rejected`)
@@ -51,63 +51,18 @@ The `audit` field is part of the standard message format defined in `message_for
 
 ```json
 "audit": {
-  "compliance_notes": "Request within video analysis scope per application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-  "governance_files_consulted": ["application.md", "message_format.md", "audit.md"]
+  "compliance_notes": "Request within video analysis scope per context/02_application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
+  "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
 }
 ```
 
 ---
 
-## Orchestration Layer: Log Extraction and Writing
+## Log Storage and Retention
 
-The orchestration layer extracts audit data from each JSON message and writes it to the daily log file.
+Logs are stored in daily files at `system/logs/YYYYMMDD.log` (reverse date format). For example, January 27, 2026 → `20260127.log`, February 15, 2026 → `20260215.log`. A new log file is created daily at the start of each calendar day.
 
-### Fields Extracted for Logging
-
-From each JSON message, the orchestration layer extracts:
-
-| JSON Field | Audit Purpose |
-|------------|---------------|
-| `timestamp.executed_at` | When the agent processed the request |
-| `agent.name` | Which agent produced the response |
-| `input.source` | Origin of the input (user or upstream agent) |
-| `input.content` | The instruction/request received |
-| `output.content_type` | Type of output produced |
-| `status.code` | Execution status (success, failed, etc.) |
-| `status.message` | Human-readable status description |
-| `error.*` | Error details (if `has_error` is true) |
-| `audit.compliance_notes` | Governance compliance observations |
-| `audit.governance_files_consulted` | Files referenced |
-| `message_id` | Unique message identifier |
-| `metadata.session_id` | Session identifier for traceability |
-
-### Daily Log Files
-
-- **Location**: `system/logs/`
-- **File Naming Convention**: YYYYMMDD.log (reverse date format)
-- **Examples**:
-  - January 27, 2026 → `20260127.log`
-  - February 15, 2026 → `20260215.log`
-- **New Log File Creation**: A new log file is created daily at the start of each calendar day
-- **Log Rotation**: Each day uses its own dedicated log file
-
-### Log Entry Format
-
-The orchestration layer writes entries in this format:
-
-```
-[TIMESTAMP: HH:MM:SS]
-[AGENT: <agent.name>]
-[INPUT SOURCE: <input.source>]
-[INPUT]: <input.content>
-[OUTPUT TYPE: <output.content_type>]
-[STATUS: <status.code>] <status.message>
-[COMPLIANCE NOTES]: <audit.compliance_notes>
-[GOVERNANCE FILES]: <audit.governance_files_consulted>
-[MESSAGE_ID: <message_id>]
-[SESSION_ID: <metadata.session_id>]
----
-```
+For complete details on how the orchestration layer extracts audit data from JSON messages, the fields that are logged, and the log entry format, refer to the "Orchestration Layer: Audit Log Extraction" section in `message_format.md`.
 
 ---
 
@@ -148,5 +103,8 @@ Non-compliant operations (messages without audit data) are prohibited and must b
 
 ---
 
+## Version
+v1.1.0
+
 ## Last Updated
-January 27, 2026
+February 9, 2026

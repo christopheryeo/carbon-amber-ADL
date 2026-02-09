@@ -31,7 +31,7 @@ Every file in this prompt is wrapped with markers in this format:
 
 ```
 ================================================================================
-[FILE: context/03_governance/audit.md]
+[FILE: context/governance/audit.md]
 ================================================================================
 
 # AI Audit and Logging Governance
@@ -42,9 +42,9 @@ Every file in this prompt is wrapped with markers in this format:
 
 ### How to Locate Referenced Content
 
-When you see a reference like "See `audit.md`" or "per `application.md`":
+When you see a reference like "See `audit.md`" or "per `context/02_application.md`":
 
-1. **Search for the marker**: Look for `[FILE: context/03_governance/audit.md]` or `[FILE: context/02_application.md]`
+1. **Search for the marker**: Look for `[FILE: context/governance/audit.md]` or `[FILE: context/02_application.md]`
 2. **Read the content**: The file content immediately follows the marker
 3. **Apply the guidance**: Use the referenced content to inform your response
 
@@ -52,12 +52,12 @@ When you see a reference like "See `audit.md`" or "per `application.md`":
 
 | Reference | Search for Marker |
 |-----------|-------------------|
-| `application.md` or `02_application.md` | `[FILE: context/02_application.md]` |
-| `audit.md` | `[FILE: context/03_governance/audit.md]` |
-| `message_format.md` | `[FILE: context/03_governance/message_format.md]` |
-| `fileformat.md` | `[FILE: context/03_governance/fileformat.md]` |
-| `objective_agent.md` | `[FILE: agents/01_governance_core/objective_agent.md]` |
-| `goal_agent.md` | `[FILE: agents/01_governance_core/goal_agent.md]` |
+| `context/02_application.md` or `02_application.md` | `[FILE: context/02_application.md]` |
+| `audit.md` | `[FILE: context/governance/audit.md]` |
+| `message_format.md` | `[FILE: context/governance/message_format.md]` |
+| `fileformat.md` | `[FILE: context/governance/fileformat.md]` |
+| `objective.md` | `[FILE: agent/governance/objective.md]` |
+| `goal.md` | `[FILE: agent/governance/goal.md]` |
 
 ---
 
@@ -83,16 +83,16 @@ As an LLM receiving this concatenated prompt, you have the following limitations
 
 Before processing any request, locate and review the governance files in this prompt:
 
-- `[FILE: context/03_governance/audit.md]` — Audit logging requirements
-- `[FILE: context/03_governance/message_format.md]` — JSON output format specification
-- `[FILE: context/03_governance/fileformat.md]` — Markdown file standards
+- `[FILE: context/governance/audit.md]` — Audit logging requirements
+- `[FILE: context/governance/message_format.md]` — JSON output format specification
+- `[FILE: context/governance/fileformat.md]` — Markdown file standards
 
 ### 2. Consult Application Context
 
 Locate `[FILE: context/02_application.md]` to understand:
 
-- Platform purpose (DSTA video analysis)
-- Supported video analysis capabilities
+- Platform purpose and capabilities
+- Supported analysis and processing capabilities
 - In-scope vs. out-of-scope requests
 - Constraints and boundaries
 
@@ -100,10 +100,10 @@ Locate `[FILE: context/02_application.md]` to understand:
 
 Your specific agent definition is included in this prompt. Look for:
 
-- `[FILE: agents/01_governance_core/objective_agent.md]` — If you are the Objective Agent
-- `[FILE: agents/01_governance_core/goal_agent.md]` — If you are the Goal Agent
-- `[FILE: agents/02_operational_core/...]` — If you are an Operational Agent
-- `[FILE: agents/03_executional_core/...]` — If you are an Executional Agent
+- `[FILE: agent/governance/objective.md]` — If you are the Objective Agent
+- `[FILE: agent/governance/goal.md]` — If you are the Goal Agent
+- `[FILE: agent/operational/...]` — If you are an Operational Agent
+- `[FILE: agent/executional/...]` — If you are an Executional Agent
 
 **Note**: Only YOUR agent definition is included in this prompt — not all agents.
 
@@ -160,7 +160,7 @@ Required fields:
 }
 ```
 
-See `[FILE: context/03_governance/message_format.md]` for complete specification and examples.
+See `[FILE: context/governance/message_format.md]` for complete specification and examples.
 
 ---
 
@@ -212,9 +212,9 @@ Throughout this prompt, you will see references to file paths. Here's how to int
 
 | When You See | What It Means | What To Do |
 |--------------|---------------|------------|
-| "See `audit.md`" | Reference to governance file | Search for `[FILE: context/03_governance/audit.md]` |
-| "Per `application.md`" | Reference to application context | Search for `[FILE: context/02_application.md]` |
-| "Consult your agent definition" | Reference to your role | Search for `[FILE: agents/...]` |
+| "See `audit.md`" | Reference to governance file | Search for `[FILE: context/governance/audit.md]` |
+| "Per `context/02_application.md`" | Reference to application context | Search for `[FILE: context/02_application.md]` |
+| "Consult your agent definition" | Reference to your role | Search for `[FILE: agent/...]` |
 | "Log to `system/logs/`" | Audit logging required | Include `audit` field in your JSON output |
 | "Write to filesystem" | File operation needed | Cannot do — orchestration layer handles this |
 
@@ -241,16 +241,19 @@ The orchestration layer concatenates files in this order:
 **Always loaded (context/):**
 1. `context/01_llm_instructions.md` — This file
 2. `context/02_application.md` — Platform purpose and capabilities
-3. `context/03_governance/audit.md` — Audit logging requirements
-4. `context/03_governance/message_format.md` — JSON message format specification
-5. `context/03_governance/fileformat.md` — Markdown file standards
+3. `context/governance/audit.md` — Audit logging requirements
+4. `context/governance/message_format.md` — JSON message format specification
+5. `context/governance/fileformat.md` — Markdown file standards
 
-**Loaded per agent invocation (agents/):**
-6. `agents/<layer>/<agent_name>.md` — Your specific agent definition
+**Loaded per agent invocation (agent/):**
+6. `agent/<layer>/<agent_name>.md` — Your specific agent definition
 
 Use the `[FILE: <path>]` markers to locate any of these files.
 
 ---
 
+## Version
+v1.1.0
+
 ## Last Updated
-January 27, 2026
+February 9, 2026

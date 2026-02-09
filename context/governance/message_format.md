@@ -69,7 +69,7 @@ All agent communications must use the following JSON structure:
 | `timestamp.executed_at` | string | ISO 8601 formatted datetime when agent executed |
 | `timestamp.timezone` | string | Timezone identifier (e.g., "Asia/Singapore", "UTC") |
 | `agent.name` | string | Name of the agent producing this message |
-| `agent.type` | string | Agent's core layer (governance, operational, executional, communication) |
+| `agent.type` | string | Agent's core layer (governance, operational, executional) |
 | `input.source` | string | Where the input came from ("user" or previous agent name) |
 | `input.content` | string/object | The actual input received |
 | `output.content` | string/array/object | The output produced by the agent |
@@ -184,8 +184,8 @@ All agent communications must use the following JSON structure:
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request within video analysis scope per application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-    "governance_files_consulted": ["application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Request within video analysis scope per context/02_application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
+    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
   }
 }
 ```
@@ -256,8 +256,8 @@ All agent communications must use the following JSON structure:
     "parent_message_id": "msg-obj-20260127-143052-001"
   },
   "audit": {
-    "compliance_notes": "Objectives successfully decomposed into actionable goals; all goals map to platform capabilities defined in application.md; goal sequence supports efficient execution",
-    "governance_files_consulted": ["application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Objectives successfully decomposed into actionable goals; all goals map to platform capabilities defined in context/02_application.md; goal sequence supports efficient execution",
+    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
   }
 }
 ```
@@ -305,8 +305,8 @@ All agent communications must use the following JSON structure:
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per application.md Constraints and Boundaries; platform supports analysis only, not content modification",
-    "governance_files_consulted": ["application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per context/02_application.md Constraints and Boundaries; platform supports analysis only, not content modification",
+    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
   }
 }
 ```
@@ -328,7 +328,7 @@ User Request
     ↓
 [4] Executional Agents → outputs: analysis results
     ↓
-[5] Communication Agent → outputs: formatted response to user
+[5] Final Output → formatted response to user
 ```
 
 Each agent receives the message from the previous agent, processes it, updates the relevant fields, and passes it to the next agent.
@@ -400,5 +400,8 @@ See `audit.md` for complete audit logging governance requirements.
 
 ---
 
+## Version
+v1.0.0
+
 ## Last Updated
-January 27, 2026
+February 9, 2026

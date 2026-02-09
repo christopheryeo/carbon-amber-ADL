@@ -4,7 +4,7 @@
 
 This folder contains a **prompt engineering architecture** that defines how multiple AI agents collaborate to process requests. It is essentially a "constitution" for an AI agent system — defining how agents should behave, communicate, and maintain accountability.
 
-The architecture is **application-agnostic**: the same agent framework, governance policies, and LLM instructions can be used for different applications by simply changing the `application.md` file.
+The architecture is **application-agnostic**: the same agent framework, governance policies, and LLM instructions can be used for different applications by changing `context/02_application.md` and archiving prior versions under `application/archive/`.
 
 ### How It Works
 
@@ -33,18 +33,34 @@ The architecture is **application-agnostic**: the same agent framework, governan
 Sentient Agentic AI/
 ├── context/                         ← Always loaded for ALL agents
 │   ├── 01_llm_instructions.md       ← LLM execution instructions (first file loaded)
-│   ├── 02_application.md            ← Application context (TEMPLATE — customize per application)
-│   └── 03_governance/               ← Governance policies
+│   ├── 02_application.md            ← Application context (active application)
+│   └── governance/                  ← Governance policies
 │       ├── audit.md
 │       ├── message_format.md
 │       └── fileformat.md
-├── agents/                          ← Only SPECIFIC agent loaded per invocation
-│   ├── 01_governance_core/
-│   │   └── objective_agent.md
-│   ├── 02_operational_core/
-│   └── 03_executional_core/
-├── system/                          ← Runtime artifacts (NOT concatenated)
-│   └── logs/
+├── agent/                           ← Only SPECIFIC agent loaded per invocation
+│   ├── governance/
+│   │   ├── objective.md
+│   │   └── goal.md
+│   ├── operational/
+│   │   ├── planning.md
+│   │   ├── reasoning.md
+│   │   ├── learning.md
+│   │   └── memory.md
+│   └── executional/
+│       ├── perception.md
+│       ├── interpretation.md
+│       └── action.md
+├── schema/                          ← Machine-readable validation schemas
+│   └── message_schema.json
+├── template/                        ← Blank templates for creating new content
+│   └── 02_application_template.md
+├── application/                     ← Archived application contexts
+│   └── archive/
+├── system/                          ← Runtime directories (NOT concatenated)
+│   └── logs/                        ← Daily audit log files (YYYYMMDD.log)
+├── doc/                             ← Human documentation (NOT concatenated)
+│   └── Carbon Amber Agentic AI Platform.docx
 └── README.md                        ← Human documentation (NOT concatenated)
 ```
 
@@ -52,7 +68,7 @@ Sentient Agentic AI/
 
 ## Application Template Format
 
-The `application.md` file follows a **standardized template format** that enables different applications to be deployed using the same agent framework. When creating a new application, replace the content in sections marked `[APPLICATION-SPECIFIC]` while keeping sections marked `[STANDARD]` unchanged.
+The `context/02_application.md` file follows a **standardized template format** that enables different applications to be deployed using the same agent framework. When creating a new application, replace the content in sections marked `[APPLICATION-SPECIFIC]` while keeping sections marked `[STANDARD]` unchanged.
 
 ### Template Sections
 
@@ -74,9 +90,9 @@ The `application.md` file follows a **standardized template format** that enable
 
 To deploy a new application:
 
-1. Copy `context/02_application.md` to create your new application file
+1. Copy `template/02_application_template.md` to `context/02_application.md` (move the previous one into `application/archive/`)
 2. Keep all `[STANDARD]` sections unchanged
-3. Replace all `[APPLICATION-SPECIFIC]` sections with your application's content:
+3. Replace all `[APPLICATION-SPECIFIC]` placeholder sections with your application's content:
    - **Section 4**: Set your application name, customer, and description
    - **Section 5**: Define the primary objective and scope statement
    - **Section 6**: List all capabilities the application supports
@@ -103,7 +119,7 @@ To deploy a new application:
 The folder is organized to support two loading patterns:
 
 1. **Context files** (`context/`) — Always loaded for ALL agent invocations
-2. **Agent files** (`agents/`) — Only the SPECIFIC agent definition is loaded per invocation
+2. **Agent files** (`agent/`) — Only the SPECIFIC agent definition is loaded per invocation
 
 ### Loading Order
 
@@ -113,8 +129,8 @@ The orchestration layer concatenates files into a master prompt in this order:
 |-------|------|---------|
 | 1 | `context/01_llm_instructions.md` | LLM execution instructions — how to interpret the prompt |
 | 2 | `context/02_application.md` | Application context — purpose, capabilities, constraints |
-| 3 | `context/03_governance/*.md` | Governance policies (audit, message format, file format) |
-| 4 | `agents/<core>/<agent>.md` | Specific agent definition (only the agent being invoked) |
+| 3 | `context/governance/*.md` | Governance policies (audit, message format, file format) |
+| 4 | `agent/<core>/<agent>.md` | Specific agent definition (only the agent being invoked) |
 
 **Note**: This README.md is **NOT concatenated** — it is for human reference only.
 
@@ -152,14 +168,14 @@ When concatenating files, the orchestration layer **MUST** wrap each file with m
 ...
 
 ================================================================================
-[FILE: context/03_governance/audit.md]
+[FILE: context/governance/audit.md]
 ================================================================================
 
 # AI Audit and Logging Governance
 ...
 
 ================================================================================
-[FILE: agents/01_governance_core/objective_agent.md]
+[FILE: agent/governance/objective.md]
 ================================================================================
 
 # Objective Agent Requirements
@@ -176,51 +192,44 @@ Contains files that are **always loaded for ALL agents**. This provides the comm
 
 ### Files:
 - **01_llm_instructions.md** — Explains how the LLM should interpret the prompt, locate referenced files using markers, and format its JSON output
-- **02_application.md** — Application context template defining purpose, capabilities, and constraints (customize per application)
-- **03_governance/** — Governance policies folder:
+- **02_application.md** — Active application context defining purpose, capabilities, and constraints (archive prior versions under `application/archive/`)
+- **governance/** — Governance policies folder:
   - **audit.md** — Audit logging requirements
   - **message_format.md** — JSON message format specification
   - **fileformat.md** — Markdown file format standards
 
 ---
 
-## agents/
+## agent/
 
 Contains agent definitions organized into three core layers. **Only the specific agent being invoked is loaded** (not all agents).
 
-### Governance Core (01_governance_core/)
+### Governance Core (governance/)
 High-level strategic agents responsible for objective and goal setting:
-- **objective_agent.md** — Receives user requests and outputs strategic objectives (*what* to achieve)
-- **goal_agent/** — Decomposes objectives into actionable goals (*how* to achieve them)
+- **objective.md** — Receives user requests and outputs strategic objectives (*what* to achieve)
+- **goal.md** — Decomposes objectives into actionable goals (*how* to achieve them)
 
-### Operational Core (02_operational_core/)
-Mid-level agents that manage planning, review, and memory:
-- **planning_agent/** — Creates execution plans and workflows
-- **reviewer_agent/** — Validates outputs and ensures quality standards
-- **memory_agent/** — Manages context and historical information
+### Operational Core (operational/)
+Mid-level agents that manage planning, reasoning, learning, and memory:
+- **planning.md** — Devises strategies for complex tasks involving multiple data points or agents
+- **reasoning.md** — Makes logical inferences from analyzed elements
+- **learning.md** — Adapts analysis models based on feedback and new data patterns
+- **memory.md** — Stores and retrieves analysis results, learned patterns, and context
 
-### Executional Core (03_executional_core/)
+### Executional Core (executional/)
 Specialized agents that produce deliverables. **These agents are application-specific** — different applications define different executional agents based on their capabilities.
 
-For the current DSTA Video Analysis application (see `application.md`):
-- **perception_agent/** — Identifies speakers, analyzes expressions/gestures, detects objects, analyzes audio
-- **interpretation_agent/** — Processes analysis requests and contextualizes results
-- **action_agent/** — Executes analysis models and generates structured outputs
+For the current DSTA Video Analysis application (see `context/02_application.md`):
+- **perception.md** — Identifies speakers, analyzes expressions/gestures, detects objects, analyzes audio
+- **interpretation.md** — Processes analysis requests and contextualizes results
+- **action.md** — Executes analysis models and generates structured outputs
 
 ---
 
-## system/
-
-System-level infrastructure supporting the Agentic AI framework. **NOT concatenated into prompts.**
-
-### Subdirectories:
-- **logs/** — Daily audit logs written by the orchestration layer
-
----
 
 ## Governance Compliance
 
-**CRITICAL REQUIREMENT**: All AI agents must comply with governance policies in `context/03_governance/`.
+**CRITICAL REQUIREMENT**: All AI agents must comply with governance policies in `context/governance/`.
 
 ### Compliance Mandate
 - Every instruction must be evaluated against governance policies
@@ -254,13 +263,13 @@ User Request
 ┌─────────────────────────────────────────────────────────────────┐
 │  OPERATIONAL CORE                                               │
 │  ┌─────────────────┐  ┌─────────────────┐                      │
-│  │ Planning Agent  │  │ Reviewer Agent  │                      │
-│  │ (workflows)     │  │ (quality)       │                      │
+│  │ Planning Agent  │  │ Reasoning Agent │                      │
+│  │ (workflows)     │  │ (inference)     │                      │
 │  └─────────────────┘  └─────────────────┘                      │
-│  ┌─────────────────┐                                           │
-│  │  Memory Agent   │                                           │
-│  │ (context)       │                                           │
-│  └─────────────────┘                                           │
+│  ┌─────────────────┐  ┌─────────────────┐                      │
+│  │ Learning Agent  │  │  Memory Agent   │                      │
+│  │ (adaptation)    │  │ (context)       │                      │
+│  └─────────────────┘  └─────────────────┘                      │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -284,7 +293,7 @@ The orchestration layer (n8n, CrewAI, or similar) handles:
 |------|-------------|
 | **File concatenation** | Concatenate context files + specific agent file with `[FILE: <path>]` markers |
 | **Prompt delivery** | Send concatenated prompt to LLM |
-| **Audit log extraction** | Extract `audit` field from JSON response and write to `system/logs/YYYYMMDD.log` |
+| **Audit log extraction** | Extract `audit` field from JSON response and write to the orchestration layer's configured audit log location |
 | **Message routing** | Read `next_agent.name` from JSON response and route to next agent |
 | **Session management** | Track session state across agent chain |
 | **Model execution** | Execute application-specific models as directed by agents |
@@ -292,14 +301,56 @@ The orchestration layer (n8n, CrewAI, or similar) handles:
 ---
 
 ## Last Updated
-January 28, 2026
+February 9, 2026
 
 ---
 
 ## Version History
 
-| Version | Date     |Description                                                           |
-|:--------|:---------|:---------------------------------------------------------------------|
+| Version | Date       | Description                                                                              |
+|:--------|:-----------|:-----------------------------------------------------------------------------------------|
+| v1.1.0  | 2026-02-09 | Added placeholder agent files, template/, schema/, system/logs/; refactored audit.md;    |
+|         |            | added version numbers to governance files; standardized agent file naming                |
 | v1.0.0  | 2026-01-29 | Initial Release: Sentient Agentic AI Platform                                            |
 | v0.9.0  | 2026-01-28 | Updated Executional Core agent list to match DSTA Video Analysis application             |
 |         |            | (perception, interpretation, action agents)                                              |
+
+---
+
+## schema/
+
+Machine-readable validation schemas for programmatic enforcement of platform standards.
+
+- **message_schema.json** — JSON Schema for validating the agent message format defined in `context/governance/message_format.md`. Can be used by the orchestration layer to validate every agent output automatically.
+
+---
+
+## template/
+
+Blank templates for creating new content. These are starting points — copy and customize.
+
+- **02_application_template.md** — Blank application context template with all `[STANDARD]` sections pre-filled and `[APPLICATION-SPECIFIC]` sections containing placeholder guidance. Copy to `context/02_application.md` when deploying a new application.
+
+---
+
+## system/
+
+Runtime directories used by the orchestration layer. Not concatenated into prompts.
+
+- **logs/** — Daily audit log files in `YYYYMMDD.log` format, written by the orchestration layer per `context/governance/audit.md`
+
+---
+
+## application/
+
+Archived application context files. Move older versions of `context/02_application.md` here as new applications are deployed.
+
+---
+
+## doc/
+
+Human documentation and reference material. Not concatenated into prompts.
+
+- **Carbon Amber Agentic AI Platform.docx** — Platform documentation
+
+---

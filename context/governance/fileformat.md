@@ -40,5 +40,8 @@ Content here...
 - Existing markdown files should be updated to comply with these requirements during their next review or update
 - Document authors are responsible for ensuring their files meet these governance standards
 
+## Version
+v1.0.0
+
 ## Last Updated
-January 24, 2026
+February 9, 2026
