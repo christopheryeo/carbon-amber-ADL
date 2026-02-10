@@ -137,10 +137,12 @@ The orchestration layer concatenates files into a master prompt in this order:
 
 | Order | Path | Purpose |
 |-------|------|---------|
-| 1 | `context/instructions.md` | LLM execution instructions — how to interpret the prompt |
+| 1 | `context/instructions.md` | LLM execution instructions — **must always be read first** |
 | 2 | `context/application.md` | Application context — purpose, capabilities, constraints |
-| 3 | `context/governance/*.md` | Governance policies (audit, message format, file format) |
-| 4 | `agent/<core>/<agent>.md` | Specific agent definition (only the agent being invoked) |
+| 3 | `context/governance/audit.md` | Audit governance requirements |
+| 4 | `context/governance/message_format.md` | JSON output format requirements |
+| 5 | `context/governance/fileformat.md` | Markdown and file formatting standards |
+| 6 | `agent/<core>/<agent>.md` | Specific agent definition (only the agent being invoked) |
 
 **Note**: This README.md is **NOT concatenated** — it is for human reference only.
 
@@ -192,7 +194,41 @@ When concatenating files, the orchestration layer **MUST** wrap each file with m
 ...
 ```
 
-These markers allow the LLM to locate specific files when documents reference them (e.g., "See `audit.md`").
+These markers ensure each source is explicitly identifiable inside the merged master prompt.
+
+### Executing LLM Responsibilities
+
+After receiving the concatenated prompt, the LLM should:
+
+1. Use `context/application.md` as the authoritative application scope and capability source
+2. Enforce governance from:
+   - `context/governance/audit.md`
+   - `context/governance/message_format.md`
+   - `context/governance/fileformat.md`
+3. Follow the selected agent file as role-specific behavior
+4. Return exactly one JSON message compliant with `context/governance/message_format.md`
+
+### Responsibility Boundary
+
+| Task | LLM | Orchestration Layer |
+|------|-----|---------------------|
+| Interpret user/agent input | ✅ | |
+| Apply governance rules | ✅ | |
+| Produce JSON output per `message_format.md` | ✅ | |
+| Select which agent file to load for this run | | ✅ |
+| Read files and concatenate master prompt | | ✅ |
+| Route output to next agent | | ✅ |
+| Persist logs/session state | | ✅ |
+| Execute external tools, APIs, models, file IO | | ✅ |
+
+### Processing Sequence (LLM Side)
+
+1. Read `context/application.md`
+2. Read all governance files
+3. Read the loaded agent file
+4. Validate scope and constraints
+5. Generate role-appropriate output
+6. Format as one JSON message
 
 ---
 
@@ -201,7 +237,7 @@ These markers allow the LLM to locate specific files when documents reference th
 Contains files that are **always loaded for ALL agents**. This provides the common context that every agent needs.
 
 ### Files:
-- **instructions.md** — Explains how the LLM should interpret the prompt, locate referenced files using markers, and format its JSON output
+- **instructions.md** — Defines the prompt assembly contract, executing LLM responsibilities, and orchestration-vs-LLM boundary
 - **application.md** — Active application context defining purpose, capabilities, and constraints (archive prior versions under `application/archive/`)
 - **governance/** — Governance policies folder:
   - **audit.md** — Audit logging requirements
@@ -311,7 +347,7 @@ The orchestration layer (n8n, CrewAI, or similar) handles:
 ---
 
 ## Last Updated
-February 9, 2026
+February 10, 2026
 
 ---
 
@@ -319,6 +355,8 @@ February 9, 2026
 
 | Version | Date       | Description                                                                              |
 |:--------|:-----------|:-----------------------------------------------------------------------------------------|
+| v2.0.0  | 2026-02-10 | Updated `context/instructions.md` documentation with explicit file loading contract,     |
+|         |            | executing LLM responsibilities, responsibility boundary, and processing sequence         |
 | v1.1.0  | 2026-02-09 | Added placeholder agent files, template/, schema/, system/logs/; refactored audit.md;    |
 |         |            | added version numbers to governance files; standardized agent file naming                |
 | v1.0.0  | 2026-01-29 | Initial Release: Sentient Agentic AI Platform                                            |
