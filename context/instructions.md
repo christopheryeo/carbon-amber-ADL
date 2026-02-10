@@ -2,22 +2,38 @@
 
 ## Description
 
-This document provides essential instructions for the executing LLM. It explains how to interpret this prompt, locate referenced content, and produce correctly formatted output. **Read this section first before processing any user requests.**
+This is the **first file** the orchestration workflow must read when building a master prompt for any agent.
+
+It defines:
+1. The required file load order for prompt assembly
+2. What the executing LLM must do after prompt assembly
+3. What responsibilities stay with orchestration vs. the LLM
 
 ---
 
-## How This Prompt Is Structured
+## Prompt Assembly Contract (Orchestration Layer)
 
-This prompt contains two types of content:
+**Purpose**: n8n/CrewAI (or equivalent orchestration) must follow this contract before calling the LLM.
 
-1. **Context files** (always loaded) — Platform definition, governance policies
-2. **Your agent definition** (specific to you) — Your role and responsibilities
+### Step 1 — Read this file first
+Always read `context/instructions.md` before all other files.
 
-Each file is wrapped with markers that identify its source path.
+### Step 2 — Read and concatenate core files in this exact order
 
-### File Markers
+1. `context/instructions.md`
+2. `context/application.md`
+3. `context/governance/audit.md`
+4. `context/governance/message_format.md`
+5. `context/governance/fileformat.md`
+6. One agent file selected for the current invocation:
+   - `agent/governance/objective.md`, or
+   - `agent/governance/goal.md`, or
+   - one file in `agent/operational/`, or
+   - one file in `agent/executional/`
 
-Every file in this prompt is wrapped with markers in this format:
+### Step 3 — Wrap each file with file markers
+
+Each concatenated file must be wrapped in the marker format below:
 
 ```
 ================================================================================
@@ -27,233 +43,53 @@ Every file in this prompt is wrapped with markers in this format:
 <file content here>
 ```
 
-**Example:**
-
-```
-================================================================================
-[FILE: context/governance/audit.md]
-================================================================================
-
-# AI Audit and Logging Governance
-
-## Description
-...
-```
-
-### How to Locate Referenced Content
-
-When you see a reference like "See `audit.md`" or "per `context/application.md`":
-
-1. **Search for the marker**: Look for `[FILE: context/governance/audit.md]` or `[FILE: context/application.md]`
-2. **Read the content**: The file content immediately follows the marker
-3. **Apply the guidance**: Use the referenced content to inform your response
-
-**Common references and their markers:**
-
-| Reference | Search for Marker |
-|-----------|-------------------|
-| `context/application.md` or `application.md` | `[FILE: context/application.md]` |
-| `audit.md` | `[FILE: context/governance/audit.md]` |
-| `message_format.md` | `[FILE: context/governance/message_format.md]` |
-| `fileformat.md` | `[FILE: context/governance/fileformat.md]` |
-| `objective.md` | `[FILE: agent/governance/objective.md]` |
-| `goal.md` | `[FILE: agent/governance/goal.md]` |
+### Step 4 — Send one merged prompt to the target LLM
+Do not ask the LLM to fetch files dynamically. The orchestration layer must provide all required context in the concatenated prompt.
 
 ---
 
-## What You Cannot Do
+## Executing LLM Responsibilities
 
-As an LLM receiving this concatenated prompt, you have the following limitations:
+After receiving the concatenated prompt, the LLM must:
 
-| Action | Can You Do It? | Who Handles It |
-|--------|----------------|----------------|
-| Read files from filesystem | ❌ No | Content already in prompt |
-| Write files to filesystem | ❌ No | Orchestration layer |
-| Execute code or models | ❌ No | Orchestration layer |
-| Route messages to next agent | ❌ No | Orchestration layer |
-| Access external APIs | ❌ No | Orchestration layer |
-
-**Your role**: Process input, apply governance rules, and output correctly formatted JSON messages. The orchestration layer handles everything else.
+1. Use `context/application.md` as application scope and capability source
+2. Enforce governance from:
+   - `context/governance/audit.md`
+   - `context/governance/message_format.md`
+   - `context/governance/fileformat.md`
+3. Follow the loaded agent file as role-specific behavior
+4. Output exactly one JSON message that complies with `context/governance/message_format.md`
 
 ---
 
-## What You Must Do
+## Responsibility Boundary
 
-### 1. Consult Governance Files
-
-Before processing any request, locate and review the governance files in this prompt:
-
-- `[FILE: context/governance/audit.md]` — Audit logging requirements
-- `[FILE: context/governance/message_format.md]` — JSON output format specification
-- `[FILE: context/governance/fileformat.md]` — Markdown file standards
-
-### 2. Consult Application Context
-
-Locate `[FILE: context/application.md]` to understand:
-
-- Platform purpose and capabilities
-- Supported analysis and processing capabilities
-- In-scope vs. out-of-scope requests
-- Constraints and boundaries
-
-### 3. Consult Your Agent Definition
-
-Your specific agent definition is included in this prompt. Look for:
-
-- `[FILE: agent/governance/objective.md]` — If you are the Objective Agent
-- `[FILE: agent/governance/goal.md]` — If you are the Goal Agent
-- `[FILE: agent/operational/...]` — If you are an Operational Agent
-- `[FILE: agent/executional/...]` — If you are an Executional Agent
-
-**Note**: Only YOUR agent definition is included in this prompt — not all agents.
-
-### 4. Output JSON Messages
-
-**Every response must be a single JSON message** following the format in `message_format.md`.
-
-Required fields:
-
-```json
-{
-  "message_id": "<unique identifier>",
-  "timestamp": {
-    "executed_at": "<ISO 8601 datetime>",
-    "timezone": "<timezone identifier>"
-  },
-  "agent": {
-    "name": "<your agent name>",
-    "type": "<governance | operational | executional>"
-  },
-  "input": {
-    "source": "<user | previous agent name>",
-    "content": "<the input you received>"
-  },
-  "output": {
-    "content": "<your output>",
-    "content_type": "<objectives | goals | plan | analysis | error>"
-  },
-  "next_agent": {
-    "name": "<next agent to process>",
-    "reason": "<why this agent is next>"
-  },
-  "status": {
-    "code": "<success | partial | failed | pending>",
-    "message": "<human-readable status>"
-  },
-  "error": {
-    "has_error": false,
-    "error_code": null,
-    "error_message": null,
-    "retry_count": 0,
-    "recoverable": false
-  },
-  "metadata": {
-    "session_id": "<session identifier>",
-    "request_id": "<original request identifier>",
-    "sequence_number": "<position in agent chain>",
-    "parent_message_id": "<previous message_id or null>"
-  },
-  "audit": {
-    "compliance_notes": "<governance compliance observations>",
-    "governance_files_consulted": ["<list of files you referenced>"]
-  }
-}
-```
-
-See `[FILE: context/governance/message_format.md]` for complete specification and examples.
+| Task | LLM | Orchestration Layer |
+|------|-----|---------------------|
+| Interpret user/agent input | ✅ | |
+| Apply governance rules | ✅ | |
+| Produce JSON output per `message_format.md` | ✅ | |
+| Select which agent file to load for this run | | ✅ |
+| Read files and concatenate master prompt | | ✅ |
+| Route output to next agent | | ✅ |
+| Persist logs/session state | | ✅ |
+| Execute external tools, APIs, models, file IO | | ✅ |
 
 ---
 
-## Your Responsibilities vs. Orchestration Layer
+## Processing Sequence (LLM Side)
 
-| Task | Your Responsibility | Orchestration Layer |
-|------|---------------------|---------------------|
-| Parse user requests | ✅ Yes | |
-| Validate requests against application scope | ✅ Yes | |
-| Generate objectives (Objective Agent) | ✅ Yes | |
-| Decompose objectives into goals (Goal Agent) | ✅ Yes | |
-| Output JSON messages per `message_format.md` | ✅ Yes | |
-| Include `audit` field in JSON messages | ✅ Yes | |
-| Extract audit data and write to log files | | ✅ Yes |
-| Route JSON message to next agent | | ✅ Yes |
-| Manage session state | | ✅ Yes |
-| Execute video analysis models | | ✅ Yes |
-| Download videos from sources | | ✅ Yes |
-
----
-
-## Processing Flow
-
-When you receive a user request:
-
-```
-1. READ this instructions file (you're doing this now)
-        ↓
-2. LOCATE context/application.md — understand platform scope
-        ↓
-3. LOCATE your agent definition — understand your role
-        ↓
-4. LOCATE governance files — understand compliance requirements
-        ↓
-5. VALIDATE the request — is it in scope?
-        ↓
-6. PROCESS the request — generate your output
-        ↓
-7. FORMAT as JSON — per message_format.md
-        ↓
-8. OUTPUT the JSON message — orchestration layer takes over
-```
-
----
-
-## Handling File Path References
-
-Throughout this prompt, you will see references to file paths. Here's how to interpret them:
-
-| When You See | What It Means | What To Do |
-|--------------|---------------|------------|
-| "See `audit.md`" | Reference to governance file | Search for `[FILE: context/governance/audit.md]` |
-| "Per `context/application.md`" | Reference to application context | Search for `[FILE: context/application.md]` |
-| "Consult your agent definition" | Reference to your role | Search for `[FILE: agent/...]` |
-| "Log to `system/logs/`" | Audit logging required | Include `audit` field in your JSON output |
-| "Write to filesystem" | File operation needed | Cannot do — orchestration layer handles this |
-
----
-
-## Error Handling
-
-If you encounter an issue:
-
-1. **Out-of-scope request**: Set `status.code` to `"failed"`, `error.has_error` to `true`, `error.error_code` to `"OUT_OF_SCOPE"`, and explain in `error.error_message`
-
-2. **Invalid input**: Set `error.error_code` to `"INVALID_INPUT"` and explain what's wrong
-
-3. **Cannot locate referenced file**: Note this in `audit.compliance_notes` and proceed with available information
-
-4. **Ambiguous request**: If clarification is needed, indicate this in your output and set `status.code` to `"pending"`
-
----
-
-## Prompt Structure
-
-The orchestration layer concatenates files in this order:
-
-**Always loaded (context/):**
-1. `context/instructions.md` — This file
-2. `context/application.md` — Platform purpose and capabilities
-3. `context/governance/audit.md` — Audit logging requirements
-4. `context/governance/message_format.md` — JSON message format specification
-5. `context/governance/fileformat.md` — Markdown file standards
-
-**Loaded per agent invocation (agent/):**
-6. `agent/<layer>/<agent_name>.md` — Your specific agent definition
-
-Use the `[FILE: <path>]` markers to locate any of these files.
+1. Read `context/application.md`
+2. Read all governance files
+3. Read your agent file
+4. Validate scope and constraints
+5. Generate role-appropriate output
+6. Format as one JSON message
 
 ---
 
 ## Version
-v1.1.0
+v2.0.0
 
 ## Last Updated
-February 9, 2026
+February 10, 2026
