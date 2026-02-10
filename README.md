@@ -29,6 +29,16 @@ The architecture is **application-agnostic**: the same agent framework, governan
 
 ## Directory Structure
 
+### Canonical core context filenames
+
+The primary context and template documents use the following canonical filenames:
+
+- `instructions.md` (path: `context/instructions.md`)
+- `application.md` (path: `context/application.md`)
+- `application_template.md` (path: `template/application_template.md`)
+
+All cross-references should point to these canonical filenames and paths.
+
 ```
 Sentient Agentic AI/
 ├── context/                         ← Always loaded for ALL agents
@@ -329,7 +339,7 @@ Machine-readable validation schemas for programmatic enforcement of platform sta
 
 Blank templates for creating new content. These are starting points — copy and customize.
 
-- **application_template.md** — Blank application context template with all `[STANDARD]` sections pre-filled and `[APPLICATION-SPECIFIC]` sections containing placeholder guidance. Copy to `context/application.md` when deploying a new application.
+- **template/application_template.md** — Blank application context template with all `[STANDARD]` sections pre-filled and `[APPLICATION-SPECIFIC]` sections containing placeholder guidance. Copy to `context/application.md` when deploying a new application.
 
 ---
 
