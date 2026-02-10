@@ -184,8 +184,8 @@ All agent communications must use the following JSON structure:
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request within video analysis scope per context/02_application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
+    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
   }
 }
 ```
@@ -256,8 +256,8 @@ All agent communications must use the following JSON structure:
     "parent_message_id": "msg-obj-20260127-143052-001"
   },
   "audit": {
-    "compliance_notes": "Objectives successfully decomposed into actionable goals; all goals map to platform capabilities defined in context/02_application.md; goal sequence supports efficient execution",
-    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Objectives successfully decomposed into actionable goals; all goals map to platform capabilities defined in context/application.md; goal sequence supports efficient execution",
+    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
   }
 }
 ```
@@ -305,8 +305,8 @@ All agent communications must use the following JSON structure:
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per context/02_application.md Constraints and Boundaries; platform supports analysis only, not content modification",
-    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per context/application.md Constraints and Boundaries; platform supports analysis only, not content modification",
+    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
   }
 }
 ```

@@ -94,8 +94,8 @@ As the first agent in the processing chain, the Objective Agent is responsible f
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request within video analysis scope per context/02_application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-    "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
+    "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
+    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
   }
 }
 ```
@@ -119,7 +119,7 @@ The Objective Agent must analyze user requests and generate one or more strategi
 - Each objective must represent a strategic outcome (*what* to achieve)
 - Objectives define the "what", not the "how" (goals define the "how")
 - Complex requests may require multiple objectives
-- Objectives must map to the Video Analysis Capabilities defined in `context/02_application.md`
+- Objectives must map to the Video Analysis Capabilities defined in `context/application.md`
 - Objectives are output as plain text, one per line, with no metadata
 
 **Video Analysis Capability Mapping:**
@@ -239,7 +239,7 @@ The Objective Agent must validate that all objectives fall within the platform's
 
 ### 6. Application Context Reference
 
-The Objective Agent must reference `context/02_application.md` to ensure all objectives align with:
+The Objective Agent must reference `context/application.md` to ensure all objectives align with:
 - The Primary Objective of comprehensive video content analysis
 - The supported Video Analysis Capabilities
 - The defined Execution Process

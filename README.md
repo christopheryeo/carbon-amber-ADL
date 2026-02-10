@@ -4,7 +4,7 @@
 
 This folder contains a **prompt engineering architecture** that defines how multiple AI agents collaborate to process requests. It is essentially a "constitution" for an AI agent system — defining how agents should behave, communicate, and maintain accountability.
 
-The architecture is **application-agnostic**: the same agent framework, governance policies, and LLM instructions can be used for different applications by changing `context/02_application.md` and archiving prior versions under `application/archive/`.
+The architecture is **application-agnostic**: the same agent framework, governance policies, and LLM instructions can be used for different applications by changing `context/application.md` and archiving prior versions under `application/archive/`.
 
 ### How It Works
 
@@ -32,8 +32,8 @@ The architecture is **application-agnostic**: the same agent framework, governan
 ```
 Sentient Agentic AI/
 ├── context/                         ← Always loaded for ALL agents
-│   ├── 01_llm_instructions.md       ← LLM execution instructions (first file loaded)
-│   ├── 02_application.md            ← Application context (active application)
+│   ├── instructions.md              ← LLM execution instructions (first file loaded)
+│   ├── application.md               ← Application context (active application)
 │   └── governance/                  ← Governance policies
 │       ├── audit.md
 │       ├── message_format.md
@@ -54,7 +54,7 @@ Sentient Agentic AI/
 ├── schema/                          ← Machine-readable validation schemas
 │   └── message_schema.json
 ├── template/                        ← Blank templates for creating new content
-│   └── 02_application_template.md
+│   └── application_template.md
 ├── application/                     ← Archived application contexts
 │   └── archive/
 ├── system/                          ← Runtime directories (NOT concatenated)
@@ -68,7 +68,7 @@ Sentient Agentic AI/
 
 ## Application Template Format
 
-The `context/02_application.md` file follows a **standardized template format** that enables different applications to be deployed using the same agent framework. When creating a new application, replace the content in sections marked `[APPLICATION-SPECIFIC]` while keeping sections marked `[STANDARD]` unchanged.
+The `context/application.md` file follows a **standardized template format** that enables different applications to be deployed using the same agent framework. When creating a new application, replace the content in sections marked `[APPLICATION-SPECIFIC]` while keeping sections marked `[STANDARD]` unchanged.
 
 ### Template Sections
 
@@ -90,7 +90,7 @@ The `context/02_application.md` file follows a **standardized template format** 
 
 To deploy a new application:
 
-1. Copy `template/02_application_template.md` to `context/02_application.md` (move the previous one into `application/archive/`)
+1. Copy `template/application_template.md` to `context/application.md` (move the previous one into `application/archive/`)
 2. Keep all `[STANDARD]` sections unchanged
 3. Replace all `[APPLICATION-SPECIFIC]` placeholder sections with your application's content:
    - **Section 4**: Set your application name, customer, and description
@@ -127,8 +127,8 @@ The orchestration layer concatenates files into a master prompt in this order:
 
 | Order | Path | Purpose |
 |-------|------|---------|
-| 1 | `context/01_llm_instructions.md` | LLM execution instructions — how to interpret the prompt |
-| 2 | `context/02_application.md` | Application context — purpose, capabilities, constraints |
+| 1 | `context/instructions.md` | LLM execution instructions — how to interpret the prompt |
+| 2 | `context/application.md` | Application context — purpose, capabilities, constraints |
 | 3 | `context/governance/*.md` | Governance policies (audit, message format, file format) |
 | 4 | `agent/<core>/<agent>.md` | Specific agent definition (only the agent being invoked) |
 
@@ -150,7 +150,7 @@ When concatenating files, the orchestration layer **MUST** wrap each file with m
 
 ```
 ================================================================================
-[FILE: context/01_llm_instructions.md]
+[FILE: context/instructions.md]
 ================================================================================
 
 # LLM Execution Instructions
@@ -159,7 +159,7 @@ When concatenating files, the orchestration layer **MUST** wrap each file with m
 ...
 
 ================================================================================
-[FILE: context/02_application.md]
+[FILE: context/application.md]
 ================================================================================
 
 # Application Context
@@ -191,8 +191,8 @@ These markers allow the LLM to locate specific files when documents reference th
 Contains files that are **always loaded for ALL agents**. This provides the common context that every agent needs.
 
 ### Files:
-- **01_llm_instructions.md** — Explains how the LLM should interpret the prompt, locate referenced files using markers, and format its JSON output
-- **02_application.md** — Active application context defining purpose, capabilities, and constraints (archive prior versions under `application/archive/`)
+- **instructions.md** — Explains how the LLM should interpret the prompt, locate referenced files using markers, and format its JSON output
+- **application.md** — Active application context defining purpose, capabilities, and constraints (archive prior versions under `application/archive/`)
 - **governance/** — Governance policies folder:
   - **audit.md** — Audit logging requirements
   - **message_format.md** — JSON message format specification
@@ -219,7 +219,7 @@ Mid-level agents that manage planning, reasoning, learning, and memory:
 ### Executional Core (executional/)
 Specialized agents that produce deliverables. **These agents are application-specific** — different applications define different executional agents based on their capabilities.
 
-For the current DSTA Video Analysis application (see `context/02_application.md`):
+For the current DSTA Video Analysis application (see `context/application.md`):
 - **perception.md** — Identifies speakers, analyzes expressions/gestures, detects objects, analyzes audio
 - **interpretation.md** — Processes analysis requests and contextualizes results
 - **action.md** — Executes analysis models and generates structured outputs
@@ -329,7 +329,7 @@ Machine-readable validation schemas for programmatic enforcement of platform sta
 
 Blank templates for creating new content. These are starting points — copy and customize.
 
-- **02_application_template.md** — Blank application context template with all `[STANDARD]` sections pre-filled and `[APPLICATION-SPECIFIC]` sections containing placeholder guidance. Copy to `context/02_application.md` when deploying a new application.
+- **application_template.md** — Blank application context template with all `[STANDARD]` sections pre-filled and `[APPLICATION-SPECIFIC]` sections containing placeholder guidance. Copy to `context/application.md` when deploying a new application.
 
 ---
 
@@ -343,7 +343,7 @@ Runtime directories used by the orchestration layer. Not concatenated into promp
 
 ## application/
 
-Archived application context files. Move older versions of `context/02_application.md` here as new applications are deployed.
+Archived application context files. Move older versions of `context/application.md` here as new applications are deployed.
 
 ---
 

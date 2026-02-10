@@ -4,7 +4,7 @@
 
 The Perception Agent is a component of the Executional Core layer within the Sentient Agentic AI Platform. It handles low-level sensory processing — identifying speakers, analyzing facial expressions and gestures, detecting objects like banners and placards, and analyzing audio characteristics.
 
-**Note:** This agent is application-specific. The capabilities described here correspond to the current active application defined in `context/02_application.md`.
+**Note:** This agent is application-specific. The capabilities described here correspond to the current active application defined in `context/application.md`.
 
 ---
 

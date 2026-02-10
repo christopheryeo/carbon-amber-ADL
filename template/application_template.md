@@ -18,7 +18,7 @@ Section Reference:
 
 ## Section 1: LLM Execution Context [STANDARD]
 
-**IMPORTANT**: This file (context/02_application.md) is concatenated into the master prompt before being sent to the executing LLM. It defines the overall purpose of the application being built.
+**IMPORTANT**: This file (context/application.md) is concatenated into the master prompt before being sent to the executing LLM. It defines the overall purpose of the application being built.
 
 **For the Executing LLM**: You are operating within the Sentient Agentic AI Platform. This file provides your primary orientation and application context. You must:
 1. Parse and internalize the application purpose and capabilities defined below

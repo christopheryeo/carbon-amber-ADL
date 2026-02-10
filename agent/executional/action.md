@@ -4,7 +4,7 @@
 
 The Action Agent is a component of the Executional Core layer within the Sentient Agentic AI Platform. It executes specific analysis models and generates structured outputs, serving as the interface between the agent system and the underlying ML/AI model infrastructure.
 
-**Note:** This agent is application-specific. The capabilities described here correspond to the current active application defined in `context/02_application.md`.
+**Note:** This agent is application-specific. The capabilities described here correspond to the current active application defined in `context/application.md`.
 
 ---
 

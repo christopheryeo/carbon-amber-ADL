@@ -4,7 +4,7 @@
 
 The Interpretation Agent is a component of the Executional Core layer within the Sentient Agentic AI Platform. It processes analysis requests and contextualizes results based on user queries, transforming raw perceptual data into meaningful, query-relevant interpretations.
 
-**Note:** This agent is application-specific. The capabilities described here correspond to the current active application defined in `context/02_application.md`.
+**Note:** This agent is application-specific. The capabilities described here correspond to the current active application defined in `context/application.md`.
 
 ---
 

@@ -42,9 +42,9 @@ Every file in this prompt is wrapped with markers in this format:
 
 ### How to Locate Referenced Content
 
-When you see a reference like "See `audit.md`" or "per `context/02_application.md`":
+When you see a reference like "See `audit.md`" or "per `context/application.md`":
 
-1. **Search for the marker**: Look for `[FILE: context/governance/audit.md]` or `[FILE: context/02_application.md]`
+1. **Search for the marker**: Look for `[FILE: context/governance/audit.md]` or `[FILE: context/application.md]`
 2. **Read the content**: The file content immediately follows the marker
 3. **Apply the guidance**: Use the referenced content to inform your response
 
@@ -52,7 +52,7 @@ When you see a reference like "See `audit.md`" or "per `context/02_application.m
 
 | Reference | Search for Marker |
 |-----------|-------------------|
-| `context/02_application.md` or `02_application.md` | `[FILE: context/02_application.md]` |
+| `context/application.md` or `application.md` | `[FILE: context/application.md]` |
 | `audit.md` | `[FILE: context/governance/audit.md]` |
 | `message_format.md` | `[FILE: context/governance/message_format.md]` |
 | `fileformat.md` | `[FILE: context/governance/fileformat.md]` |
@@ -89,7 +89,7 @@ Before processing any request, locate and review the governance files in this pr
 
 ### 2. Consult Application Context
 
-Locate `[FILE: context/02_application.md]` to understand:
+Locate `[FILE: context/application.md]` to understand:
 
 - Platform purpose and capabilities
 - Supported analysis and processing capabilities
@@ -189,7 +189,7 @@ When you receive a user request:
 ```
 1. READ this instructions file (you're doing this now)
         ↓
-2. LOCATE context/02_application.md — understand platform scope
+2. LOCATE context/application.md — understand platform scope
         ↓
 3. LOCATE your agent definition — understand your role
         ↓
@@ -213,7 +213,7 @@ Throughout this prompt, you will see references to file paths. Here's how to int
 | When You See | What It Means | What To Do |
 |--------------|---------------|------------|
 | "See `audit.md`" | Reference to governance file | Search for `[FILE: context/governance/audit.md]` |
-| "Per `context/02_application.md`" | Reference to application context | Search for `[FILE: context/02_application.md]` |
+| "Per `context/application.md`" | Reference to application context | Search for `[FILE: context/application.md]` |
 | "Consult your agent definition" | Reference to your role | Search for `[FILE: agent/...]` |
 | "Log to `system/logs/`" | Audit logging required | Include `audit` field in your JSON output |
 | "Write to filesystem" | File operation needed | Cannot do — orchestration layer handles this |
@@ -239,8 +239,8 @@ If you encounter an issue:
 The orchestration layer concatenates files in this order:
 
 **Always loaded (context/):**
-1. `context/01_llm_instructions.md` — This file
-2. `context/02_application.md` — Platform purpose and capabilities
+1. `context/instructions.md` — This file
+2. `context/application.md` — Platform purpose and capabilities
 3. `context/governance/audit.md` — Audit logging requirements
 4. `context/governance/message_format.md` — JSON message format specification
 5. `context/governance/fileformat.md` — Markdown file standards

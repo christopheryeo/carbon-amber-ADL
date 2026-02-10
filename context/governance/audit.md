@@ -37,11 +37,11 @@ The `audit` field is part of the standard message format defined in `message_for
 | Field | Required | Description |
 |-------|----------|-------------|
 | `audit.compliance_notes` | Yes | Governance compliance observations, validations performed, scope confirmations, and any flags or concerns |
-| `audit.governance_files_consulted` | Yes | Array of governance file names referenced during processing (e.g., `["context/02_application.md", "message_format.md", "audit.md"]`) |
+| `audit.governance_files_consulted` | Yes | Array of governance file names referenced during processing (e.g., `["context/application.md", "message_format.md", "audit.md"]`) |
 
 ### What to Include in compliance_notes
 
-- Confirmation that the request is within platform scope (per `context/02_application.md`)
+- Confirmation that the request is within platform scope (per `context/application.md`)
 - Validation that output aligns with platform capabilities
 - Any governance concerns or flags identified
 - Reason for rejection (if status is `failed` or `rejected`)
@@ -51,8 +51,8 @@ The `audit` field is part of the standard message format defined in `message_for
 
 ```json
 "audit": {
-  "compliance_notes": "Request within video analysis scope per context/02_application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-  "governance_files_consulted": ["context/02_application.md", "message_format.md", "audit.md"]
+  "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
+  "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
 }
 ```
 
