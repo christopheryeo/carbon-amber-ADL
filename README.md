@@ -9,11 +9,7 @@ The architecture is **application-agnostic**: the same agent framework, governan
 ### How It Works
 
 1. **Prompt Concatenation**: Files are concatenated with section markers and loaded into an LLM's context window
-2. **Agent Chain**: User requests flow through agents in sequence:
-   - **Objective Agent** → receives user requests, outputs strategic objectives (*what* to achieve)
-   - **Goal Agent** → decomposes objectives into actionable goals (*how* to achieve them)
-   - **Planning Agent** → creates execution workflows
-   - **Executional Agents** → perform the actual tasks
+2. **Agent Chain**: User requests flow through agents in sequence, with each agent routing to the next via the `next_agent` field. The canonical agent chain flow is defined in `context/governance/message_format.md` § Agent Chain Flow.
 3. **Standardized Communication**: Agents communicate using a defined JSON message format with session tracking, error handling, and audit metadata
 4. **Governance Enforcement**: All operations must comply with policies in the governance folder
 
@@ -295,39 +291,7 @@ For the current DSTA Video Analysis application (see `context/application.md`):
 
 ## Agent Communication Flow
 
-```
-User Request
-     ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  GOVERNANCE CORE                                                │
-│  ┌─────────────────┐      ┌─────────────────┐                  │
-│  │ Objective Agent │ ───→ │   Goal Agent    │                  │
-│  │ (what to do)    │      │ (how to do it)  │                  │
-│  └─────────────────┘      └─────────────────┘                  │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  OPERATIONAL CORE                                               │
-│  ┌─────────────────┐  ┌─────────────────┐                      │
-│  │ Planning Agent  │  │ Reasoning Agent │                      │
-│  │ (workflows)     │  │ (inference)     │                      │
-│  └─────────────────┘  └─────────────────┘                      │
-│  ┌─────────────────┐  ┌─────────────────┐                      │
-│  │ Learning Agent  │  │  Memory Agent   │                      │
-│  │ (adaptation)    │  │ (context)       │                      │
-│  └─────────────────┘  └─────────────────┘                      │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  EXECUTIONAL CORE (Application-Specific)                        │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐                  │
-│  │ Perception │ │Interprettn │ │   Action   │                  │
-│  │   Agent    │ │   Agent    │ │   Agent    │                  │
-│  └────────────┘ └────────────┘ └────────────┘                  │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-                      Final Output
-```
+The agent chain flow — including the full execution sequence and routing — is defined in `context/governance/message_format.md` § Agent Chain Flow. That file is the single source of truth for agent ordering. Each agent determines its successor at runtime via the `next_agent` field in its JSON output.
 
 ---
 

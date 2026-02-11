@@ -31,6 +31,8 @@ Always read `context/instructions.md` before all other files.
    - one file in `agent/operational/`, or
    - one file in `agent/executional/`
 
+> **Note**: This list defines valid agent files for prompt assembly. Agent execution order is not determined by this list — see `context/governance/message_format.md` § Agent Chain Flow for the canonical flow definition.
+
 ### Step 3 — Wrap each file with file markers
 
 Each concatenated file must be wrapped in the marker format below:
