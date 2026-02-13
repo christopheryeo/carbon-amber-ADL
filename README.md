@@ -328,7 +328,7 @@ The orchestration layer (n8n) handles:
 ---
 
 ## Last Updated
-February 10, 2026
+February 13, 2026
 
 ---
 
@@ -336,6 +336,8 @@ February 10, 2026
 
 | Version | Date       | Description                                                                              |
 |:--------|:-----------|:-----------------------------------------------------------------------------------------|
+| v2.1.1  | 2026-02-13 | Updated `message_format.md` examples to apply Acquisition-First Pattern with real         |
+|         |            | URLs and Storage Resolution Rule. Added `temp/` directory for conformance reviews.       |
 | v2.1.0  | 2026-02-13 | Added Memory Agent definition (`agent/operational/memory.md`) and `context/memory/`      |
 |         |            | directory for institutional knowledge. Updated loading order and LLM responsibilities    |
 |         |            | to include memory files. Clarified that `instructions.md` is not concatenated into       |
@@ -366,11 +368,19 @@ Blank templates for creating new content. These are starting points — copy and
 
 ---
 
+## temp/
+
+Temporary working files, conformance reviews, and analysis artefacts. Not concatenated into prompts. Contents may be cleaned up periodically.
+
+- **log_review_YYYYMMDD.md** — Conformance review reports evaluating agent log output against platform specifications
+
+---
+
 ## system/
 
 Runtime directories used by the orchestration layer. Not concatenated into prompts.
 
-- **logs/** — Daily audit log files in `YYYYMMDD.log` format, written by the orchestration layer per `context/governance/audit.md`
+- **logs/** — Daily audit log files in `YYYYMMDD.md` format, written by the orchestration layer per `context/governance/audit.md`
 
 ---
 
