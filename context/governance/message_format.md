@@ -155,12 +155,12 @@ All agent communications must use the following JSON structure:
   },
   "input": {
     "source": "user",
-    "content": "Download this YouTube video and analyze the speaker's sentiment"
+    "content": "Download this YouTube video and analyze the speaker's sentiment in https://www.youtube.com/watch?v=abc123"
   },
   "output": {
     "content": [
-      "Obtain video content from YouTube",
-      "Analyze speaker sentiment"
+      "Obtain video content from https://www.youtube.com/watch?v=abc123",
+      "Analyze speaker sentiment from the obtained video content"
     ],
     "content_type": "objectives"
   },
@@ -186,9 +186,9 @@ All agent communications must use the following JSON structure:
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
-    "reasoning": "User request contains two distinct actions (download and analyze) requiring separate objectives. Video source is YouTube (supported). Sentiment analysis maps to Speaker Analysis capability. Applied Acquisition-First Pattern: Objective 1 for video acquisition, Objective 2 for analysis referencing obtained content."
+    "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube). Acquisition-First Pattern applied: source URL included in acquisition objective only; subsequent analysis objectives reference 'the obtained video content' per objective.md Acquisition-First Pattern.",
+    "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/objective.md"],
+    "reasoning": "User request contains two distinct actions (download and analyze) requiring separate objectives. Video source is YouTube (supported). Sentiment analysis maps to Speaker Analysis capability. Applied Acquisition-First Pattern: Objective 1 includes the source URL for video acquisition; Objective 2 references 'the obtained video content' to operate on the platform-stored asset."
   }
 }
 ```
@@ -209,29 +209,30 @@ All agent communications must use the following JSON structure:
   "input": {
     "source": "objective_agent",
     "content": [
-      "Obtain video content from YouTube",
-      "Analyze speaker sentiment"
+      "Obtain video content from https://www.youtube.com/watch?v=abc123",
+      "Analyze speaker sentiment from the obtained video content"
     ]
   },
   "output": {
     "content": {
       "objective_1": {
-        "objective": "Obtain video content from YouTube",
+        "objective": "Obtain video content from https://www.youtube.com/watch?v=abc123",
         "goals": [
-          "Extract video URL from user input",
-          "Validate URL is from supported source (YouTube)",
-          "Download video file to storage",
-          "Verify video file integrity"
+          "Validate that https://www.youtube.com/watch?v=abc123 is a reachable YouTube URL",
+          "Download video content from https://www.youtube.com/watch?v=abc123 to platform file storage (Wasabi)",
+          "Verify downloaded file integrity and format compatibility",
+          "Extract video metadata including duration, resolution, and frame rate"
         ]
       },
       "objective_2": {
-        "objective": "Analyze speaker sentiment",
+        "objective": "Analyze speaker sentiment from the obtained video content",
         "goals": [
-          "Extract audio track from video",
-          "Transcribe audio using Whisper-X",
-          "Identify speaker segments",
-          "Run sentiment analysis model on transcript",
-          "Correlate sentiment with speaker timestamps"
+          "Extract audio track from the video file stored in platform storage (Wasabi)",
+          "Transcribe audio content to text with timestamps",
+          "Identify and label distinct speakers through diarization",
+          "Analyse vocal characteristics for speech emotion recognition per speaker",
+          "Run sentiment analysis on transcript segments per speaker",
+          "Correlate text sentiment, vocal emotion, and facial expression results per speaker"
         ]
       }
     },
@@ -243,7 +244,7 @@ All agent communications must use the following JSON structure:
   },
   "status": {
     "code": "success",
-    "message": "Successfully decomposed 2 objectives into 9 actionable goals"
+    "message": "Successfully decomposed 2 objectives into 10 actionable goals"
   },
   "error": {
     "has_error": false,
@@ -259,9 +260,9 @@ All agent communications must use the following JSON structure:
     "parent_message_id": "msg-obj-20260127-143052-001"
   },
   "audit": {
-    "compliance_notes": "Objectives successfully decomposed into actionable goals; all goals map to platform capabilities defined in context/application.md; goal sequence supports efficient execution",
-    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
-    "reasoning": "Objective 1 (video acquisition) decomposed into 4 sequential goals covering URL extraction, source validation, download, and integrity verification. Objective 2 (sentiment analysis) decomposed into 5 goals following the audio-first pipeline: extract audio, transcribe, identify speakers, run sentiment model, then correlate with timestamps. Goal ordering ensures each step has required inputs from the previous step."
+    "compliance_notes": "Objectives successfully decomposed into actionable goals. Storage Resolution Rule applied: acquisition goals reference source URL with explicit Wasabi storage; all analysis goals reference 'the video file stored in platform storage (Wasabi)' per goal.md Storage Resolution Rule. All goals map to platform capabilities defined in context/application.md; goal sequence supports efficient execution.",
+    "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/goal.md"],
+    "reasoning": "Objective 1 (video acquisition) decomposed into 4 sequential goals covering URL validation, download to Wasabi, integrity verification, and metadata extraction. Objective 2 (sentiment analysis) decomposed into 6 goals following the audio-first pipeline: extract audio from Wasabi-stored file, transcribe, identify speakers, analyse vocal emotion, run sentiment analysis, then correlate multi-modal results. All analysis goals reference 'the video file stored in platform storage (Wasabi)' per the Storage Resolution Rule."
   }
 }
 ```
