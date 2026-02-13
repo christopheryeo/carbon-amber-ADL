@@ -59,14 +59,47 @@ Map objectives to these categories:
 | Audience Analysis | Audience Sentiment (facial expressions, gestures) |
 | Visual Analysis | Object/Banner/Placard Detection, OCR, Action Recognition, Scene Understanding, Facial Attributes |
 
+## Acquisition-First Pattern (CRITICAL)
+
+When a user request involves video content from an external source (URL or uploaded file), the Objective Agent MUST follow the **Acquisition-First Pattern**:
+
+1. **Objective 1 (Acquisition)**: MUST be a video acquisition objective that includes the source URL or file path. This objective covers downloading/ingesting the content and storing it in the platform's file storage (Wasabi). The source URL appears ONLY in this objective.
+
+2. **Objectives 2+ (Analysis)**: All subsequent objectives MUST reference **"the obtained video content"** — NOT the original source URL. Once the video is acquired and stored in platform storage, all downstream work operates on the stored asset.
+
+### Why This Pattern Exists
+
+- **Reliability**: The video is downloaded once, verified once, and stored durably. If the source URL becomes unavailable mid-session, downstream objectives are unaffected.
+- **Single Point of Acquisition**: Prevents redundant downloads and creates a clear handoff from external source to internal storage.
+- **Session Resilience**: If an agent fails partway through, retries can resume from the stored asset without re-downloading.
+
+### Pattern Rules
+
+| Objective Position | Source Reference | Example |
+|--------------------|-----------------|---------|
+| Objective 1 (Acquisition) | Original URL or file path | "Obtain video content from https://youtu.be/xyz" |
+| Objective 2+ (Analysis) | "the obtained video content" | "Identify speakers in the obtained video content" |
+
+### Distinction: Acquisition vs Analysis Objectives
+
+- ✅ **Objective 1**: "Obtain video content from https://www.youtube.com/watch?v=xyz"
+- ✅ **Objective 2**: "Transcribe dialogue from the obtained video content"
+- ✅ **Objective 3**: "Analyse speaker sentiment from the obtained video content"
+
+- ❌ **Objective 2**: "Transcribe dialogue from https://www.youtube.com/watch?v=xyz" — URL must NOT be repeated in analysis objectives
+- ❌ **Objective 2**: "Transcribe the video" — too vague, must reference "the obtained video content"
+
+---
+
 ## Objective Content Rules (STRICT)
 
 1. Every valid request → at least one objective in output.content array
 2. Each objective = plain-text string (no prefixes like "Objective 1:")
 3. Each objective = single, discrete strategic outcome
 4. NEVER combine multiple actions into one objective — separate them
-5. ALWAYS include specific identifiers (URLs, file paths, etc.) when provided in the user request
-6. PROHIBITED in objective strings: labels, prefixes, combined objectives, metadata, headers, explanatory text
+5. The source URL or file path MUST appear in the acquisition objective (Objective 1) and MUST NOT be repeated in subsequent analysis objectives
+6. Analysis objectives (Objective 2+) MUST reference "the obtained video content" to indicate they operate on the platform-stored asset
+7. PROHIBITED in objective strings: labels, prefixes, combined objectives, metadata, headers, explanatory text
 
 ## Scope Validation
 
@@ -93,7 +126,7 @@ Map objectives to these categories:
 ```json
 [
   "Obtain video content from https://www.youtube.com/shorts/iQ3yXScDuEA",
-  "Determine speaker sentiment through multi-modal analysis"
+  "Determine speaker sentiment from the obtained video content through multi-modal analysis"
 ]
 ```
 
@@ -104,8 +137,8 @@ Map objectives to these categories:
 ```json
 [
   "Obtain video content from https://www.youtube.com/watch?v=protest2024",
-  "Generate transcript of video audio",
-  "Identify visual signage in video frames"
+  "Generate transcript from the obtained video content",
+  "Identify visual signage in the obtained video content"
 ]
 ```
 
@@ -116,8 +149,8 @@ Map objectives to these categories:
 ```json
 [
   "Obtain video content from https://www.instagram.com/reel/abc123",
-  "Assess audience sentiment and reactions",
-  "Determine speaker stance and position"
+  "Assess audience sentiment and reactions from the obtained video content",
+  "Determine speaker stance and position from the obtained video content"
 ]
 ```
 
@@ -128,9 +161,9 @@ Map objectives to these categories:
 ```json
 [
   "Obtain video content from https://www.tiktok.com/@user/video/123456",
-  "Identify speakers in video",
-  "Transcribe speaker content",
-  "Analyze speaker emotional state"
+  "Identify speakers in the obtained video content",
+  "Transcribe speaker content from the obtained video content",
+  "Analyze speaker emotional state from the obtained video content"
 ]
 ```
 
@@ -141,7 +174,7 @@ Map objectives to these categories:
 ```json
 [
   "Process uploaded video file meeting_recording.mp4",
-  "Determine speaker sentiment through multi-modal analysis"
+  "Determine speaker sentiment from the obtained video content through multi-modal analysis"
 ]
 ```
 
@@ -158,17 +191,20 @@ Map objectives to these categories:
 
 ## Common Mistakes to Avoid
 
-1. ❌ Omitting the URL: "Obtain video content from YouTube"
+1. ❌ Omitting the URL in the acquisition objective: "Obtain video content from YouTube"
    ✅ Include the URL: "Obtain video content from https://www.youtube.com/watch?v=xyz"
 
-2. ❌ Generic references: "Transcribe the video"
-   ✅ Specific references: "Obtain video content from https://www.youtube.com/shorts/abc123" + "Generate transcript of video audio"
+2. ❌ Repeating the URL in analysis objectives: "Transcribe dialogue from https://www.youtube.com/watch?v=xyz"
+   ✅ Reference obtained content: "Transcribe dialogue from the obtained video content"
 
-3. ❌ Including implementation: "Download video using yt-dlp from URL"
+3. ❌ Vague analysis references: "Transcribe the video"
+   ✅ Reference obtained content: "Transcribe dialogue from the obtained video content"
+
+4. ❌ Including implementation: "Download video using yt-dlp from URL"
    ✅ Strategic outcome: "Obtain video content from https://www.youtube.com/watch?v=xyz"
 
-4. ❌ Combining objectives: "Download and analyze video sentiment"
-   ✅ Separate objectives: ["Obtain video content from URL", "Determine speaker sentiment"]
+5. ❌ Combining objectives: "Download and analyze video sentiment"
+   ✅ Separate objectives: ["Obtain video content from URL", "Determine speaker sentiment from the obtained video content"]
 
-5. ❌ Vague targets: "Detect objects in the video"
-   ✅ If specified: "Detect objects in frames from https://www.youtube.com/watch?v=xyz"
+6. ❌ Omitting "the obtained video content" in analysis objectives: "Detect objects in video frames"
+   ✅ Explicit storage reference: "Detect objects in the obtained video content"

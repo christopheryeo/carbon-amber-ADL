@@ -75,7 +75,7 @@ Governance files are **authoritative** and take precedence over any conflicting 
 
 This application enables comprehensive video content analysis through autonomous AI agents that collaborate to extract insights from audio, visual, and contextual elements of video content from sources such as YouTube, Instagram, and TikTok.
 
-The platform integrates orchestration tools (n8n, CrewAI) and leverages multiple AI agents organized into Governance, Operational, and Executional cores to perform sophisticated multi-modal video analysis tasks autonomously.
+The platform integrates n8n as its orchestration engine and leverages multiple AI agents organized into Governance, Operational, and Executional cores to perform sophisticated multi-modal video analysis tasks autonomously.
 
 ---
 
@@ -190,7 +190,7 @@ The platform leverages these technologies (for agent awareness when planning tas
 
 | Category | Technologies |
 |----------|--------------|
-| Orchestration | n8n, CrewAI, Model Context Protocol (MCP) |
+| Orchestration | n8n, Model Context Protocol (MCP) |
 | LLMs | Phase 1: Gemini (online API); Phase 2: Llama 4 (on-premise) |
 | Transcription & Diarization | OpenAI Whisper-X, pyannote.audio |
 | Video Processing | ffmpeg, ffprobe, OpenCV, PySceneDetect |
@@ -222,7 +222,7 @@ The platform utilizes a three-core agent architecture. User requests should be d
 | Planning Agent | Devises strategies for complex tasks involving multiple data points or agents |
 | Reasoning Agent | Makes logical inferences from analyzed elements |
 | Learning Agent | Adapts analysis models based on feedback and new data patterns |
-| Memory Agent | Stores and retrieves analysis results, learned patterns, and context |
+| Memory Agent | Captures audit log data, distills institutional knowledge (patterns, decision history, error prevention, quality benchmarks), and files it in `context/memory/` for inclusion in the master prompt |
 
 ### Executional Core [APPLICATION-SPECIFIC]
 | Agent | Role |

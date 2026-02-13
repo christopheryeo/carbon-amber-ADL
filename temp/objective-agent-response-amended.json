@@ -15,8 +15,8 @@
   "output": {
     "content": [
       "Obtain video content from https://www.youtube.com/shorts/iQ3yXScDuEA",
-      "Identify speakers in the video",
-      "Determine speaker sentiment"
+      "Identify speakers in the obtained video content",
+      "Determine speaker sentiment from the obtained video content"
     ],
     "content_type": "objectives"
   },
@@ -42,7 +42,7 @@
     "parent_message_id": null
   },
   "audit": {
-    "compliance_notes": "Request is within platform scope. YouTube is a supported source per Section 7 of application.md. Speaker Sentiment Analysis is a listed capability under Speaker Analysis in Section 6 (Capabilities Matrix). Source URL embedded in acquisition objective per Source URL Embedding Rule in objective.md. All generated objectives map to defined platform capabilities: video acquisition (Supported Sources), speaker identification (Audio Analysis - Speaker ID/Diarization), and sentiment determination (Speaker Analysis - Sentiment Analysis). No governance concerns identified.",
+    "compliance_notes": "Request is within platform scope. YouTube is a supported source per Section 7 of application.md. Speaker Sentiment Analysis is a listed capability under Speaker Analysis in Section 6 (Capabilities Matrix). Acquisition-First Pattern applied per objective.md: source URL included in acquisition objective only; subsequent analysis objectives reference 'the obtained video content'. All generated objectives map to defined platform capabilities: video acquisition (Supported Sources), speaker identification (Audio Analysis - Speaker ID/Diarization), and sentiment determination (Speaker Analysis - Sentiment Analysis). No governance concerns identified.",
     "governance_files_consulted": [
       "context/application.md",
       "context/governance/message_format.md",

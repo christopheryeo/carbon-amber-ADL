@@ -13,18 +13,18 @@ It defines:
 
 ## Prompt Assembly Contract (Orchestration Layer)
 
-**Purpose**: n8n/CrewAI (or equivalent orchestration) must follow this contract before calling the LLM.
+**Purpose**: n8n (or equivalent orchestration) must follow this contract before calling the LLM.
 
 ### Step 1 — Read this file first
 Always read `context/instructions.md` before all other files.
 
 ### Step 2 — Read and concatenate core files in this exact order
 
-1. `context/instructions.md`
-2. `context/application.md`
-3. `context/governance/audit.md`
-4. `context/governance/message_format.md`
-5. `context/governance/fileformat.md`
+1. `context/application.md`
+2. `context/governance/audit.md`
+3. `context/governance/message_format.md`
+4. `context/governance/fileformat.md`
+5. All files found under `context/memory/` and its subdirectories (excluding `context/memory/staging/`). Load every `.md` file present at the time of prompt assembly. This directory is populated by the Memory Agent and may be empty initially.
 6. One agent file selected for the current invocation:
    - `agent/governance/objective.md`, or
    - `agent/governance/goal.md`, or
@@ -59,8 +59,9 @@ After receiving the concatenated prompt, the LLM must:
    - `context/governance/audit.md`
    - `context/governance/message_format.md`
    - `context/governance/fileformat.md`
-3. Follow the loaded agent file as role-specific behavior
-4. Output exactly one JSON message that complies with `context/governance/message_format.md`
+3. Apply institutional knowledge from any `context/memory/` files included in the prompt. These contain learned patterns, heuristics, and error prevention insights. Governance always takes precedence over memory.
+4. Follow the loaded agent file as role-specific behavior
+5. Output exactly one JSON message that complies with `context/governance/message_format.md`
 
 ---
 
@@ -83,10 +84,11 @@ After receiving the concatenated prompt, the LLM must:
 
 1. Read `context/application.md`
 2. Read all governance files
-3. Read your agent file
-4. Validate scope and constraints
-5. Generate role-appropriate output
-6. Format as one JSON message
+3. Read any `context/memory/` files for institutional knowledge
+4. Read your agent file
+5. Validate scope and constraints
+6. Generate role-appropriate output
+7. Format as one JSON message
 
 ---
 

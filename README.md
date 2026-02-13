@@ -38,12 +38,20 @@ All cross-references should point to these canonical filenames and paths.
 ```
 Sentient Agentic AI/
 ├── context/                         ← Always loaded for ALL agents
-│   ├── instructions.md              ← LLM execution instructions (first file loaded)
+│   ├── instructions.md              ← Prompt assembly contract (read by orchestration only, NOT concatenated)
 │   ├── application.md               ← Application context (active application)
-│   └── governance/                  ← Governance policies
-│       ├── audit.md
-│       ├── message_format.md
-│       └── fileformat.md
+│   ├── governance/                  ← Governance policies
+│   │   ├── audit.md
+│   │   ├── message_format.md
+│   │   └── fileformat.md
+│   └── memory/                      ← Institutional knowledge (populated by Memory Agent)
+│       ├── domain_knowledge.md      ← Accumulated domain insights
+│       ├── operational_heuristics.md ← Learned process optimizations
+│       ├── error_prevention.md      ← Known failure modes and mitigations
+│       ├── quality_benchmarks.md    ← Historical quality baselines
+│       ├── staging/                 ← Low-confidence entries (NOT concatenated)
+│       └── session_summaries/       ← Daily transaction summaries
+│           └── {YYYY-MM-DD}_summary.md
 ├── agent/                           ← Only SPECIFIC agent loaded per invocation
 │   ├── governance/
 │   │   ├── objective.md
@@ -129,18 +137,18 @@ The folder is organized to support two loading patterns:
 
 ### Loading Order
 
-The orchestration layer concatenates files into a master prompt in this order:
+The orchestration layer reads `context/instructions.md` first to determine the assembly contract, then concatenates the following files into a master prompt in this order:
 
 | Order | Path | Purpose |
 |-------|------|---------|
-| 1 | `context/instructions.md` | LLM execution instructions — **must always be read first** |
-| 2 | `context/application.md` | Application context — purpose, capabilities, constraints |
-| 3 | `context/governance/audit.md` | Audit governance requirements |
-| 4 | `context/governance/message_format.md` | JSON output format requirements |
-| 5 | `context/governance/fileformat.md` | Markdown and file formatting standards |
+| 1 | `context/application.md` | Application context — purpose, capabilities, constraints |
+| 2 | `context/governance/audit.md` | Audit governance requirements |
+| 3 | `context/governance/message_format.md` | JSON output format requirements |
+| 4 | `context/governance/fileformat.md` | Markdown and file formatting standards |
+| 5 | All `.md` files in `context/memory/` and subdirectories (excluding `context/memory/staging/`) | Institutional knowledge — learned patterns, heuristics, error prevention. May be empty initially. |
 | 6 | `agent/<core>/<agent>.md` | Specific agent definition (only the agent being invoked) |
 
-**Note**: This README.md is **NOT concatenated** — it is for human reference only.
+**Note**: `context/instructions.md` is read by the orchestration layer to determine which files to load but is **NOT** itself concatenated into the master prompt. This README.md is also **NOT concatenated** — it is for human reference only.
 
 ### File Markers (Orchestration Layer Requirement)
 
@@ -158,15 +166,6 @@ When concatenating files, the orchestration layer **MUST** wrap each file with m
 
 ```
 ================================================================================
-[FILE: context/instructions.md]
-================================================================================
-
-# LLM Execution Instructions
-
-## Description
-...
-
-================================================================================
 [FILE: context/application.md]
 ================================================================================
 
@@ -180,6 +179,15 @@ When concatenating files, the orchestration layer **MUST** wrap each file with m
 ================================================================================
 
 # AI Audit and Logging Governance
+...
+
+================================================================================
+[FILE: context/memory/error_prevention.md]
+================================================================================
+
+# Error Prevention
+
+[LAST_UPDATED]: 2025-06-01T12:00:00Z
 ...
 
 ================================================================================
@@ -201,8 +209,9 @@ After receiving the concatenated prompt, the LLM should:
    - `context/governance/audit.md`
    - `context/governance/message_format.md`
    - `context/governance/fileformat.md`
-3. Follow the selected agent file as role-specific behavior
-4. Return exactly one JSON message compliant with `context/governance/message_format.md`
+3. Apply institutional knowledge from any `context/memory/` files included in the prompt. These contain learned patterns, heuristics, and error prevention insights. Governance always takes precedence over memory.
+4. Follow the selected agent file as role-specific behavior
+5. Return exactly one JSON message compliant with `context/governance/message_format.md`
 
 ### Responsibility Boundary
 
@@ -221,10 +230,11 @@ After receiving the concatenated prompt, the LLM should:
 
 1. Read `context/application.md`
 2. Read all governance files
-3. Read the loaded agent file
-4. Validate scope and constraints
-5. Generate role-appropriate output
-6. Format as one JSON message
+3. Read any `context/memory/` files for institutional knowledge
+4. Read the loaded agent file
+5. Validate scope and constraints
+6. Generate role-appropriate output
+7. Format as one JSON message
 
 ---
 
@@ -233,12 +243,19 @@ After receiving the concatenated prompt, the LLM should:
 Contains files that are **always loaded for ALL agents**. This provides the common context that every agent needs.
 
 ### Files:
-- **instructions.md** — Defines the prompt assembly contract, executing LLM responsibilities, and orchestration-vs-LLM boundary
+- **instructions.md** — Prompt assembly contract read by the orchestration layer to determine which files to load. Not concatenated into the master prompt itself.
 - **application.md** — Active application context defining purpose, capabilities, and constraints (archive prior versions under `application/archive/`)
 - **governance/** — Governance policies folder:
   - **audit.md** — Audit logging requirements
   - **message_format.md** — JSON message format specification
   - **fileformat.md** — Markdown file format standards
+- **memory/** — Institutional knowledge folder populated by the Memory Agent. All `.md` files here (excluding `staging/`) are concatenated into the master prompt. Contains:
+  - **domain_knowledge.md** — Accumulated domain insights from repeated processing
+  - **operational_heuristics.md** — Learned shortcuts and process optimizations
+  - **error_prevention.md** — Known failure modes and their mitigations
+  - **quality_benchmarks.md** — Historical quality baselines from Reviewer Agent assessments
+  - **staging/** — Low-confidence knowledge entries awaiting confirmation (NOT concatenated)
+  - **session_summaries/** — Daily transaction summaries
 
 ---
 
@@ -256,7 +273,7 @@ Mid-level agents that manage planning, reasoning, learning, and memory:
 - **planning.md** — Devises strategies for complex tasks involving multiple data points or agents
 - **reasoning.md** — Makes logical inferences from analyzed elements
 - **learning.md** — Adapts analysis models based on feedback and new data patterns
-- **memory.md** — Stores and retrieves analysis results, learned patterns, and context
+- **memory.md** — Captures audit log data, distills it into institutional knowledge (patterns, decision history, error prevention, quality benchmarks), and files it in `context/memory/` for inclusion in the master prompt
 
 ### Executional Core (executional/)
 Specialized agents that produce deliverables. **These agents are application-specific** — different applications define different executional agents based on their capabilities.
@@ -297,7 +314,7 @@ The agent chain flow — including the full execution sequence and routing — i
 
 ## Orchestration Layer Responsibilities
 
-The orchestration layer (n8n, CrewAI, or similar) handles:
+The orchestration layer (n8n) handles:
 
 | Task | Description |
 |------|-------------|
@@ -319,6 +336,10 @@ February 10, 2026
 
 | Version | Date       | Description                                                                              |
 |:--------|:-----------|:-----------------------------------------------------------------------------------------|
+| v2.1.0  | 2026-02-13 | Added Memory Agent definition (`agent/operational/memory.md`) and `context/memory/`      |
+|         |            | directory for institutional knowledge. Updated loading order and LLM responsibilities    |
+|         |            | to include memory files. Clarified that `instructions.md` is not concatenated into       |
+|         |            | master prompt. Removed CrewAI references — n8n is the sole orchestration engine.         |
 | v2.0.0  | 2026-02-10 | Updated `context/instructions.md` documentation with explicit file loading contract,     |
 |         |            | executing LLM responsibilities, responsibility boundary, and processing sequence         |
 | v1.1.0  | 2026-02-09 | Added placeholder agent files, template/, schema/, system/logs/; refactored audit.md;    |

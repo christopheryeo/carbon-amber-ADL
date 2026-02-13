@@ -44,6 +44,31 @@ Your output uses the `output.content` field with `content_type: "goals"` in the 
 
 ---
 
+## Storage Resolution Rule (CRITICAL)
+
+The Objective Agent follows an **Acquisition-First Pattern** where:
+- **Objective 1 (Acquisition)** includes the source URL and covers downloading and storing the video in platform file storage (Wasabi).
+- **Objectives 2+ (Analysis)** reference **"the obtained video content"** instead of the source URL.
+
+When the Goal Agent encounters these patterns, it MUST resolve references as follows:
+
+| Objective Type | Goal Agent Resolution |
+|---------------|----------------------|
+| Acquisition objective (contains source URL) | Goals include URL validation, download from URL, **storage to Wasabi**, file integrity verification, and metadata extraction |
+| Analysis objective (references "the obtained video content") | Goals operate on **"the video file stored in platform storage (Wasabi)"** — NEVER re-download from the original source URL |
+
+### Why This Matters
+- The source URL is an external, potentially volatile reference. Once acquired and stored in Wasabi, all processing operates on the durable, integrity-verified copy.
+- If the Goal Agent generates goals that reference the original URL for analysis objectives, downstream agents may attempt to re-download, wasting bandwidth and risking failures if the source becomes unavailable.
+
+### Goal Phrasing for Storage Resolution
+
+- ✅ **Acquisition goals**: "Download video content from https://www.youtube.com/watch?v=xyz to platform file storage (Wasabi)"
+- ✅ **Analysis goals**: "Extract audio track from the video file stored in platform storage (Wasabi)"
+- ❌ **Analysis goals**: "Extract audio track from https://www.youtube.com/watch?v=xyz" — NEVER reference the original URL in analysis goals
+
+---
+
 ## Goal Decomposition Process
 
 Follow these steps for every objective received:
@@ -101,7 +126,7 @@ Review the generated goals to ensure:
 1. Each goal must represent a single, discrete actionable step
 2. Goals define the HOW — they describe concrete actions, not outcomes
 3. Goals must map to one or more capabilities in the Capabilities Matrix (Section 6 of `context/application.md`)
-4. Goals must include specific identifiers (URLs, file paths, speaker references) inherited from the objective
+4. Acquisition goals must include the source URL/file path from the acquisition objective; analysis goals must reference "the video file stored in platform storage (Wasabi)" per the Storage Resolution Rule
 5. Each goal is a plain-text string — no prefixes, labels, numbering, or formatting
 6. Goals are output as a flat list per objective — do NOT include dependency annotations (the Planning Agent handles sequencing)
 7. Complex objectives require more goals; simple objectives may need fewer — adapt granularity to the objective's complexity
@@ -117,56 +142,58 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 
 ### Pattern A: Video Acquisition Objectives
 
-**Trigger:** Objectives containing "obtain", "download", "get", "access", or "process" video content.
+**Trigger:** Objectives containing "obtain", "download", "get", "access", or "process" video content with a source URL or file path.
 
 **Goal pattern:**
 1. Validate that the source URL/file is from a supported platform (YouTube, Instagram, TikTok) or is a valid uploaded file
-2. Download video content from [specific URL] to platform storage / Register uploaded file [specific filename] in platform storage
+2. Download video content from [specific URL] to platform file storage (Wasabi) / Register uploaded file [specific filename] in platform file storage (Wasabi)
 3. Verify downloaded/uploaded file integrity and format compatibility
 4. Extract video metadata (duration, resolution, codec, frame rate)
 
+**Note:** This is the ONLY pattern where the original source URL appears in goals. All subsequent patterns operate on the Wasabi-stored asset.
+
 ### Pattern B: Audio Transcription Objectives
 
-**Trigger:** Objectives containing "transcribe", "transcript", "what is said", or "spoken words".
+**Trigger:** Objectives referencing "the obtained video content" with "transcribe", "transcript", "what is said", or "spoken words".
 
 **Goal pattern:**
-1. Extract audio track from video file
+1. Extract audio track from the video file stored in platform storage (Wasabi)
 2. Detect language(s) spoken in the audio
 3. Transcribe audio content to text with timestamps
 4. Identify and label distinct speakers (diarization)
 
 ### Pattern C: Speaker Sentiment/Emotion Objectives
 
-**Trigger:** Objectives containing "sentiment", "emotion", "how do they feel", "tone", or "mood" of speakers.
+**Trigger:** Objectives referencing "the obtained video content" with "sentiment", "emotion", "how do they feel", "tone", or "mood" of speakers.
 
 **Goal pattern:**
-1. Extract audio track from video file
+1. Extract audio track from the video file stored in platform storage (Wasabi)
 2. Transcribe audio content to text with timestamps
 3. Identify and label distinct speakers
 4. Analyse vocal characteristics for speech emotion recognition
 5. Run sentiment analysis on transcript segments per speaker
-6. Extract video frames corresponding to speaker segments for facial expression analysis
+6. Extract video frames from the video file stored in platform storage (Wasabi) corresponding to speaker segments for facial expression analysis
 7. Correlate text sentiment, vocal emotion, and facial expression results per speaker
 
 ### Pattern D: Speaker Stance Objectives
 
-**Trigger:** Objectives containing "stance", "position", "opinion", or "viewpoint" of speakers.
+**Trigger:** Objectives referencing "the obtained video content" with "stance", "position", "opinion", or "viewpoint" of speakers.
 
 **Goal pattern:**
-1. Extract audio track from video file
+1. Extract audio track from the video file stored in platform storage (Wasabi)
 2. Transcribe audio content to text with timestamps
 3. Identify and label distinct speakers
 4. Run sentiment analysis on transcript segments per speaker
 5. Analyse vocal characteristics for emotional indicators
-6. Extract video frames for speaker visual appearance and expression analysis
+6. Extract video frames from the video file stored in platform storage (Wasabi) for speaker visual appearance and expression analysis
 7. Perform multi-modal stance analysis combining text, vocal, and visual features
 
 ### Pattern E: Audience Reaction Objectives
 
-**Trigger:** Objectives containing "audience", "crowd", "reaction", or "spectator" sentiment.
+**Trigger:** Objectives referencing "the obtained video content" with "audience", "crowd", "reaction", or "spectator" sentiment.
 
 **Goal pattern:**
-1. Extract video frames at regular intervals focusing on audience-visible segments
+1. Extract video frames from the video file stored in platform storage (Wasabi) at regular intervals focusing on audience-visible segments
 2. Detect and localise audience members in frames
 3. Analyse audience facial expressions and body language for sentiment
 4. Estimate crowd density and engagement levels
@@ -174,20 +201,20 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 
 ### Pattern F: Visual Detection Objectives
 
-**Trigger:** Objectives containing "detect", "identify", "find" objects, banners, placards, or specific visual elements.
+**Trigger:** Objectives referencing "the obtained video content" with "detect", "identify", "find" objects, banners, placards, or specific visual elements.
 
 **Goal pattern:**
-1. Extract video frames at configurable intervals
+1. Extract video frames from the video file stored in platform storage (Wasabi) at configurable intervals
 2. Run object detection on extracted frames for [specified target objects]
 3. For detected text-bearing objects (banners, placards, signs): extract text using OCR
 4. Compile detection results with frame timestamps and bounding box locations
 
 ### Pattern G: Scene and Action Understanding Objectives
 
-**Trigger:** Objectives containing "scene", "environment", "setting", "action", or "what is happening".
+**Trigger:** Objectives referencing "the obtained video content" with "scene", "environment", "setting", "action", or "what is happening".
 
 **Goal pattern:**
-1. Extract video frames at regular intervals
+1. Extract video frames from the video file stored in platform storage (Wasabi) at regular intervals
 2. Segment video into scenes based on visual transitions
 3. Classify scene environment and context (indoor/outdoor, location type, day/night)
 4. Identify actions and events occurring within each scene segment
@@ -252,7 +279,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 ```json
 [
   "Obtain video content from https://www.youtube.com/shorts/iQ3yXScDuEA",
-  "Determine speaker sentiment through multi-modal analysis"
+  "Determine speaker sentiment from the obtained video content through multi-modal analysis"
 ]
 ```
 
@@ -264,20 +291,20 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "Obtain video content from https://www.youtube.com/shorts/iQ3yXScDuEA",
       "goals": [
         "Validate that https://www.youtube.com/shorts/iQ3yXScDuEA is a reachable YouTube URL",
-        "Download video content from https://www.youtube.com/shorts/iQ3yXScDuEA to platform storage",
+        "Download video content from https://www.youtube.com/shorts/iQ3yXScDuEA to platform file storage (Wasabi)",
         "Verify downloaded file integrity and format compatibility",
         "Extract video metadata including duration, resolution, and frame rate"
       ]
     },
     "objective_2": {
-      "objective": "Determine speaker sentiment through multi-modal analysis",
+      "objective": "Determine speaker sentiment from the obtained video content through multi-modal analysis",
       "goals": [
-        "Extract audio track from the downloaded video file",
+        "Extract audio track from the video file stored in platform storage (Wasabi)",
         "Transcribe audio content to text with timestamps using speech-to-text",
         "Identify and label distinct speakers through diarization",
         "Analyse vocal characteristics for speech emotion recognition per speaker",
         "Run sentiment analysis on transcript segments per speaker",
-        "Extract video frames corresponding to speaker segments for facial expression analysis",
+        "Extract video frames from the video file stored in platform storage (Wasabi) corresponding to speaker segments for facial expression analysis",
         "Correlate text sentiment, vocal emotion, and facial expression results per speaker"
       ]
     }
@@ -292,8 +319,8 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 ```json
 [
   "Obtain video content from https://www.youtube.com/watch?v=protest2024",
-  "Generate transcript of video audio",
-  "Identify visual signage in video frames"
+  "Generate transcript from the obtained video content",
+  "Identify visual signage in the obtained video content"
 ]
 ```
 
@@ -305,24 +332,24 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "Obtain video content from https://www.youtube.com/watch?v=protest2024",
       "goals": [
         "Validate that https://www.youtube.com/watch?v=protest2024 is a reachable YouTube URL",
-        "Download video content from https://www.youtube.com/watch?v=protest2024 to platform storage",
+        "Download video content from https://www.youtube.com/watch?v=protest2024 to platform file storage (Wasabi)",
         "Verify downloaded file integrity and format compatibility",
         "Extract video metadata including duration, resolution, and frame rate"
       ]
     },
     "objective_2": {
-      "objective": "Generate transcript of video audio",
+      "objective": "Generate transcript from the obtained video content",
       "goals": [
-        "Extract audio track from the downloaded video file",
+        "Extract audio track from the video file stored in platform storage (Wasabi)",
         "Detect language(s) spoken in the audio",
         "Transcribe audio content to text with timestamps",
         "Identify and label distinct speakers through diarization"
       ]
     },
     "objective_3": {
-      "objective": "Identify visual signage in video frames",
+      "objective": "Identify visual signage in the obtained video content",
       "goals": [
-        "Extract video frames at regular intervals for visual analysis",
+        "Extract video frames from the video file stored in platform storage (Wasabi) at regular intervals for visual analysis",
         "Run object detection on extracted frames targeting banners, placards, and signs",
         "Extract text from detected signage using OCR",
         "Compile signage detection results with frame timestamps and locations"
@@ -339,8 +366,8 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 ```json
 [
   "Obtain video content from https://www.instagram.com/reel/abc123",
-  "Assess audience sentiment and reactions",
-  "Determine speaker stance and position"
+  "Assess audience sentiment and reactions from the obtained video content",
+  "Determine speaker stance and position from the obtained video content"
 ]
 ```
 
@@ -352,15 +379,15 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "Obtain video content from https://www.instagram.com/reel/abc123",
       "goals": [
         "Validate that https://www.instagram.com/reel/abc123 is a reachable Instagram URL",
-        "Download video content from https://www.instagram.com/reel/abc123 to platform storage",
+        "Download video content from https://www.instagram.com/reel/abc123 to platform file storage (Wasabi)",
         "Verify downloaded file integrity and format compatibility",
         "Extract video metadata including duration, resolution, and frame rate"
       ]
     },
     "objective_2": {
-      "objective": "Assess audience sentiment and reactions",
+      "objective": "Assess audience sentiment and reactions from the obtained video content",
       "goals": [
-        "Extract video frames at regular intervals focusing on audience-visible segments",
+        "Extract video frames from the video file stored in platform storage (Wasabi) at regular intervals focusing on audience-visible segments",
         "Detect and localise audience members in extracted frames",
         "Analyse audience facial expressions and body language for sentiment",
         "Estimate crowd density in audience-visible frames",
@@ -368,14 +395,14 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       ]
     },
     "objective_3": {
-      "objective": "Determine speaker stance and position",
+      "objective": "Determine speaker stance and position from the obtained video content",
       "goals": [
-        "Extract audio track from the downloaded video file",
+        "Extract audio track from the video file stored in platform storage (Wasabi)",
         "Transcribe audio content to text with timestamps",
         "Identify and label distinct speakers through diarization",
         "Run sentiment analysis on transcript segments per speaker",
         "Analyse vocal characteristics for emotional indicators per speaker",
-        "Extract video frames corresponding to speaker segments for visual analysis",
+        "Extract video frames from the video file stored in platform storage (Wasabi) corresponding to speaker segments for visual analysis",
         "Perform multi-modal stance analysis combining text, vocal, and visual features per speaker"
       ]
     }
@@ -390,7 +417,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 ```json
 [
   "Process uploaded video file meeting_recording.mp4",
-  "Determine speaker sentiment through multi-modal analysis"
+  "Determine speaker sentiment from the obtained video content through multi-modal analysis"
 ]
 ```
 
@@ -402,20 +429,20 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "Process uploaded video file meeting_recording.mp4",
       "goals": [
         "Validate that uploaded file meeting_recording.mp4 exists and is in a supported format",
-        "Register meeting_recording.mp4 in platform storage",
+        "Register meeting_recording.mp4 in platform file storage (Wasabi)",
         "Verify uploaded file integrity and check for corruption",
         "Extract video metadata including duration, resolution, and frame rate"
       ]
     },
     "objective_2": {
-      "objective": "Determine speaker sentiment through multi-modal analysis",
+      "objective": "Determine speaker sentiment from the obtained video content through multi-modal analysis",
       "goals": [
-        "Extract audio track from meeting_recording.mp4",
+        "Extract audio track from the video file stored in platform storage (Wasabi)",
         "Transcribe audio content to text with timestamps using speech-to-text",
         "Identify and label distinct speakers through diarization",
         "Analyse vocal characteristics for speech emotion recognition per speaker",
         "Run sentiment analysis on transcript segments per speaker",
-        "Extract video frames corresponding to speaker segments for facial expression analysis",
+        "Extract video frames from the video file stored in platform storage (Wasabi) corresponding to speaker segments for facial expression analysis",
         "Correlate text sentiment, vocal emotion, and facial expression results per speaker"
       ]
     }
@@ -430,9 +457,9 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 ```json
 [
   "Obtain video content from https://www.tiktok.com/@user/video/123456",
-  "Identify speakers in video",
-  "Transcribe speaker content",
-  "Analyze speaker emotional state"
+  "Identify speakers in the obtained video content",
+  "Transcribe speaker content from the obtained video content",
+  "Analyze speaker emotional state from the obtained video content"
 ]
 ```
 
@@ -444,22 +471,22 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "Obtain video content from https://www.tiktok.com/@user/video/123456",
       "goals": [
         "Validate that https://www.tiktok.com/@user/video/123456 is a reachable TikTok URL",
-        "Download video content from https://www.tiktok.com/@user/video/123456 to platform storage",
+        "Download video content from https://www.tiktok.com/@user/video/123456 to platform file storage (Wasabi)",
         "Verify downloaded file integrity and format compatibility",
         "Extract video metadata including duration, resolution, and frame rate"
       ]
     },
     "objective_2": {
-      "objective": "Identify speakers in video",
+      "objective": "Identify speakers in the obtained video content",
       "goals": [
-        "Extract audio track from the downloaded video file",
+        "Extract audio track from the video file stored in platform storage (Wasabi)",
         "Identify and label distinct speakers through audio diarization",
-        "Extract video frames to visually identify speaker appearances",
+        "Extract video frames from the video file stored in platform storage (Wasabi) to visually identify speaker appearances",
         "Build speaker profiles with speaking duration and visual characteristics"
       ]
     },
     "objective_3": {
-      "objective": "Transcribe speaker content",
+      "objective": "Transcribe speaker content from the obtained video content",
       "goals": [
         "Detect language(s) spoken in the audio",
         "Transcribe audio content to text with timestamps",
@@ -467,11 +494,11 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       ]
     },
     "objective_4": {
-      "objective": "Analyze speaker emotional state",
+      "objective": "Analyze speaker emotional state from the obtained video content",
       "goals": [
         "Analyse vocal characteristics for speech emotion recognition per speaker",
         "Run sentiment analysis on transcript segments per speaker",
-        "Extract video frames corresponding to speaker segments for facial expression analysis",
+        "Extract video frames from the video file stored in platform storage (Wasabi) corresponding to speaker segments for facial expression analysis",
         "Correlate vocal emotion, text sentiment, and facial expression results per speaker"
       ]
     }
@@ -486,7 +513,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 ```json
 [
   "Obtain video content from https://www.youtube.com/watch?v=xyz",
-  "Transcribe the video audio",
+  "Transcribe audio from the obtained video content",
   "Generate subtitles and embed them in the video"
 ]
 ```
@@ -499,15 +526,15 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "Obtain video content from https://www.youtube.com/watch?v=xyz",
       "goals": [
         "Validate that https://www.youtube.com/watch?v=xyz is a reachable YouTube URL",
-        "Download video content from https://www.youtube.com/watch?v=xyz to platform storage",
+        "Download video content from https://www.youtube.com/watch?v=xyz to platform file storage (Wasabi)",
         "Verify downloaded file integrity and format compatibility",
         "Extract video metadata including duration, resolution, and frame rate"
       ]
     },
     "objective_2": {
-      "objective": "Transcribe the video audio",
+      "objective": "Transcribe audio from the obtained video content",
       "goals": [
-        "Extract audio track from the downloaded video file",
+        "Extract audio track from the video file stored in platform storage (Wasabi)",
         "Detect language(s) spoken in the audio",
         "Transcribe audio content to text with timestamps",
         "Identify and label distinct speakers through diarization"
@@ -548,33 +575,40 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 ## Common Mistakes to Avoid
 
 1. ❌ Goals that are too vague: "Analyse the video"
-   ✅ Specific actions: "Extract audio track from the downloaded video file"
+   ✅ Specific actions: "Extract audio track from the video file stored in platform storage (Wasabi)"
 
 2. ❌ Combining multiple actions: "Download and verify video from URL"
-   ✅ Separate goals: "Download video content from [URL]" + "Verify downloaded file integrity"
+   ✅ Separate goals: "Download video content from [URL] to platform file storage (Wasabi)" + "Verify downloaded file integrity"
 
 3. ❌ Omitting pre-conditions: Jumping straight to "Run sentiment analysis" without acquisition/extraction
-   ✅ Include all steps: URL validation → download → verify → extract audio → transcribe → analyse
+   ✅ Include all steps: URL validation → download to Wasabi → verify → extract audio → transcribe → analyse
 
 4. ❌ Goals outside platform capabilities: "Stream video in real-time for live analysis"
    ✅ Only generate goals that map to the Capabilities Matrix
 
-5. ❌ Dropping identifiers: "Download the video" without specifying which one
-   ✅ Carry forward identifiers: "Download video content from https://www.youtube.com/shorts/iQ3yXScDuEA"
+5. ❌ Dropping identifiers in acquisition goals: "Download the video" without specifying which one
+   ✅ Carry forward identifiers: "Download video content from https://www.youtube.com/shorts/iQ3yXScDuEA to platform file storage (Wasabi)"
 
-6. ❌ Including dependency annotations: "After downloading, extract audio"
-   ✅ Flat list without ordering: "Extract audio track from the downloaded video file"
+6. ❌ Referencing the source URL in analysis goals: "Extract audio from https://www.youtube.com/shorts/iQ3yXScDuEA"
+   ✅ Reference Wasabi storage: "Extract audio track from the video file stored in platform storage (Wasabi)"
 
-7. ❌ Adding prefixes or numbers: "Goal 1: Validate URL"
+7. ❌ Including dependency annotations: "After downloading, extract audio"
+   ✅ Flat list without ordering: "Extract audio track from the video file stored in platform storage (Wasabi)"
+
+8. ❌ Adding prefixes or numbers: "Goal 1: Validate URL"
    ✅ Plain text: "Validate that the source URL is a reachable YouTube URL"
 
-8. ❌ Duplicating the Objective Agent's work: Re-interpreting the user request or generating new objectives
+9. ❌ Duplicating the Objective Agent's work: Re-interpreting the user request or generating new objectives
    ✅ Take objectives as given and decompose them into goals
 
 ---
 
 ## Version
-v1.0.0
+v1.1.0
 
 ## Last Updated
-February 11, 2026
+February 12, 2026
+
+## Changelog
+- v1.1.0 (Feb 12, 2026): Added Storage Resolution Rule and Acquisition-First Pattern support. Updated all patterns and examples to reference Wasabi platform storage for analysis goals. Source URLs now appear only in acquisition goals.
+- v1.0.0 (Feb 11, 2026): Initial release.

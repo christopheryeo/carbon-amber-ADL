@@ -52,7 +52,8 @@ All agent communications must use the following JSON structure:
   },
   "audit": {
     "compliance_notes": "<governance compliance observations and validations>",
-    "governance_files_consulted": ["<list of governance files referenced>"]
+    "governance_files_consulted": ["<list of governance files referenced>"],
+    "reasoning": "<chain of thought explaining why decisions were made>"
   }
 }
 ```
@@ -109,6 +110,7 @@ All agent communications must use the following JSON structure:
 |-------|------|-------------|
 | `audit.compliance_notes` | string | Governance compliance observations, validations performed, and any flags |
 | `audit.governance_files_consulted` | array | List of governance files referenced during processing (e.g., `["audit.md", "message_format.md"]`) |
+| `audit.reasoning` | string | Chain of Thought explaining why decisions were made — the rationale behind routing, scope validation, output choices, and any trade-offs considered |
 
 ---
 
@@ -185,7 +187,8 @@ All agent communications must use the following JSON structure:
   },
   "audit": {
     "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
+    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
+    "reasoning": "User request contains two distinct actions (download and analyze) requiring separate objectives. Video source is YouTube (supported). Sentiment analysis maps to Speaker Analysis capability. Applied Acquisition-First Pattern: Objective 1 for video acquisition, Objective 2 for analysis referencing obtained content."
   }
 }
 ```
@@ -257,7 +260,8 @@ All agent communications must use the following JSON structure:
   },
   "audit": {
     "compliance_notes": "Objectives successfully decomposed into actionable goals; all goals map to platform capabilities defined in context/application.md; goal sequence supports efficient execution",
-    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
+    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
+    "reasoning": "Objective 1 (video acquisition) decomposed into 4 sequential goals covering URL extraction, source validation, download, and integrity verification. Objective 2 (sentiment analysis) decomposed into 5 goals following the audio-first pipeline: extract audio, transcribe, identify speakers, run sentiment model, then correlate with timestamps. Goal ordering ensures each step has required inputs from the previous step."
   }
 }
 ```
@@ -306,7 +310,8 @@ All agent communications must use the following JSON structure:
   },
   "audit": {
     "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per context/application.md Constraints and Boundaries; platform supports analysis only, not content modification",
-    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
+    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
+    "reasoning": "User request asks for video editing (content modification) and audio addition (content creation). Both actions fall outside the platform scope which is limited to video analysis and insight generation. No partial match to any supported capability. Returning OUT_OF_SCOPE with no next_agent to terminate the chain."
   }
 }
 ```
@@ -329,9 +334,13 @@ User Request
 [4] Executional Agents → outputs: analysis results
     ↓
 [5] Final Output → formatted response to user
+    ↓
+[6] Memory Agent (operational, post-chain) → captures audit logs, distills institutional knowledge into context/memory/
 ```
 
-Each agent receives the message from the previous agent, processes it, updates the relevant fields, and passes it to the next agent.
+Steps [1]–[5] form the main request chain. Each agent receives the message from the previous agent, processes it, updates the relevant fields, and passes it to the next agent.
+
+Step [6] is a post-chain process: after the chain reaches COMPLETE or terminal ERROR status, the orchestration layer invokes the Memory Agent to process the transaction's audit logs and distill institutional knowledge. The Memory Agent may also be invoked on a schedule for batch distillation, or on-demand by other agents for context retrieval. See `agent/operational/memory.md` for full specification.
 
 ---
 
@@ -401,7 +410,7 @@ See `audit.md` for complete audit logging governance requirements.
 ---
 
 ## Version
-v1.0.0
+v1.1.0
 
 ## Last Updated
-February 9, 2026
+February 13, 2026

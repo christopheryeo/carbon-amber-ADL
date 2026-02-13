@@ -217,7 +217,7 @@ The platform utilizes a three-core agent architecture. User requests should be d
 | Planning Agent | Devises strategies for complex tasks involving multiple data points or agents |
 | Reasoning Agent | Makes logical inferences from analyzed elements |
 | Learning Agent | Adapts analysis models based on feedback and new data patterns |
-| Memory Agent | Stores and retrieves analysis results, learned patterns, and context |
+| Memory Agent | Captures audit log data, distills institutional knowledge (patterns, decision history, error prevention, quality benchmarks), and files it in `context/memory/` for inclusion in the master prompt |
 
 ### Executional Core [APPLICATION-SPECIFIC]
 

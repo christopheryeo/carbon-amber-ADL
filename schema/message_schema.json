@@ -3,6 +3,8 @@
   "$id": "https://agentic.sentient.io/schemas/agent-message-v1",
   "title": "Agent Message Schema",
   "description": "JSON Schema for validating the mandatory message format used for communication between all agents within the Sentient Agentic AI Platform. All agent communications must adhere to this structure for inter-agent message passing.",
+  "version": "1.1.0",
+  "lastUpdated": "2026-02-13",
   "type": "object",
   "required": [
     "message_id",
@@ -290,7 +292,8 @@
       "description": "Audit and compliance information for governance tracking",
       "required": [
         "compliance_notes",
-        "governance_files_consulted"
+        "governance_files_consulted",
+        "reasoning"
       ],
       "properties": {
         "compliance_notes": {
@@ -305,6 +308,11 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Chain of Thought explaining why decisions were made — the rationale behind routing, scope validation, output choices, and any trade-offs considered",
+          "minLength": 1
         }
       },
       "additionalProperties": false

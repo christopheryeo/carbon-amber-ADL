@@ -27,7 +27,8 @@ The `audit` field is part of the standard message format defined in `message_for
 {
   "audit": {
     "compliance_notes": "<governance compliance observations and validations>",
-    "governance_files_consulted": ["<list of governance files referenced>"]
+    "governance_files_consulted": ["<list of governance files referenced>"],
+    "reasoning": "<chain of thought explaining why decisions were made>"
   }
 }
 ```
@@ -38,6 +39,7 @@ The `audit` field is part of the standard message format defined in `message_for
 |-------|----------|-------------|
 | `audit.compliance_notes` | Yes | Governance compliance observations, validations performed, scope confirmations, and any flags or concerns |
 | `audit.governance_files_consulted` | Yes | Array of governance file names referenced during processing (e.g., `["context/application.md", "message_format.md", "audit.md"]`) |
+| `audit.reasoning` | Yes | Chain of Thought explaining why decisions were made — the rationale behind routing, scope validation, output choices, and any trade-offs considered |
 
 ### What to Include in compliance_notes
 
@@ -47,12 +49,21 @@ The `audit` field is part of the standard message format defined in `message_for
 - Reason for rejection (if status is `failed` or `rejected`)
 - References to specific constraints or boundaries applied
 
+### What to Include in reasoning
+
+- Why the agent chose to route to a specific next agent
+- How scope validation was determined (what was checked, what matched)
+- Rationale behind output choices (why these objectives, goals, or plans)
+- Trade-offs considered and why one approach was selected over alternatives
+- How institutional knowledge from `context/memory/` influenced decisions (if applicable)
+
 ### Example
 
 ```json
 "audit": {
   "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube)",
-  "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"]
+  "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
+  "reasoning": "User request contains two distinct actions (download and analyze) requiring separate objectives. Video source is YouTube (supported). Sentiment analysis maps to Speaker Analysis capability. Applied Acquisition-First Pattern: Objective 1 for video acquisition, Objective 2 for analysis referencing obtained content."
 }
 ```
 
@@ -104,7 +115,7 @@ Non-compliant operations (messages without audit data) are prohibited and must b
 ---
 
 ## Version
-v1.1.0
+v1.2.0
 
 ## Last Updated
-February 9, 2026
+February 13, 2026
