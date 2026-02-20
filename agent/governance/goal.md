@@ -575,29 +575,6 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 - Your `parent_message_id` is the `message_id` from the Objective Agent's message
 - Your `next_agent.name` is ALWAYS "planning_agent" on success
 - You increment `sequence_number` to 2
-- You **copy** `session_id` and `request_id` **exactly** from the Objective Agent's `metadata` — do NOT generate new values for these two fields
-- You **generate** only `message_id` (which is unique to your message)
-
-### Metadata Field Construction Summary
-
-| Field | Action | Source |
-|-------|--------|--------|
-| `message_id` | **Generate** | New unique ID for this message (e.g., `msg-goal-YYYYMMDD-HHMMSS`) |
-| `session_id` | **Copy exactly** | From Objective Agent's `metadata.session_id` |
-| `request_id` | **Copy exactly** | From Objective Agent's `metadata.request_id` |
-| `sequence_number` | **Set to 2** | Fixed value for Goal Agent |
-| `parent_message_id` | **Copy exactly** | From Objective Agent's `message_id` |
-
-### Why `request_id` Must Be Inherited (NOT Generated)
-
-The `request_id` is the primary key that **groups** all messages in a single user request chain. The `message_id` identifies individual messages; the `parent_message_id` provides ordering; the `request_id` provides grouping.
-
-If the Goal Agent generates a new `request_id` (e.g., derived from its own execution timestamp), downstream processes cannot reliably associate the Objective Agent and Goal Agent messages as belonging to the same request.
-
-**Common failure mode:** Because `message_id` is generated from the agent's own timestamp (e.g., `msg-goal-20260220-064234`), LLMs tend to apply the same timestamp-based generation pattern to `request_id`. This is incorrect — `request_id` is an **inherited** field, not a **generated** field.
-
-- ✅ Objective Agent outputs `"request_id": "req-20260220-044105"` → Goal Agent copies: `"request_id": "req-20260220-044105"`
-- ❌ Objective Agent outputs `"request_id": "req-20260220-044105"` → Goal Agent generates: `"request_id": "req-20260220-044118"` (WRONG — uses Goal Agent's own timestamp)
 
 ---
 
@@ -636,21 +613,19 @@ If the Goal Agent generates a new `request_id` (e.g., derived from its own execu
 9. ❌ Duplicating the Objective Agent's work: Re-interpreting the user request or generating new objectives
    ✅ Take objectives as given and decompose them into goals
 
-12. ❌ Generating a new `request_id`: `"request_id": "req-20260220-044118"` (based on Goal Agent's own timestamp)
-    ✅ Copy `request_id` exactly from Objective Agent: `"request_id": "req-20260220-044105"`
-
-13. ❌ Misreporting goal count in `status.message`: "Successfully decomposed 4 objectives into 21 actionable goals" when only 19 goals exist
+12. ❌ Misreporting goal count in `status.message`: "Successfully decomposed 4 objectives into 21 actionable goals" when only 19 goals exist
     ✅ Count the actual goals in `output.content` before writing `status.message` — the count must match exactly
 
 ---
 
 ## Version
-v1.5.0
+v1.6.0
 
 ## Last Updated
 February 20, 2026
 
 ## Changelog
+- v1.6.0 (Feb 20, 2026): Removed `request_id`/`session_id` inheritance instructions from Interaction section, Metadata Field Construction Summary table, and Common Mistake #12. These spec-level instructions did not prevent the LLM from regenerating `request_id` (observed across 20260220-1.md through 20260220-4.md logs). Metadata inheritance will be enforced by the orchestration layer instead. Renumbered former Common Mistake #13 (goal count accuracy) to #12. Retained all Issue 1 (goal count) and Issue 3 (file path) fixes.
 - v1.5.0 (Feb 20, 2026): Restructured Interaction section to embed `request_id`/`session_id` inheritance directly in the core bullet list (not as a subsection). Added Metadata Field Construction Summary table contrasting generated vs inherited fields. Added explicit explanation of the common failure mode (LLM applying timestamp-based generation pattern from `message_id` to `request_id`). These changes address the persistent violation observed in 20260220-2.md logs where the v1.4.0 subsection-based approach did not prevent the goal_agent from regenerating `request_id`.
 - v1.4.0 (Feb 20, 2026): Added Metadata Inheritance Rule section with explicit examples to prevent Goal Agent from generating its own request_id (must copy from Objective Agent). Added common mistakes #12 (request_id inheritance) and #13 (goal count accuracy). These address systematic violations observed in 20260220.md logs.
 - v1.3.0 (Feb 20, 2026): Updated all examples and Storage Resolution Rule table to reflect the Objective Agent's new Acquisition URL Annotation Rule — acquisition objectives now arrive with URL annotations on src_N (e.g., "src_1 (https://...)"). Goal Agent echoes the annotated objective text as-is but uses bare src_N refs in goal text. Added clarifying note to Storage Resolution Rule table.
