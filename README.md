@@ -328,7 +328,7 @@ The orchestration layer (n8n) handles:
 ---
 
 ## Last Updated
-February 13, 2026
+February 20, 2026
 
 ---
 
@@ -336,6 +336,16 @@ February 13, 2026
 
 | Version | Date       | Description                                                                              |
 |:--------|:-----------|:-----------------------------------------------------------------------------------------|
+| v2.3.0  | 2026-02-20 | Added Acquisition URL Annotation Rule to `objective.md` (v1.2.0) — acquisition           |
+|         |            | objectives now include the original URL as a parenthetical on src_N for explicit          |
+|         |            | traceability (e.g., `src_1 (https://...)`). Updated `goal.md` (v1.3.0) to reflect        |
+|         |            | annotated acquisition objectives in all examples and Storage Resolution Rule.             |
+| v2.2.0  | 2026-02-19 | Added Resource Extraction and Ref Assignment to `objective.md` (v1.1.0) — URLs            |
+|         |            | assigned structured ref IDs (src_N → store_N) instead of raw URLs in objectives.          |
+|         |            | Added First-Mention Provenance Rule. Updated `goal.md` (v1.2.0) Storage Resolution       |
+|         |            | Rule to use ref IDs. Added `resources` field to `message_schema.json` (v1.2.0) with      |
+|         |            | source_refs, storage_refs, and derived_refs for structured resource tracking.             |
+|         |            | Updated `planning.md` for ref ID awareness.                                              |
 | v2.1.1  | 2026-02-13 | Updated `message_format.md` examples to apply Acquisition-First Pattern with real         |
 |         |            | URLs and Storage Resolution Rule. Added `temp/` directory for conformance reviews.       |
 | v2.1.0  | 2026-02-13 | Added Memory Agent definition (`agent/operational/memory.md`) and `context/memory/`      |

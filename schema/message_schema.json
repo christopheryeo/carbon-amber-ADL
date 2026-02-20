@@ -3,8 +3,8 @@
   "$id": "https://agentic.sentient.io/schemas/agent-message-v1",
   "title": "Agent Message Schema",
   "description": "JSON Schema for validating the mandatory message format used for communication between all agents within the Sentient Agentic AI Platform. All agent communications must adhere to this structure for inter-agent message passing.",
-  "version": "1.1.0",
-  "lastUpdated": "2026-02-13",
+  "version": "1.2.0",
+  "lastUpdated": "2026-02-19",
   "type": "object",
   "required": [
     "message_id",
@@ -16,6 +16,7 @@
     "status",
     "error",
     "metadata",
+    "resources",
     "audit"
   ],
   "properties": {
@@ -283,6 +284,181 @@
               "type": "null"
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "resources": {
+      "type": "object",
+      "description": "Structured resource references for tracking source URLs, storage locations, and derived assets through the agent chain",
+      "required": [
+        "source_refs",
+        "storage_refs",
+        "derived_refs"
+      ],
+      "properties": {
+        "source_refs": {
+          "type": "array",
+          "description": "URLs and file paths originally provided by the user or extracted from user input",
+          "items": {
+            "type": "object",
+            "required": [
+              "ref_id",
+              "url",
+              "platform",
+              "media_type",
+              "provided_by",
+              "extracted_at_sequence"
+            ],
+            "properties": {
+              "ref_id": {
+                "type": "string",
+                "description": "Unique reference identifier (e.g., 'src_1', 'src_2')",
+                "pattern": "^src_[0-9]+$"
+              },
+              "url": {
+                "type": "string",
+                "description": "The original URL or file path"
+              },
+              "platform": {
+                "type": "string",
+                "description": "Source platform identifier (e.g., 'youtube', 'instagram', 'tiktok', 'upload')"
+              },
+              "media_type": {
+                "type": "string",
+                "description": "Media type (e.g., 'video', 'audio', 'image')"
+              },
+              "provided_by": {
+                "type": "string",
+                "description": "Who provided the URL — 'user' or agent name"
+              },
+              "extracted_at_sequence": {
+                "type": "integer",
+                "description": "Sequence number of the agent that extracted and assigned this ref ID",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "storage_refs": {
+          "type": "array",
+          "description": "Platform storage locations (e.g., Wasabi) for acquired content",
+          "items": {
+            "type": "object",
+            "required": [
+              "ref_id",
+              "source_ref_id",
+              "storage_uri",
+              "storage_backend",
+              "media_type",
+              "created_at_sequence",
+              "status"
+            ],
+            "properties": {
+              "ref_id": {
+                "type": "string",
+                "description": "Unique reference identifier (e.g., 'store_1', 'store_2')",
+                "pattern": "^store_[0-9]+$"
+              },
+              "source_ref_id": {
+                "type": "string",
+                "description": "The source_ref this storage object was acquired from (e.g., 'src_1')",
+                "pattern": "^src_[0-9]+$"
+              },
+              "storage_uri": {
+                "description": "The storage URI once the asset is stored (null while pending)",
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "null" }
+                ]
+              },
+              "storage_backend": {
+                "type": "string",
+                "description": "Storage system identifier (e.g., 'wasabi')"
+              },
+              "media_type": {
+                "type": "string",
+                "description": "Media type of the stored asset"
+              },
+              "created_at_sequence": {
+                "description": "Sequence number of the agent that created this storage entry (null while pending)",
+                "oneOf": [
+                  { "type": "integer", "minimum": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "status": {
+                "type": "string",
+                "description": "Current status of the storage reference",
+                "enum": [
+                  "pending",
+                  "stored",
+                  "failed"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "derived_refs": {
+          "type": "array",
+          "description": "Intermediate assets derived from stored content (e.g., extracted audio tracks, frame sets)",
+          "items": {
+            "type": "object",
+            "required": [
+              "ref_id",
+              "parent_ref_id",
+              "storage_uri",
+              "asset_type",
+              "capability_id",
+              "created_at_sequence",
+              "status"
+            ],
+            "properties": {
+              "ref_id": {
+                "type": "string",
+                "description": "Unique reference identifier (e.g., 'derived_1', 'derived_2')",
+                "pattern": "^derived_[0-9]+$"
+              },
+              "parent_ref_id": {
+                "type": "string",
+                "description": "The ref_id this asset was derived from (e.g., 'store_1')"
+              },
+              "storage_uri": {
+                "description": "The storage URI once the asset is created (null while pending)",
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "null" }
+                ]
+              },
+              "asset_type": {
+                "type": "string",
+                "description": "Type of derived asset (e.g., 'audio_track', 'frame_set', 'transcript')"
+              },
+              "capability_id": {
+                "type": "string",
+                "description": "The capability that produces this asset (e.g., 'CAP-PRE-002')"
+              },
+              "created_at_sequence": {
+                "description": "Sequence number of the agent that registered this derived ref (null while pending)",
+                "oneOf": [
+                  { "type": "integer", "minimum": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "status": {
+                "type": "string",
+                "description": "Current status of the derived asset",
+                "enum": [
+                  "pending",
+                  "created",
+                  "failed"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false

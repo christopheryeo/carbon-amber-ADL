@@ -50,6 +50,40 @@ All agent communications must use the following JSON structure:
     "sequence_number": <position in agent chain>,
     "parent_message_id": "<message_id of previous agent's message>"
   },
+  "resources": {
+    "source_refs": [
+      {
+        "ref_id": "<src_N identifier>",
+        "url": "<original URL or file path>",
+        "platform": "<source platform>",
+        "media_type": "<media type>",
+        "provided_by": "<user or agent name>",
+        "extracted_at_sequence": <sequence number of extracting agent>
+      }
+    ],
+    "storage_refs": [
+      {
+        "ref_id": "<store_N identifier>",
+        "source_ref_id": "<src_N this was acquired from>",
+        "storage_uri": "<storage URI or null if pending>",
+        "storage_backend": "<storage system e.g. wasabi>",
+        "media_type": "<media type>",
+        "created_at_sequence": <sequence number or null>,
+        "status": "<pending|stored|failed>"
+      }
+    ],
+    "derived_refs": [
+      {
+        "ref_id": "<derived_N identifier>",
+        "parent_ref_id": "<ref_id this was derived from>",
+        "storage_uri": "<storage URI or null if pending>",
+        "asset_type": "<asset type e.g. audio_track, frame_set>",
+        "capability_id": "<CAP-ID that produces this asset>",
+        "created_at_sequence": <sequence number or null>,
+        "status": "<pending|created|failed>"
+      }
+    ]
+  },
   "audit": {
     "compliance_notes": "<governance compliance observations and validations>",
     "governance_files_consulted": ["<list of governance files referenced>"],
@@ -103,6 +137,21 @@ All agent communications must use the following JSON structure:
 | `metadata.request_id` | string | Identifier linking back to original user request |
 | `metadata.sequence_number` | integer | Position in the agent execution chain (starts at 1) |
 | `metadata.parent_message_id` | string | message_id of the previous agent's message (null for first agent) |
+
+### Resources Fields (Required)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `resources.source_refs` | array | URLs and file paths from user input. Each entry: `ref_id` (src_N), `url`, `platform`, `media_type`, `provided_by`, `extracted_at_sequence` |
+| `resources.storage_refs` | array | Platform storage locations for acquired content. Each entry: `ref_id` (store_N), `source_ref_id`, `storage_uri` (null if pending), `storage_backend`, `media_type`, `created_at_sequence`, `status` |
+| `resources.derived_refs` | array | Intermediate assets derived from stored content. Each entry: `ref_id` (derived_N), `parent_ref_id`, `storage_uri` (null if pending), `asset_type`, `capability_id`, `created_at_sequence`, `status` |
+
+**Ref ID Conventions:**
+- Source refs: `src_1`, `src_2`, etc. — assigned by the Objective Agent (sequence 1)
+- Storage refs: `store_1`, `store_2`, etc. — assigned by the Objective Agent (sequence 1), URI populated by executional agents
+- Derived refs: `derived_1`, `derived_2`, etc. — registered by the Planning Agent (sequence 3), created by executional agents
+
+**First-Mention Provenance Rule:** When objective or goal text references a storage ref (e.g., `store_1`), the FIRST mention within each scope must include parenthetical provenance: `store_1 (acquired from src_1)`. Scope varies by agent: for the Objective Agent, provenance appears on the first analysis objective referencing a store_N; for the Goal Agent, provenance appears on the first goal within each objective's goal list. Subsequent mentions within the same scope use the bare ref ID `store_1`.
 
 ### Audit Fields (Required)
 
@@ -159,8 +208,8 @@ All agent communications must use the following JSON structure:
   },
   "output": {
     "content": [
-      "Obtain video content from https://www.youtube.com/watch?v=abc123",
-      "Analyze speaker sentiment from the obtained video content"
+      "Obtain video content from src_1 and store as store_1",
+      "From store_1 (acquired from src_1), analyze speaker sentiment through multi-modal analysis"
     ],
     "content_type": "objectives"
   },
@@ -185,10 +234,34 @@ All agent communications must use the following JSON structure:
     "sequence_number": 1,
     "parent_message_id": null
   },
+  "resources": {
+    "source_refs": [
+      {
+        "ref_id": "src_1",
+        "url": "https://www.youtube.com/watch?v=abc123",
+        "platform": "youtube",
+        "media_type": "video",
+        "provided_by": "user",
+        "extracted_at_sequence": 1
+      }
+    ],
+    "storage_refs": [
+      {
+        "ref_id": "store_1",
+        "source_ref_id": "src_1",
+        "storage_uri": null,
+        "storage_backend": "wasabi",
+        "media_type": "video",
+        "created_at_sequence": null,
+        "status": "pending"
+      }
+    ],
+    "derived_refs": []
+  },
   "audit": {
-    "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube). Acquisition-First Pattern applied: source URL included in acquisition objective only; subsequent analysis objectives reference 'the obtained video content' per objective.md Acquisition-First Pattern.",
+    "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube). Resource extraction: identified 1 URL in user input, assigned src_1 → store_1. Acquisition-First Pattern applied with ref IDs.",
     "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/objective.md"],
-    "reasoning": "User request contains two distinct actions (download and analyze) requiring separate objectives. Video source is YouTube (supported). Sentiment analysis maps to Speaker Analysis capability. Applied Acquisition-First Pattern: Objective 1 includes the source URL for video acquisition; Objective 2 references 'the obtained video content' to operate on the platform-stored asset."
+    "reasoning": "Scanned user input for source URLs. Found 1 URL: https://www.youtube.com/watch?v=abc123. Assigned ref IDs: src_1 (source) → store_1 (storage target). Platform detection: youtube.com domain maps to YouTube (supported per application.md Section 6.1). User request contains two distinct actions (download and analyze) requiring separate objectives. Applied Acquisition-First Pattern: Objective 1 acquires from src_1 to store_1; Objective 2 references store_1 (acquired from src_1) for analysis."
   }
 }
 ```
@@ -209,25 +282,25 @@ All agent communications must use the following JSON structure:
   "input": {
     "source": "objective_agent",
     "content": [
-      "Obtain video content from https://www.youtube.com/watch?v=abc123",
-      "Analyze speaker sentiment from the obtained video content"
+      "Obtain video content from src_1 and store as store_1",
+      "From store_1 (acquired from src_1), analyze speaker sentiment through multi-modal analysis"
     ]
   },
   "output": {
     "content": {
       "objective_1": {
-        "objective": "Obtain video content from https://www.youtube.com/watch?v=abc123",
+        "objective": "Obtain video content from src_1 and store as store_1",
         "goals": [
-          "Validate that https://www.youtube.com/watch?v=abc123 is a reachable YouTube URL",
-          "Download video content from https://www.youtube.com/watch?v=abc123 to platform file storage (Wasabi)",
-          "Verify downloaded file integrity and format compatibility",
-          "Extract video metadata including duration, resolution, and frame rate"
+          "Validate that src_1 is a reachable YouTube URL",
+          "Download video content from src_1 to platform file storage (Wasabi) as store_1",
+          "Verify downloaded file integrity and format compatibility for store_1",
+          "Extract video metadata including duration, resolution, and frame rate from store_1"
         ]
       },
       "objective_2": {
-        "objective": "Analyze speaker sentiment from the obtained video content",
+        "objective": "From store_1 (acquired from src_1), analyze speaker sentiment through multi-modal analysis",
         "goals": [
-          "Extract audio track from the video file stored in platform storage (Wasabi)",
+          "Extract audio track from store_1 (acquired from src_1)",
           "Transcribe audio content to text with timestamps",
           "Identify and label distinct speakers through diarization",
           "Analyse vocal characteristics for speech emotion recognition per speaker",
@@ -259,10 +332,34 @@ All agent communications must use the following JSON structure:
     "sequence_number": 2,
     "parent_message_id": "msg-obj-20260127-143052-001"
   },
+  "resources": {
+    "source_refs": [
+      {
+        "ref_id": "src_1",
+        "url": "https://www.youtube.com/watch?v=abc123",
+        "platform": "youtube",
+        "media_type": "video",
+        "provided_by": "user",
+        "extracted_at_sequence": 1
+      }
+    ],
+    "storage_refs": [
+      {
+        "ref_id": "store_1",
+        "source_ref_id": "src_1",
+        "storage_uri": null,
+        "storage_backend": "wasabi",
+        "media_type": "video",
+        "created_at_sequence": null,
+        "status": "pending"
+      }
+    ],
+    "derived_refs": []
+  },
   "audit": {
-    "compliance_notes": "Objectives successfully decomposed into actionable goals. Storage Resolution Rule applied: acquisition goals reference source URL with explicit Wasabi storage; all analysis goals reference 'the video file stored in platform storage (Wasabi)' per goal.md Storage Resolution Rule. All goals map to platform capabilities defined in context/application.md; goal sequence supports efficient execution.",
+    "compliance_notes": "Objectives successfully decomposed into actionable goals. Storage Resolution Rule applied using ref IDs: acquisition goals reference src_1 with explicit store_1 target; analysis goals reference store_1 (acquired from src_1) on first mention per First-Mention Provenance Rule. All goals map to platform capabilities.",
     "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/goal.md"],
-    "reasoning": "Objective 1 (video acquisition) decomposed into 4 sequential goals covering URL validation, download to Wasabi, integrity verification, and metadata extraction. Objective 2 (sentiment analysis) decomposed into 6 goals following the audio-first pipeline: extract audio from Wasabi-stored file, transcribe, identify speakers, analyse vocal emotion, run sentiment analysis, then correlate multi-modal results. All analysis goals reference 'the video file stored in platform storage (Wasabi)' per the Storage Resolution Rule."
+    "reasoning": "Objective 1 (video acquisition) decomposed into 4 goals: validate src_1, download src_1 to Wasabi as store_1, verify store_1 integrity, extract store_1 metadata. Objective 2 (sentiment analysis) decomposed into 6 goals following audio-first pipeline. First goal in objective 2 includes provenance: 'store_1 (acquired from src_1)'; subsequent goals use bare ref IDs per First-Mention Provenance Rule."
   }
 }
 ```
@@ -309,10 +406,15 @@ All agent communications must use the following JSON structure:
     "sequence_number": 1,
     "parent_message_id": null
   },
+  "resources": {
+    "source_refs": [],
+    "storage_refs": [],
+    "derived_refs": []
+  },
   "audit": {
-    "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per context/application.md Constraints and Boundaries; platform supports analysis only, not content modification",
+    "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per context/application.md Constraints and Boundaries; platform supports analysis only, not content modification. No resource refs assigned (out-of-scope request).",
     "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
-    "reasoning": "User request asks for video editing (content modification) and audio addition (content creation). Both actions fall outside the platform scope which is limited to video analysis and insight generation. No partial match to any supported capability. Returning OUT_OF_SCOPE with no next_agent to terminate the chain."
+    "reasoning": "User request asks for video editing (content modification) and audio addition (content creation). Both actions fall outside the platform scope which is limited to video analysis and insight generation. No partial match to any supported capability. No source URLs to extract. Returning OUT_OF_SCOPE with no next_agent to terminate the chain."
   }
 }
 ```
@@ -348,10 +450,13 @@ Step [6] is a post-chain process: after the chain reaches COMPLETE or terminal E
 ## Compliance Requirements
 
 1. **All agents MUST use this message format** for inter-agent communication
-2. **All fields are required** — use `null` for fields that don't apply
+2. **All fields are required** — use `null` for fields that don't apply; use empty arrays `[]` for resource ref arrays with no entries
 3. **Messages MUST include audit data** — the `audit` field is mandatory for every message
-4. **Message integrity must be maintained** — do not alter previous agent's data
-5. **Sequence numbers must be consecutive** — no gaps in the chain
+4. **Messages MUST include resources** — the `resources` field is mandatory for every message, even if all arrays are empty
+5. **Resource refs are immutable** — once a ref ID is assigned, it must not be reassigned or reused within the same session
+6. **First-Mention Provenance Rule** — the first reference to a storage_ref within each agent's message scope must include parenthetical provenance (e.g., `store_1 (acquired from src_1)`)
+7. **Message integrity must be maintained** — do not alter previous agent's data
+8. **Sequence numbers must be consecutive** — no gaps in the chain
 
 ---
 
@@ -377,6 +482,9 @@ The orchestration layer is responsible for extracting audit data from the JSON m
 │     - output.content_type                                       │
 │     - status.code, status.message                               │
 │     - error (if has_error is true)                              │
+│     - resources.source_refs (ref_id and url pairs)              │
+│     - resources.storage_refs (ref_id and status)                │
+│     - resources.derived_refs (ref_id and asset_type)            │
 │     - audit.compliance_notes                                    │
 │     - audit.governance_files_consulted                          │
 │  3. Format and append to system/logs/YYYYMMDD.log               │
@@ -399,6 +507,7 @@ The orchestration layer writes entries to `system/logs/YYYYMMDD.log` in this for
 [INPUT]: <input.content>
 [OUTPUT TYPE: <output.content_type>]
 [STATUS: <status.code>] <status.message>
+[RESOURCES]: source_refs=<ref_id:url pairs>, storage_refs=<ref_id:status pairs>, derived_refs=<ref_id:asset_type pairs>
 [COMPLIANCE NOTES]: <audit.compliance_notes>
 [GOVERNANCE FILES]: <audit.governance_files_consulted>
 [MESSAGE_ID: <message_id>]
@@ -411,7 +520,7 @@ See `audit.md` for complete audit logging governance requirements.
 ---
 
 ## Version
-v1.1.0
+v1.2.0
 
 ## Last Updated
-February 13, 2026
+February 19, 2026
