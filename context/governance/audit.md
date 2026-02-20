@@ -38,7 +38,7 @@ The `audit` field is part of the standard message format defined in `message_for
 | Field | Required | Description |
 |-------|----------|-------------|
 | `audit.compliance_notes` | Yes | Governance compliance observations, validations performed, scope confirmations, and any flags or concerns |
-| `audit.governance_files_consulted` | Yes | Array of governance file names referenced during processing (e.g., `["context/application.md", "message_format.md", "audit.md"]`) |
+| `audit.governance_files_consulted` | Yes | Array of governance file paths referenced during processing, using **repository-root-relative paths** (e.g., `["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/objective.md"]`). Always use the full path from the repository root — never use bare filenames like `"audit.md"` or `"objective.md"`. |
 | `audit.reasoning` | Yes | Chain of Thought explaining why decisions were made — the rationale behind routing, scope validation, output choices, and any trade-offs considered |
 
 ### What to Include in compliance_notes
@@ -65,7 +65,7 @@ The `audit` field is part of the standard message format defined in `message_for
 ```json
 "audit": {
   "compliance_notes": "Request within video analysis scope per context/application.md; objectives align with Audio Analysis and Speaker Analysis capabilities; validated against supported video sources (YouTube). Resource extraction: 1 URL found, assigned src_1 → store_1.",
-  "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md", "objective.md"],
+  "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/objective.md"],
   "reasoning": "User request contains one YouTube URL: https://youtu.be/pcaYkGY996o. Assigned src_1 (platform: youtube, media_type: video). Created corresponding store_1 for Wasabi storage. User request contains two distinct actions (download and analyze) requiring separate objectives. Applied Acquisition-First Pattern: Objective 1 uses ref IDs (src_1, store_1) for video acquisition. Objective 2 references store_1 with first-mention provenance (acquired from src_1) for sentiment analysis. Sentiment analysis maps to Speaker Analysis capability."
 }
 ```
@@ -75,7 +75,7 @@ The `audit` field is part of the standard message format defined in `message_for
 ```json
 "audit": {
   "compliance_notes": "All goals mapped to valid capabilities in Capabilities Matrix. 0 duplicate goals detected. Registered 4 derived_refs (derived_1 through derived_4) for intermediate assets.",
-  "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md", "planning.md"],
+  "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/operational/planning.md"],
   "reasoning": "Received 2 objectives with 11 total goals from goal_agent. All goals map to CAP-IDs in the Capabilities Matrix. Derived ref registration: derived_1 (audio_track from store_1, CAP-PRE-002), derived_2 (frame_set from store_1, CAP-PRE-003), derived_3 (transcript from derived_1, CAP-AUD-001), derived_4 (diarization_map from derived_1, CAP-AUD-002). DAG validation passed: no circular dependencies. Execution groups: 7 tiers with parallelism in groups 3, 4, 5, 6."
 }
 ```
@@ -130,11 +130,12 @@ Non-compliant operations (messages without audit data) are prohibited and must b
 ---
 
 ## Version
-v1.3.0
+v1.4.0
 
 ## Last Updated
-February 19, 2026
+February 20, 2026
 
 ## Changelog
+- v1.4.0 (Feb 20, 2026): Standardized `governance_files_consulted` to require repository-root-relative paths (e.g., `"context/governance/audit.md"` not `"audit.md"`). Updated field description and both examples. This addresses inconsistent path conventions observed in 20260220.md logs.
 - v1.3.0 (Feb 19, 2026): Added resource extraction audit requirements for Objective Agent (ref ID assignment documentation) and Planning Agent (derived_refs registration documentation). Updated examples to show resource tracking in audit reasoning. Added mandatory logging requirements for resources.
 - v1.2.0 (Feb 13, 2026): Previous release.

@@ -158,7 +158,7 @@ All agent communications must use the following JSON structure:
 | Field | Type | Description |
 |-------|------|-------------|
 | `audit.compliance_notes` | string | Governance compliance observations, validations performed, and any flags |
-| `audit.governance_files_consulted` | array | List of governance files referenced during processing (e.g., `["audit.md", "message_format.md"]`) |
+| `audit.governance_files_consulted` | array | List of governance files referenced during processing, using repository-root-relative paths (e.g., `["context/governance/audit.md", "context/governance/message_format.md", "agent/governance/objective.md"]`) |
 | `audit.reasoning` | string | Chain of Thought explaining why decisions were made — the rationale behind routing, scope validation, output choices, and any trade-offs considered |
 
 ---
@@ -413,7 +413,7 @@ All agent communications must use the following JSON structure:
   },
   "audit": {
     "compliance_notes": "Request rejected - video editing and audio addition fall outside platform scope per context/application.md Constraints and Boundaries; platform supports analysis only, not content modification. No resource refs assigned (out-of-scope request).",
-    "governance_files_consulted": ["context/application.md", "message_format.md", "audit.md"],
+    "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/objective.md"],
     "reasoning": "User request asks for video editing (content modification) and audio addition (content creation). Both actions fall outside the platform scope which is limited to video analysis and insight generation. No partial match to any supported capability. No source URLs to extract. Returning OUT_OF_SCOPE with no next_agent to terminate the chain."
   }
 }
@@ -515,12 +515,45 @@ The orchestration layer writes entries to `system/logs/YYYYMMDD.log` in this for
 ---
 ```
 
-See `audit.md` for complete audit logging governance requirements.
+See `context/governance/audit.md` for complete audit logging governance requirements.
+
+---
+
+## Orchestration Layer: Message Validation
+
+Before passing a message to the next agent, the orchestration layer SHOULD perform the following validations and flag non-compliant messages:
+
+### Metadata Continuity Checks
+
+| Check | Rule | Severity |
+|-------|------|----------|
+| `request_id` inheritance | For sequence_number > 1: `metadata.request_id` MUST match the `request_id` from the parent message (identified by `parent_message_id`). If mismatched, log a compliance warning and optionally correct before forwarding. | ERROR |
+| `session_id` inheritance | For sequence_number > 1: `metadata.session_id` MUST match the parent message. | ERROR |
+| `sequence_number` continuity | Must equal parent's `sequence_number + 1`. | ERROR |
+| `parent_message_id` validity | Must reference an existing `message_id` from the current session. | ERROR |
+
+### Output Integrity Checks
+
+| Check | Rule | Severity |
+|-------|------|----------|
+| Goal count accuracy | For goal_agent messages: count all goals across all objectives in `output.content` and verify the count in `status.message` matches. | WARNING |
+| Resource ref consistency | All `ref_id` values in `resources` must be consistent with the parent message (no dropped or renamed refs). | ERROR |
+
+### Audit Quality Checks
+
+| Check | Rule | Severity |
+|-------|------|----------|
+| `governance_files_consulted` paths | All entries must be repository-root-relative paths (e.g., `"context/governance/audit.md"`, not `"audit.md"`). | WARNING |
+| `audit.reasoning` completeness | Must be non-empty and reference specific governance rules applied. | WARNING |
 
 ---
 
 ## Version
-v1.2.0
+v1.4.0
 
 ## Last Updated
-February 19, 2026
+February 20, 2026
+
+## Changelog
+- v1.4.0 (Feb 20, 2026): Added "Orchestration Layer: Message Validation" section defining metadata continuity checks (request_id/session_id inheritance, sequence_number continuity), output integrity checks (goal count accuracy), and audit quality checks (governance file path format). Fixed Example 3 governance_files_consulted to use full paths. These address systematic violations observed in 20260220.md logs.
+- v1.3.0 (Feb 19, 2026): Previous release.

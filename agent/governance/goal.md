@@ -574,8 +574,16 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 - Your `input.source` is always "objective_agent"
 - Your `parent_message_id` is the `message_id` from the Objective Agent's message
 - Your `next_agent.name` is ALWAYS "planning_agent" on success
-- You inherit the `session_id` and `request_id` from the Objective Agent's metadata
 - You increment `sequence_number` to 2
+
+### Metadata Inheritance Rule (CRITICAL)
+
+You MUST copy the `session_id` and `request_id` **exactly** from the Objective Agent's `metadata` field. Do NOT generate new values for these fields.
+
+- ✅ **Correct**: `"request_id": "req-20260220-044105"` (copied from Objective Agent)
+- ❌ **Incorrect**: `"request_id": "req-20260220-044118"` (generated from Goal Agent's own timestamp)
+
+**Why this matters:** The `request_id` is the primary key linking all messages in a single user request chain. If the Goal Agent generates a new `request_id`, downstream processes cannot reliably group the Objective Agent and Goal Agent messages as belonging to the same request. The `parent_message_id` provides ordering, but `request_id` provides grouping.
 
 ---
 
@@ -614,15 +622,22 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 9. ❌ Duplicating the Objective Agent's work: Re-interpreting the user request or generating new objectives
    ✅ Take objectives as given and decompose them into goals
 
+12. ❌ Generating a new `request_id`: `"request_id": "req-20260220-044118"` (based on Goal Agent's own timestamp)
+    ✅ Copy `request_id` exactly from Objective Agent: `"request_id": "req-20260220-044105"`
+
+13. ❌ Misreporting goal count in `status.message`: "Successfully decomposed 4 objectives into 21 actionable goals" when only 19 goals exist
+    ✅ Count the actual goals in `output.content` before writing `status.message` — the count must match exactly
+
 ---
 
 ## Version
-v1.3.0
+v1.4.0
 
 ## Last Updated
 February 20, 2026
 
 ## Changelog
+- v1.4.0 (Feb 20, 2026): Added Metadata Inheritance Rule section with explicit examples to prevent Goal Agent from generating its own request_id (must copy from Objective Agent). Added common mistakes #12 (request_id inheritance) and #13 (goal count accuracy). These address systematic violations observed in 20260220.md logs.
 - v1.3.0 (Feb 20, 2026): Updated all examples and Storage Resolution Rule table to reflect the Objective Agent's new Acquisition URL Annotation Rule — acquisition objectives now arrive with URL annotations on src_N (e.g., "src_1 (https://...)"). Goal Agent echoes the annotated objective text as-is but uses bare src_N refs in goal text. Added clarifying note to Storage Resolution Rule table.
 - v1.2.0 (Feb 19, 2026): Updated Storage Resolution Rule to use ref IDs (src_N, store_N) instead of raw URLs and "the video file stored in platform storage (Wasabi)". Added First-Mention Provenance Rule. Updated all patterns (A–J) and all 6 examples to use ref IDs. Updated common mistakes.
 - v1.1.0 (Feb 12, 2026): Added Storage Resolution Rule and Acquisition-First Pattern support. Updated all patterns and examples to reference Wasabi platform storage for analysis goals. Source URLs now appear only in acquisition goals.
