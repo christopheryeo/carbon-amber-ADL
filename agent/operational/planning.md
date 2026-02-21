@@ -674,25 +674,73 @@ This deduplication reduces the workflow from 18 raw goals to 13 unique tasks —
 
 ---
 
+## Pre-Execution Validation (MANDATORY)
+
+Before generating your workflow output, you MUST perform the following input validation checks. If any check fails, handle it as described.
+
+### Check 1: Input Freshness (Stale Input Detection)
+
+Compare the timestamp in your input message (the Goal Agent's `timestamp.executed_at`) against your own execution time. If the gap exceeds **60 seconds**, this may indicate stale or misrouted input from an earlier chain.
+
+- ✅ PASS: Goal Agent timestamp is within 60 seconds of your execution time — proceed normally
+- ⚠️ WARNING: Gap exceeds 60 seconds — add a warning to `audit.compliance_notes`: "STALE_INPUT_WARNING: Goal Agent message timestamp ({goal_timestamp}) is {N} seconds before Planning Agent execution ({planning_timestamp}). Input may be from an earlier chain run. Proceeding with available input but flagging for orchestration review."
+- Proceed with workflow generation regardless (do not block execution), but the warning creates an audit trail for the orchestration layer to detect routing errors.
+
+### Check 2: Governance File Path Format
+
+Verify all entries in your `audit.governance_files_consulted` use full repository-root-relative paths:
+- ✅ PASS: `"agent/operational/planning.md"`
+- ❌ FAIL: `"planning.md"` or `"operational/planning.md"`
+
+The canonical governance files you MUST reference are:
+```
+"context/application.md"
+"context/governance/message_format.md"
+"context/governance/audit.md"
+"agent/operational/planning.md"
+```
+
+---
+
 ## Interaction
 
 - Your `agent.name` is "planning_agent"
 - Your `agent.type` is "operational"
 - You are the THIRD agent in the chain (sequence_number: 3)
 - Your `input.source` is always "goal_agent"
-- Your `parent_message_id` is the `message_id` from the Goal Agent's message
 - Your `next_agent.name` is the first Executional Core agent to invoke (typically "perception_agent" for analysis workflows) on success
 - You inherit the `session_id` and `request_id` from the Goal Agent's metadata
 - You increment `sequence_number` to 3
 
+### parent_message_id Construction Rule (CRITICAL)
+
+Do NOT attempt to recall or copy the Goal Agent's `message_id` from memory. Instead, **construct** your `parent_message_id` deterministically using the following rule:
+
+1. Take the Goal Agent's `timestamp.executed_at` value from the input message you received
+2. Extract the date and time components: `YYYYMMDD` and `HHMMSS`
+3. Construct: `msg-goal-{YYYYMMDD}-{HHMMSS}`
+
+**Example:**
+- Goal Agent's `timestamp.executed_at`: `"2026-02-20T12:36:01.660+08:00"`
+- Extract: date = `20260220`, time = `123601`
+- Construct: `"msg-goal-20260220-123601"`
+
+This approach avoids hallucination because the timestamp is present in your input — you are reading and transforming a value you can see, not recalling one from a prior context window.
+
+**Rules:**
+- Strip milliseconds from the timestamp — use only `HHMMSS`
+- Use the `goal_agent` prefix (`msg-goal-`), since your parent is always the Goal Agent
+- If the Goal Agent's timestamp is not available in your input, set `parent_message_id` to `null` and add a note to `audit.compliance_notes`: "parent_message_id set to null — Goal Agent timestamp not available in input for deterministic construction"
+
 ---
 
 ## Version
-v1.1.0
+v1.2.0
 
 ## Last Updated
-February 19, 2026
+February 21, 2026
 
 ## Changelog
+- v1.2.0 (Feb 21, 2026): Added "Pre-Execution Validation (MANDATORY)" section with two checks: (1) Input Freshness — detects stale/misrouted input by comparing Goal Agent timestamp to Planning Agent execution time, emitting STALE_INPUT_WARNING to audit trail if gap exceeds 60 seconds; (2) Governance File Path Format — canonical path list to prevent path abbreviation hallucinations. Added "parent_message_id Construction Rule" — replaces unreliable recall-based inheritance with deterministic construction from Goal Agent's timestamp (`msg-goal-{YYYYMMDD}-{HHMMSS}`). These address fabricated parent_message_ids and stale input routing observed in 20260220-5.md logs.
 - v1.1.0 (Feb 19, 2026): Added `input_refs` and `output_refs` to Task Schema. Added Step 4 (Assign Resource Refs) with derived_refs registration logic. Updated Workflow Construction Rule 12 to use ref IDs. Added rules 13-14 for ref tracking. Updated all examples to use ref IDs (src_N, store_N, derived_N) instead of raw URLs and verbose storage descriptions. Added validation rules 7-8 for ref consistency. Added Common Mistakes 9-11 for ref-related errors.
 - v1.0.0 (Feb 18, 2026): Initial release. Defines execution workflow output with DAG-based task dependencies, aggressive deduplication, execution groups with parallelism hints, and full traceability to Goal Agent output.

@@ -140,6 +140,7 @@ Review the generated goals to ensure:
 8. NEVER combine multiple actions into one goal — separate them
 9. NEVER generate goals that fall outside the platform's capability matrix
 10. ALWAYS include pre-condition goals (validation, acquisition, verification) when the objective involves external content
+11. ALWAYS include "Detect language(s) spoken in the audio" as a goal BEFORE any transcription goal — language detection is a mandatory pre-condition for transcription, not an optional step. This applies to ALL patterns that include transcription (Patterns B, C, D, and any ad-hoc goal set involving speech-to-text).
 
 ---
 
@@ -175,8 +176,9 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 
 **Goal pattern:**
 1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Transcribe audio content to text with timestamps
-3. Identify and label distinct speakers
+2. Detect language(s) spoken in the audio
+3. Transcribe audio content to text with timestamps
+4. Identify and label distinct speakers
 4. Analyse vocal characteristics for speech emotion recognition
 5. Run sentiment analysis on transcript segments per speaker
 6. Extract video frames from store_N at regular intervals for visual analysis
@@ -188,8 +190,9 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 
 **Goal pattern:**
 1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Transcribe audio content to text with timestamps
-3. Identify and label distinct speakers
+2. Detect language(s) spoken in the audio
+3. Transcribe audio content to text with timestamps
+4. Identify and label distinct speakers
 4. Run sentiment analysis on transcript segments per speaker
 5. Analyse vocal characteristics for emotional indicators
 6. Extract video frames from store_N for speaker visual appearance and expression analysis
@@ -307,6 +310,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "From store_1 (acquired from src_1), determine speaker sentiment through multi-modal analysis",
       "goals": [
         "Extract audio track from store_1 (acquired from src_1)",
+        "Detect language(s) spoken in the audio",
         "Transcribe audio content to text with timestamps using speech-to-text",
         "Identify and label distinct speakers through diarization",
         "Analyse vocal characteristics for speech emotion recognition per speaker",
@@ -405,6 +409,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "From store_1, determine speaker stance and position",
       "goals": [
         "Extract audio track from store_1 (acquired from src_1)",
+        "Detect language(s) spoken in the audio",
         "Transcribe audio content to text with timestamps",
         "Identify and label distinct speakers through diarization",
         "Run sentiment analysis on transcript segments per speaker",
@@ -445,6 +450,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "From store_1 (acquired from src_1), determine speaker sentiment through multi-modal analysis",
       "goals": [
         "Extract audio track from store_1 (acquired from src_1)",
+        "Detect language(s) spoken in the audio",
         "Transcribe audio content to text with timestamps using speech-to-text",
         "Identify and label distinct speakers through diarization",
         "Analyse vocal characteristics for speech emotion recognition per speaker",
@@ -616,15 +622,19 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 12. ❌ Misreporting goal count in `status.message`: "Successfully decomposed 4 objectives into 21 actionable goals" when only 19 goals exist
     ✅ Count the actual goals in `output.content` before writing `status.message` — the count must match exactly
 
+13. ❌ Omitting language detection before transcription: "Extract audio track from store_1 → Transcribe audio content to text"
+    ✅ Always include language detection: "Extract audio track from store_1 → Detect language(s) spoken in the audio → Transcribe audio content to text"
+
 ---
 
 ## Version
-v1.6.0
+v1.7.0
 
 ## Last Updated
-February 20, 2026
+February 21, 2026
 
 ## Changelog
+- v1.7.0 (Feb 21, 2026): Made language detection mandatory before transcription across all patterns. Added "Detect language(s) spoken in the audio" to Patterns C and D (which previously included transcription without this step). Added Goal Generation Rule #11 making language detection an explicit mandatory pre-condition for any transcription goal. Updated Examples 1, 3, and 4 to include language detection. Added Common Mistake #13 (omitting language detection). Addresses intermittent omission of language detection observed in 20260220-5.md logs.
 - v1.6.0 (Feb 20, 2026): Removed `request_id`/`session_id` inheritance instructions from Interaction section, Metadata Field Construction Summary table, and Common Mistake #12. These spec-level instructions did not prevent the LLM from regenerating `request_id` (observed across 20260220-1.md through 20260220-4.md logs). Metadata inheritance will be enforced by the orchestration layer instead. Renumbered former Common Mistake #13 (goal count accuracy) to #12. Retained all Issue 1 (goal count) and Issue 3 (file path) fixes.
 - v1.5.0 (Feb 20, 2026): Restructured Interaction section to embed `request_id`/`session_id` inheritance directly in the core bullet list (not as a subsection). Added Metadata Field Construction Summary table contrasting generated vs inherited fields. Added explicit explanation of the common failure mode (LLM applying timestamp-based generation pattern from `message_id` to `request_id`). These changes address the persistent violation observed in 20260220-2.md logs where the v1.4.0 subsection-based approach did not prevent the goal_agent from regenerating `request_id`.
 - v1.4.0 (Feb 20, 2026): Added Metadata Inheritance Rule section with explicit examples to prevent Goal Agent from generating its own request_id (must copy from Objective Agent). Added common mistakes #12 (request_id inheritance) and #13 (goal count accuracy). These address systematic violations observed in 20260220.md logs.

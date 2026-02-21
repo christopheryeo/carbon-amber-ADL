@@ -199,6 +199,33 @@ Within YOUR message scope, the FIRST time you mention a `store_N` ref in analysi
 9. Raw URLs MUST NOT appear in objective text — only ref IDs
 10. PROHIBITED in objective strings: labels, prefixes, combined objectives, metadata, headers, explanatory text, raw URLs
 
+## Pre-Output Self-Check (MANDATORY)
+
+Before emitting your output, you MUST perform the following validation pass on every objective in `output.content`. If any check fails, correct the objective before output — do NOT emit non-compliant objectives.
+
+### Check 1: Acquisition URL Annotation
+
+For every acquisition objective (any objective starting with "Obtain" or "Process uploaded"):
+- ✅ PASS: `src_N (https://...)` pattern is present — e.g., "Obtain video content from src_1 (https://youtu.be/abc) and store as store_1"
+- ❌ FAIL: `src_N` appears without a parenthetical URL — e.g., "Obtain video content from src_1 and store as store_1"
+- **Fix**: Insert the original URL from your `resources.source_refs` as a parenthetical annotation on `src_N`
+
+### Check 2: Objective Separation
+
+For every analysis objective, verify it contains exactly ONE strategic outcome:
+- ✅ PASS: "From store_1 (acquired from src_1), identify distinct speakers" — single outcome
+- ❌ FAIL: "From store_1 (acquired from src_1), identify distinct speakers and analyze the emotional tone of each speaker throughout" — two outcomes combined
+- **Fix**: Split into separate objectives: one for speaker identification, one for emotional tone analysis. Different analysis types (identification vs. emotion, transcription vs. sentiment, detection vs. recognition) are always separate strategic outcomes, even when they operate on the same source data.
+
+### Check 3: First-Mention Provenance
+
+For the FIRST analysis objective referencing a `store_N`:
+- ✅ PASS: "From store_1 (acquired from src_1), ..." — provenance present
+- ❌ FAIL: "From store_1, ..." on the first analysis objective — provenance missing
+- **Fix**: Add `(acquired from src_N)` after `store_N`
+
+---
+
 ## Scope Validation
 
 ### In-Scope (process normally):
@@ -286,10 +313,52 @@ Within YOUR message scope, the FIRST time you mention a `store_N` ref in analysi
 ]
 ```
 
-### Example 6: Out of Scope Request
+### Example 6: Objective Separation (Splitting Combined Analysis Types)
+
+**User:** "Identify the speakers in this video and analyze the emotional tone of each speaker throughout: https://www.youtube.com/shorts/iQ3yXScDuEA"
+
+**Ref Assignment:** src_1 → https://www.youtube.com/shorts/iQ3yXScDuEA → store_1
+
+**❌ INCORRECT — combined objectives:**
+```json
+[
+  "Obtain video content from src_1 (https://www.youtube.com/shorts/iQ3yXScDuEA) and store as store_1",
+  "From store_1 (acquired from src_1), identify distinct speakers and analyze the emotional tone of each speaker throughout"
+]
+```
+
+**Why this fails Check 2:** The second objective contains two distinct strategic outcomes — speaker identification (WHO is speaking) and emotional tone analysis (HOW they feel). These are different analysis types even though they operate on the same source.
+
+**✅ CORRECT — separated objectives:**
+```json
+[
+  "Obtain video content from src_1 (https://www.youtube.com/shorts/iQ3yXScDuEA) and store as store_1",
+  "From store_1 (acquired from src_1), identify distinct speakers",
+  "From store_1, analyze the emotional tone of each speaker throughout"
+]
+```
+
+**Separation heuristic:** If the objective text contains "and" joining two analysis verbs (identify **and** analyze, transcribe **and** detect, recognize **and** classify), it almost certainly requires splitting. Each analysis verb maps to a different capability category in the Capabilities Matrix.
+
+### Example 7: Out of Scope Request
 **User:** "Edit this video and add background music"
 
 **Response:** OUT_OF_SCOPE error — video editing is not supported. No ref IDs assigned (out-of-scope request).
+
+## Canonical Governance File Paths (MANDATORY)
+
+When populating `audit.governance_files_consulted`, you MUST use these exact paths. Do NOT abbreviate, shorten, or invent alternative paths:
+
+```
+"context/application.md"
+"context/governance/message_format.md"
+"context/governance/audit.md"
+"agent/governance/objective.md"
+```
+
+- ❌ `"agent/objective.md"` — incorrect: missing `governance/` segment
+- ❌ `"governance/objective.md"` — incorrect: missing `agent/` prefix
+- ✅ `"agent/governance/objective.md"` — correct canonical path
 
 ## Interaction
 
@@ -335,12 +404,14 @@ Within YOUR message scope, the FIRST time you mention a `store_N` ref in analysi
 ---
 
 ## Version
-v1.2.0
+v1.4.0
 
 ## Last Updated
-February 20, 2026
+February 21, 2026
 
 ## Changelog
+- v1.4.0 (Feb 21, 2026): Added Example 6 (Objective Separation) demonstrating correct splitting of combined analysis types with before/after comparison and separation heuristic. Added "Canonical Governance File Paths (MANDATORY)" section listing exact paths for `audit.governance_files_consulted` — addresses path inconsistency (`"agent/objective.md"` vs correct `"agent/governance/objective.md"`) observed in 20260220-5.md logs. Renumbered former Example 6 to Example 7.
+- v1.3.0 (Feb 21, 2026): Added "Pre-Output Self-Check (MANDATORY)" section with three validation checks: (1) Acquisition URL Annotation — verifies `src_N (https://...)` pattern is present on every acquisition objective, (2) Objective Separation — verifies each analysis objective contains exactly one strategic outcome with explicit guidance on splitting related-but-distinct analysis types, (3) First-Mention Provenance — verifies `(acquired from src_N)` is present on the first analysis objective. These address non-deterministic URL annotation compliance and objective merging observed in 20260220-5.md logs.
 - v1.2.0 (Feb 20, 2026): Added Acquisition URL Annotation Rule — acquisition objectives must now include the original URL as a parenthetical annotation on src_N for explicit traceability (e.g., "src_1 (https://...)"). Updated all examples, Pattern Rules table, Objective Content Rules, Distinction section, and Common Mistakes to reflect the new rule. URL annotation appears only in the acquisition objective; analysis objectives remain unchanged.
 - v1.1.0 (Feb 19, 2026): Added Resource Extraction and Ref Assignment section. Updated Acquisition-First Pattern to use ref IDs (src_N, store_N) instead of raw URLs. Added First-Mention Provenance Rule. Updated all examples and common mistakes. Added multi-URL handling guidance.
 - v1.0.0: Initial release.

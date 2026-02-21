@@ -54,10 +54,11 @@ Governance files are **authoritative** and take precedence over any conflicting 
 
 ## Section 3: Agent Roles [STANDARD]
 
-**For Objective Agent and Goal Agent**: This document serves as your foundational reference:
-- **Objective Agent**: Receives user requests and outputs one or more strategic objectives required to fulfill the request. Objectives define *what* needs to be achieved.
-- **Goal Agent**: Takes each objective from the Objective Agent and decomposes it into a series of goals and sub-goals. Goals define *how* to achieve each objective.
-- All objectives and goals must align with the Capabilities defined in Section 6 and stay within the application scope.
+**For Objective Agent, Goal Agent, and Planning Agent**: This document serves as your foundational reference:
+- **Objective Agent** (Governance Core): Receives user requests and outputs one or more strategic objectives required to fulfill the request. Objectives define *what* needs to be achieved.
+- **Goal Agent** (Governance Core): Takes each objective from the Objective Agent and decomposes it into a series of goals and sub-goals. Goals define *how* to achieve each objective.
+- **Planning Agent** (Operational Core): Takes the complete set of goals from the Goal Agent and produces an executable workflow plan — a directed acyclic graph (DAG) of deduplicated tasks organized into execution groups with registered `derived_refs` for all intermediate assets.
+- All objectives, goals, and plans must align with the Capabilities defined in Section 6 (including the Capability Dependencies in Section 6.9) and stay within the application scope.
 
 ---
 
@@ -68,8 +69,8 @@ Governance files are **authoritative** and take precedence over any conflicting 
 | **Application Name** | DSTA Video Analysis Platform |
 | **Customer** | DSTA (Defence Science and Technology Agency) |
 | **Deployment** | Sentient Agentic AI Platform |
-| **Version** | 1.0 |
-| **Last Updated** | January 28, 2026 |
+| **Version** | 1.3 |
+| **Last Updated** | February 21, 2026 |
 
 ### Description
 
@@ -171,6 +172,55 @@ The platform supports the following capability categories. When decomposing user
 | CAP-DAT-002 | File Storage | Store downloaded video files, extracted assets, and generated reports | Wasabi |
 | CAP-DAT-003 | Context Caching | Cache intermediate results and agent context for session continuity | Redis |
 
+### 6.9 Capability Dependencies and I/O Reference
+
+This section defines mandatory prerequisites and input/output asset types for capabilities that have them. Agents MUST respect these dependencies when decomposing goals and planning execution workflows.
+
+#### Prerequisite Rules
+
+The following capabilities have **mandatory prerequisites** — they MUST NOT be invoked until their prerequisite capabilities have completed successfully:
+
+| Capability | Prerequisite(s) | Reason |
+|-----------|-----------------|--------|
+| CAP-AUD-001 (Transcription) | CAP-AUD-004 (Language Detection) | Language must be detected before transcription model can be configured for the correct language |
+| CAP-AUD-002 (Diarization) | CAP-PRE-002 (Audio Extraction) | Diarization operates on extracted audio, not raw video |
+| CAP-AUD-003 (Speech Emotion) | CAP-PRE-002 (Audio Extraction) | Emotion recognition operates on extracted audio |
+| CAP-AUD-004 (Language Detection) | CAP-PRE-002 (Audio Extraction) | Language detection operates on extracted audio |
+| CAP-AUD-005 (Audio Event Detection) | CAP-PRE-002 (Audio Extraction) | Audio event classification operates on extracted audio, not raw video |
+| CAP-SPK-001 (Speaker Sentiment) | CAP-AUD-001 (Transcription), CAP-AUD-002 (Diarization) | Requires transcript segments mapped to identified speakers |
+| CAP-SPK-002 (Speaker Stance) | CAP-SPK-001 (Speaker Sentiment), CAP-VIS-006 (Facial Attributes) | Multi-modal stance requires both text sentiment and visual expression data |
+| CAP-VIS-001 through CAP-VIS-006 | CAP-PRE-003 (Frame Extraction) | Visual analysis operates on extracted frames, not raw video |
+| CAP-VIS-003 (OCR) | CAP-VIS-001 or CAP-VIS-002 (Object/Banner Detection) | OCR targets detected text-bearing objects |
+| CAP-SYN-001 (Multi-Modal Fusion) | At least two analysis capabilities from different modalities (audio, visual, text) | Fusion requires multiple modality outputs to correlate |
+
+**Transitive Chain Example (Audio Transcription):**
+`CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001` (extract audio → detect language → transcribe)
+
+#### I/O Asset Types
+
+The following capabilities produce or consume specific asset types. These asset types map to ref ID categories used by the Planning Agent when registering `derived_refs`:
+
+| Capability | Input Asset | Input Ref Type | Output Asset | Output Ref Type |
+|-----------|-------------|---------------|-------------|----------------|
+| CAP-ACQ-002/003/004 | Source URL | `src_N` | Video file | `store_N` |
+| CAP-ACQ-005 | Uploaded file | `src_N` | Video file | `store_N` |
+| CAP-PRE-002 | Video file | `store_N` | Audio track | `derived_N` (audio_track) |
+| CAP-PRE-003 | Video file | `store_N` | Frame set | `derived_N` (frame_set) |
+| CAP-AUD-004 | Audio track | `derived_N` | Language tag | (metadata, no new ref) |
+| CAP-AUD-001 | Audio track | `derived_N` | Transcript | `derived_N` (transcript) |
+| CAP-AUD-002 | Audio track | `derived_N` | Diarization map | `derived_N` (diarization_map) |
+| CAP-AUD-003 | Audio track | `derived_N` | Emotion scores | `derived_N` (emotion_scores) |
+| CAP-AUD-005 | Audio track | `derived_N` | Audio event labels | `derived_N` (audio_events) |
+| CAP-SPK-001 | Transcript + Diarization map | `derived_N` + `derived_N` | Sentiment scores | `derived_N` (sentiment_scores) |
+| CAP-VIS-001/002 | Frame set | `derived_N` | Detection results | `derived_N` (detection_results) |
+| CAP-VIS-003 | Detection results | `derived_N` | OCR text | `derived_N` (ocr_text) |
+| CAP-VIS-006 | Frame set | `derived_N` | Facial attributes | `derived_N` (facial_attributes) |
+| CAP-SYN-001 | Multiple analysis outputs | `derived_N` (various) | Fused insight set | `derived_N` (fused_insights) |
+
+**How agents use this table:**
+- **Goal Agent**: When decomposing objectives, verify that goals exist for all prerequisite capabilities in the chain, not just the target capability.
+- **Planning Agent**: When creating tasks and registering `derived_refs`, use the Output Asset and Output Ref Type columns to assign the correct `asset_type` to each `derived_ref`.
+
 ---
 
 ## Section 7: Supported Sources [APPLICATION-SPECIFIC]
@@ -180,7 +230,7 @@ The application can process inputs from the following sources:
 | Source Type | Examples |
 |-------------|----------|
 | Social Media | YouTube, Instagram, TikTok |
-| Direct Upload | Video file uploads (MP4, MOV, AVI) |
+| Direct Upload | Video file uploads (MP4, MOV, AVI, WEBM) |
 
 ---
 
@@ -219,7 +269,7 @@ The platform utilizes a three-core agent architecture. User requests should be d
 ### Operational Core [STANDARD]
 | Agent | Role |
 |-------|------|
-| Planning Agent | Devises strategies for complex tasks involving multiple data points or agents |
+| Planning Agent | Receives all goals from the Goal Agent and produces a DAG-based execution plan: (1) semantically deduplicates equivalent goals across objectives, (2) organizes tasks into parallelizable execution groups respecting capability prerequisite chains (Section 6.9), (3) registers `derived_refs` with correct `asset_type` for every intermediate output, and (4) validates workflow completeness to ensure all goals are covered |
 | Reasoning Agent | Makes logical inferences from analyzed elements |
 | Learning Agent | Adapts analysis models based on feedback and new data patterns |
 | Memory Agent | Captures audit log data, distills institutional knowledge (patterns, decision history, error prevention, quality benchmarks), and files it in `context/memory/` for inclusion in the master prompt |
@@ -237,15 +287,28 @@ The platform utilizes a three-core agent architecture. User requests should be d
 
 When processing requests, the system follows this execution flow:
 
-1. **Receive Request**: User submits a request
-2. **Define Objectives (Objective Agent)**: Translate the user request into strategic objectives (*what* needs to be achieved)
-3. **Decompose into Goals (Goal Agent)**: For each objective, create goals and sub-goals (*how* to achieve it)
-4. **Plan Execution (Planning Agent)**: Devise strategies and workflows for achieving the goals
-5. **Gather Data**: Collect relevant data and metadata from specified sources
-6. **Execute Analysis**: Run appropriate models via Executional Agents
-7. **Synthesize Results**: Combine outputs from multiple agents into coherent insights
-8. **Facilitate Reporting**: Present results through conversational interface
-9. **Monitor and Adapt**: Learn from feedback and improve future processing
+### Phase 1: Governance Decomposition
+1. **Receive Request**: User submits a request via the platform interface
+2. **Define Objectives (Objective Agent)**: Translate the user request into strategic objectives (*what* needs to be achieved), applying the acquisition-first pattern and ref ID annotations (see `agent/governance/objective.md`)
+3. **Decompose into Goals (Goal Agent)**: For each objective, create an ordered set of goals respecting capability prerequisite chains from Section 6.9 (*how* to achieve it; see `agent/governance/goal.md`)
+
+### Phase 2: Operational Planning
+4. **Plan Execution (Planning Agent)**: Receive all goals across all objectives and produce a DAG-based execution plan:
+   - **Semantic deduplication**: Merge identical or equivalent goals that appear across multiple objectives into single tasks
+   - **Execution grouping**: Organize tasks into numbered execution groups where tasks within a group can run in parallel, and groups execute sequentially (Group 1 → Group 2 → …)
+   - **Derived ref registration**: Register `derived_refs` with correct `asset_type` for every intermediate output produced by each task
+   - **Completeness validation**: Verify every goal from every objective maps to at least one task in the DAG
+
+### Phase 3: Execution
+5. **Execute DAG (Orchestration Engine + Executional Agents)**: The n8n orchestration engine dispatches tasks group-by-group:
+   - All tasks in Group 1 execute in parallel (typically acquisition and pre-processing)
+   - On successful completion of Group N, all tasks in Group N+1 are dispatched
+   - Executional Agents (Perception, Interpretation, Action) run the appropriate models for each task
+6. **Synthesize Results**: Combine outputs from multiple analysis tasks into coherent, correlated insights (CAP-SYN capabilities)
+
+### Phase 4: Post-Processing
+7. **Facilitate Reporting**: Generate structured reports and present results through the conversational interface
+8. **Monitor and Adapt**: Learn from feedback via the Learning Agent and capture institutional knowledge via the Memory Agent
 
 ---
 
