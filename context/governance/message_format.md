@@ -432,18 +432,23 @@ User Request
     ↓
 [2] Goal Agent (governance) → outputs: goals and sub-goals
     ↓
-[3] Planning Agent (operational) → outputs: execution plan
+[3] Planning Agent (operational) → outputs: execution plan (static DAG)
     ↓
-[4] Executional Agents → outputs: analysis results
+[4] Dispatch Agent (operational) → manages runtime DAG execution, dispatches tasks
     ↓
-[5] Final Output → formatted response to user
+[5] Execution Agent / Reasoning Agent (executional/operational) → outputs: task results / synthesis results
+    ↑___↓  (loop: each completed task returns to Dispatch Agent for next dispatch)
     ↓
-[6] Memory Agent (operational, post-chain) → captures audit logs, distills institutional knowledge into context/memory/
+[6] Final Output → formatted response to user
+    ↓
+[7] Memory Agent (operational, post-chain) → captures audit logs, distills institutional knowledge into context/memory/
 ```
 
-Steps [1]–[5] form the main request chain. Each agent receives the message from the previous agent, processes it, updates the relevant fields, and passes it to the next agent.
+Steps [1]–[6] form the main request chain. Each agent receives the message from the previous agent, processes it, updates the relevant fields, and passes it to the next agent.
 
-Step [6] is a post-chain process: after the chain reaches COMPLETE or terminal ERROR status, the orchestration layer invokes the Memory Agent to process the transaction's audit logs and distill institutional knowledge. The Memory Agent may also be invoked on a schedule for batch distillation, or on-demand by other agents for context retrieval. See `agent/operational/memory.md` for full specification.
+Steps [4]–[5] form an iterative loop: the Dispatch Agent dispatches one or more tasks, the Execution Agent (for tool-calling tasks: CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT) or the Reasoning Agent (for synthesis tasks: CAP-SYN) processes each task and returns results to the Dispatch Agent. This loop continues until all tasks in the workflow DAG are complete, failed, or skipped. See `agent/operational/dispatch.md` for the full dispatch specification.
+
+Step [7] is a post-chain process: after the chain reaches COMPLETE or terminal ERROR status, the orchestration layer invokes the Memory Agent to process the transaction's audit logs and distill institutional knowledge. The Memory Agent may also be invoked on a schedule for batch distillation, or on-demand by other agents for context retrieval. See `agent/operational/memory.md` for full specification.
 
 ---
 

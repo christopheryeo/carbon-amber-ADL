@@ -708,7 +708,7 @@ The canonical governance files you MUST reference are:
 - Your `agent.type` is "operational"
 - You are the THIRD agent in the chain (sequence_number: 3)
 - Your `input.source` is always "goal_agent"
-- Your `next_agent.name` is the first Executional Core agent to invoke (typically "perception_agent" for analysis workflows) on success
+- Your `next_agent.name` is always `"dispatch_agent"` on success — the Dispatch Agent manages runtime execution of the workflow DAG
 - You inherit the `session_id` and `request_id` from the Goal Agent's metadata
 - You increment `sequence_number` to 3
 

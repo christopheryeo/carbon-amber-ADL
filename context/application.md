@@ -270,16 +270,15 @@ The platform utilizes a three-core agent architecture. User requests should be d
 | Agent | Role |
 |-------|------|
 | Planning Agent | Receives all goals from the Goal Agent and produces a DAG-based execution plan: (1) semantically deduplicates equivalent goals across objectives, (2) organizes tasks into parallelizable execution groups respecting capability prerequisite chains (Section 6.9), (3) registers `derived_refs` with correct `asset_type` for every intermediate output, and (4) validates workflow completeness to ensure all goals are covered |
-| Reasoning Agent | Makes logical inferences from analyzed elements |
+| Dispatch Agent | Manages runtime execution of the workflow DAG produced by the Planning Agent: resolves ref dependencies, dispatches tasks to the appropriate executional agent (Execution Agent for tool-calling tasks, Reasoning Agent for synthesis tasks), tracks workflow state, handles failures with downstream impact analysis, and coordinates parallel execution within groups |
+| Reasoning Agent | Performs multi-modal synthesis tasks (CAP-SYN capabilities): fuses cross-modal analysis results into unified assessments (CAP-SYN-001), reconstructs event timelines from timestamped evidence (CAP-SYN-002), and generates structured reports with sourced claims (CAP-SYN-003) |
 | Learning Agent | Adapts analysis models based on feedback and new data patterns |
 | Memory Agent | Captures audit log data, distills institutional knowledge (patterns, decision history, error prevention, quality benchmarks), and files it in `context/memory/` for inclusion in the master prompt |
 
 ### Executional Core [APPLICATION-SPECIFIC]
 | Agent | Role |
 |-------|------|
-| Perception Agent | Identifies speakers, analyzes facial expressions/gestures, detects objects like banners/placards, analyzes audio sentiment; utilizes Whisper-X |
-| Interpretation Agent | Processes analysis requests and contextualizes results based on user queries |
-| Action Agent | Executes specific analysis models (sentiment analysis, object detection) and generates structured outputs |
+| Execution Agent | Invokes MCP tools for all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT): maps each capability to the appropriate MCP server and tool, executes the tool call, validates output quality, and registers output refs. Replaces the former Perception, Interpretation, and Action agents with a unified tool-execution interface |
 
 ---
 
@@ -300,11 +299,13 @@ When processing requests, the system follows this execution flow:
    - **Completeness validation**: Verify every goal from every objective maps to at least one task in the DAG
 
 ### Phase 3: Execution
-5. **Execute DAG (Orchestration Engine + Executional Agents)**: The n8n orchestration engine dispatches tasks group-by-group:
-   - All tasks in Group 1 execute in parallel (typically acquisition and pre-processing)
-   - On successful completion of Group N, all tasks in Group N+1 are dispatched
-   - Executional Agents (Perception, Interpretation, Action) run the appropriate models for each task
-6. **Synthesize Results**: Combine outputs from multiple analysis tasks into coherent, correlated insights (CAP-SYN capabilities)
+5. **Dispatch and Execute DAG (Dispatch Agent → Execution Agent / Reasoning Agent)**: The Dispatch Agent manages runtime execution of the workflow DAG:
+   - Initializes workflow state from the Planning Agent's execution plan and resolves ref dependencies
+   - Dispatches ready tasks group-by-group: all tasks in Group 1 execute in parallel, Group N+1 begins after Group N completes
+   - Routes tool-calling tasks (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT) to the **Execution Agent**, which invokes the appropriate MCP tools
+   - Routes synthesis tasks (CAP-SYN) to the **Reasoning Agent**, which fuses cross-modal results into unified assessments, timelines, or structured reports
+   - Handles failures with retry logic, downstream impact analysis, and escalation
+6. **Complete Workflow**: Once all tasks are complete (or terminal), the Dispatch Agent emits a workflow_complete summary with final status and output refs
 
 ### Phase 4: Post-Processing
 7. **Facilitate Reporting**: Generate structured reports and present results through the conversational interface
