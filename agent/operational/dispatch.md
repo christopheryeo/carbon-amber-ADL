@@ -219,7 +219,7 @@ From the set of `ready` tasks:
 | CAP-PRE-* (Pre-Processing) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-AUD-* (Audio Analysis) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-SPK-* (Speaker Analysis) | `action_agent` | Tool-calling task: MCP invocation |
-| CAP-AUD-R* (Audience Analysis) | `action_agent` | Tool-calling task: MCP invocation |
+| CAP-AUD-R001/R002/R003 (Audience Analysis) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-VIS-* (Visual Analysis) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-DAT-* (Data Management) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-SYN-001 | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
@@ -506,8 +506,8 @@ When the orchestration layer supports parallel dispatch:
 - On **initial invocation**: sequence_number is 4 (after planning_agent at 3)
 - On **callback invocations**: sequence_number increments from the returning agent's sequence_number
 - Your `input.source` is `"planning_agent"` (initial) or `"action_agent"`/`"reasoning_agent"` (callbacks)
-- Your `next_agent.name` is:
-  - `"action_agent"` when dispatching CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT tasks
+- Valid `target_agent_id` values:
+  - `"action_agent"` when dispatching CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R001/R002/R003, CAP-VIS, CAP-DAT tasks
   - `"reasoning_agent"` when dispatching CAP-SYN tasks
   - `"memory_agent"` when emitting the final workflow_complete message
 - You inherit `session_id` and `request_id` from the Planning Agent's metadata

@@ -28,8 +28,11 @@ Always read `context/instructions.md` before all other files.
 6. One agent file selected for the current invocation:
    - `agent/governance/objective.md`, or
    - `agent/governance/goal.md`, or
-   - one file in `agent/operational/`, or
-   - one file in `agent/executional/`
+   - `agent/operational/planning.md`, or
+   - `agent/operational/dispatch.md`, or
+   - `agent/operational/memory.md`, or
+   - `agent/operational/reasoning.md`, or
+   - `agent/executional/action.md`
 
 > **Note**: This list defines valid agent files for prompt assembly. Agent execution order is not determined by this list — see `context/governance/message_format.md` § Agent Chain Flow for the canonical flow definition.
 
@@ -93,7 +96,11 @@ After receiving the concatenated prompt, the LLM must:
 ---
 
 ## Version
-v2.0.0
+v2.1.0
 
 ## Last Updated
-February 10, 2026
+February 23, 2026
+
+## Changelog
+- v2.1.0 (Feb 23, 2026): Updated the valid agent file list in Step 2 to explicitly name all 7 active agents (`dispatch.md`, `reasoning.md`, `action.md`, `planning.md`, `memory.md`, `objective.md`, `goal.md`) following the removal of deprecated placeholder files (`perception.md`, `interpretation.md`).
+- v2.0.0 (Feb 10, 2026): Added memory integration instructions in prompt assembly and execution responsibilities.

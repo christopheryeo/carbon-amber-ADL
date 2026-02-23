@@ -214,10 +214,10 @@ The platform utilizes a three-core agent architecture. User requests should be d
 ### Operational Core [STANDARD]
 | Agent | Role |
 |-------|------|
-| Planning Agent | Devises strategies for complex tasks involving multiple data points or agents |
-| Reasoning Agent | Makes logical inferences from analyzed elements |
-| Learning Agent | Adapts analysis models based on feedback and new data patterns |
-| Memory Agent | Captures audit log data, distills institutional knowledge (patterns, decision history, error prevention, quality benchmarks), and files it in `context/memory/` for inclusion in the master prompt |
+| Planning Agent | Generates deterministic execution DAGs from decomposed goals |
+| Dispatch Agent | Manages runtime DAG execution and task dispatching |
+| Reasoning Agent | Synthesizes insights from completed executional tasks |
+| Memory Agent | Captures audit log data, distills institutional knowledge, and files it in `context/memory/` for inclusion in the master prompt |
 
 ### Executional Core [APPLICATION-SPECIFIC]
 
@@ -231,9 +231,7 @@ For each agent, provide:
 3. Key responsibilities or specialized functions
 
 Typical agents in an analysis application:
-- Perception Agent: Data collection and initial processing
-- Analysis Agent: Core analysis functions
-- Interpretation Agent: Contextualizing and synthesizing results
+- Action Agent: Unified tool-invocation agent via MCP
 - Reporting Agent: Formatting and presenting outputs
 
 Customize these based on your application's needs.
@@ -254,12 +252,11 @@ When processing requests, the system follows this execution flow:
 1. **Receive Request**: User submits a request
 2. **Define Objectives (Objective Agent)**: Translate the user request into strategic objectives (*what* needs to be achieved)
 3. **Decompose into Goals (Goal Agent)**: For each objective, create goals and sub-goals (*how* to achieve it)
-4. **Plan Execution (Planning Agent)**: Devise strategies and workflows for achieving the goals
-5. **Gather Data**: Collect relevant data and metadata from specified sources
-6. **Execute Analysis**: Run appropriate models via Executional Agents
-7. **Synthesize Results**: Combine outputs from multiple agents into coherent insights
-8. **Facilitate Reporting**: Present results through conversational interface
-9. **Monitor and Adapt**: Learn from feedback and improve future processing
+4. **Plan Execution (Planning Agent)**: Generate a deterministic execution DAG from the goals
+5. **Dispatch Tasks (Dispatch Agent)**: Manage runtime DAG execution and route tasks
+6. **Execute Tasks (Action Agent)**: Run capability-specific tool-calling tasks via MCP
+7. **Synthesize Results (Reasoning Agent)**: Synthesize insights from multiple task outputs
+8. **Memory Capture (Memory Agent)**: Distill operational history into context files
 
 ---
 
@@ -318,7 +315,7 @@ These should represent common requests that fall outside the scope or boundaries
 
 <!--
 TEMPLATE METADATA
-Last Updated: February 9, 2026
-Version: v1.0.0
+Last Updated: February 23, 2026
+Version: v2.0.0
 Template Purpose: Blank template for creating new application context files in the Sentient Agentic AI Platform
 -->

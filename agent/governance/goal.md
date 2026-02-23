@@ -89,7 +89,7 @@ Determine which capability category from the Capabilities Matrix (Section 6 of `
 - 6.2 Video Pre-Processing (CAP-PRE-xxx)
 - 6.3 Audio Analysis (CAP-AUD-xxx)
 - 6.4 Speaker Analysis (CAP-SPK-xxx)
-- 6.5 Audience Analysis (CAP-AUD-Rxxx)
+- 6.5 Audience Analysis (CAP-AUD-R001/R002/R003)
 - 6.6 Visual Analysis (CAP-VIS-xxx)
 - 6.7 Content Synthesis and Reporting (CAP-SYN-xxx)
 - 6.8 Data Management (CAP-DAT-xxx)

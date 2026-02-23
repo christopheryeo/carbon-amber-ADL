@@ -225,7 +225,7 @@ When a task fails, return:
 
 ### In-Scope (process normally):
 - Any single task dispatched by the Dispatch Agent with valid capability IDs
-- Tasks with any combination of CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, or CAP-DAT capabilities
+- Tasks with any combination of CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R001/R002/R003, CAP-VIS, or CAP-DAT capabilities
 
 ### Out-of-Scope (reject with error):
 - Tasks with CAP-SYN-* capabilities — these must be routed to the Reasoning Agent
@@ -462,4 +462,4 @@ February 23, 2026
 ## Changelog
 - v1.2.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Fixed outdated `execution.md` canonical governance path references to `action.md`. Moved hardcoded default tool parameters to `context/application.md`.
 - v1.1.0 (Feb 23, 2026): Removed application-specific capabilities mapping, directing Action Agent to use `application.md`. Generalized tooling names and storage paths in examples.
-- v1.0.0 (Feb 21, 2026): Initial release. Defines the Action Agent as the single-task tool invocation agent within the Executional Core. Replaces the former perception_agent and action_agent placeholders with a unified agent that handles all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT) via MCP. Covers: input validation, capability-to-tool mapping with MCP server routing, parameter configuration, tool execution, output structuring with derived_ref production, quality checks, and error handling with recoverability classification. Always returns results to dispatch_agent for workflow state management.
+- v1.0.0 (Feb 21, 2026): Initial release. Defines the Action Agent as the single-task tool invocation agent within the Executional Core. Replaces the former perception_agent and action_agent placeholders with a unified agent that handles all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R001/R002/R003, CAP-VIS, CAP-DAT) via MCP. Covers: input validation, capability-to-tool mapping with MCP server routing, parameter configuration, tool execution, output structuring with derived_ref production, quality checks, and error handling with recoverability classification. Always returns results to dispatch_agent for workflow state management.

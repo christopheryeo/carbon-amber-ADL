@@ -545,7 +545,7 @@ The platform utilizes a three-core agent architecture. User requests should be d
 ### Executional Core [APPLICATION-SPECIFIC]
 | Agent | Role |
 |-------|------|
-| Action Agent | Invokes MCP tools for all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT): maps each capability to the appropriate MCP server and tool, executes the tool call, validates output quality, and registers output refs. Replaces the former Perception, Interpretation, and Action agents with a unified tool-execution interface |
+| Action Agent | Invokes MCP tools for all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R001/R002/R003, CAP-VIS, CAP-DAT): maps each capability to the appropriate MCP server and tool, executes the tool call, validates output quality, and registers output refs. Replaces the former Perception, Interpretation, and Action agents with a unified tool-execution interface |
 
 ---
 

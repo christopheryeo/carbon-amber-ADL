@@ -3,8 +3,8 @@
   "$id": "https://agentic.sentient.io/schemas/agent-message-v1",
   "title": "Agent Message Schema",
   "description": "JSON Schema for validating the mandatory message format used for communication between all agents within the Sentient Agentic AI Platform. All agent communications must adhere to this structure for inter-agent message passing.",
-  "version": "1.2.0",
-  "lastUpdated": "2026-02-19",
+  "version": "1.3.0",
+  "lastUpdated": "2026-02-23",
   "type": "object",
   "required": [
     "message_id",
@@ -122,7 +122,78 @@
               "type": "array"
             },
             {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "tasks": {
+                  "type": "array",
+                  "description": "Optional DAG tasks schema for planning outputs",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "action",
+                      "capability_ids",
+                      "weight",
+                      "dependencies"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^task_[0-9]+$"
+                      },
+                      "action": {
+                        "type": "string"
+                      },
+                      "capability_ids": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^CAP-[A-Z]{3}-[A-Z]?\\d{3}$"
+                        }
+                      },
+                      "weight": {
+                        "type": "integer"
+                      },
+                      "dependencies": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^task_[0-9]+$"
+                        }
+                      }
+                    }
+                  }
+                },
+                "execution_groups": {
+                  "type": "object",
+                  "description": "Optional DAG execution groups schema for planning outputs",
+                  "patternProperties": {
+                    "^[0-9]+$": {
+                      "type": "object",
+                      "required": [
+                        "tasks",
+                        "description",
+                        "parallel"
+                      ],
+                      "properties": {
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^task_[0-9]+$"
+                          }
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "parallel": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             },
             {
               "type": "null"
@@ -369,8 +440,12 @@
               "storage_uri": {
                 "description": "The storage URI once the asset is stored (null while pending)",
                 "oneOf": [
-                  { "type": "string" },
-                  { "type": "null" }
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "storage_backend": {
@@ -384,8 +459,13 @@
               "created_at_sequence": {
                 "description": "Sequence number of the agent that created this storage entry (null while pending)",
                 "oneOf": [
-                  { "type": "integer", "minimum": 1 },
-                  { "type": "null" }
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "status": {
@@ -428,8 +508,12 @@
               "storage_uri": {
                 "description": "The storage URI once the asset is created (null while pending)",
                 "oneOf": [
-                  { "type": "string" },
-                  { "type": "null" }
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "asset_type": {
@@ -438,13 +522,19 @@
               },
               "capability_id": {
                 "type": "string",
-                "description": "The capability that produces this asset (e.g., 'CAP-PRE-002')"
+                "description": "The capability that produces this asset (e.g., 'CAP-PRE-002')",
+                "pattern": "^CAP-[A-Z]{3}-[A-Z]?\\d{3}$"
               },
               "created_at_sequence": {
                 "description": "Sequence number of the agent that registered this derived ref (null while pending)",
                 "oneOf": [
-                  { "type": "integer", "minimum": 1 },
-                  { "type": "null" }
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "status": {

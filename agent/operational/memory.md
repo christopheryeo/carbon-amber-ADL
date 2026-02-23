@@ -68,7 +68,7 @@ context/memory/
     └── {YYYY-MM-DD}_summary.md  # Daily transaction summaries
 ```
 
-- Files in `context/memory/` are loaded by ARL during the Context Assembly stage (Station 3), making them part of the master prompt context for all agents.
+- Files in `context/memory/` are loaded by the orchestration layer during the Context Assembly stage, making them part of the master prompt context for all agents.
 - Knowledge files are append-and-revise — new insights are merged into existing files rather than overwriting them, preserving the full institutional memory.
 - Each file includes a `[LAST_UPDATED]` header and a `[CHANGE_LOG]` section at the bottom tracking what was added or revised and when.
 
@@ -80,7 +80,7 @@ The Memory Agent is invoked under the following conditions:
 
 | Trigger | Description |
 |---------|-------------|
-| **Post-chain completion** | Automatically invoked by ARL after a processing chain reaches COMPLETE or terminal ERROR status. ARL calls `target_agent_id: "agent_memory"` with the transaction_id as input. |
+| **Post-chain completion** | Automatically invoked by the orchestration layer (n8n) after a processing chain reaches COMPLETE or terminal ERROR status. It calls `target_agent_id: "agent_memory"` with the transaction_id as input. |
 | **Scheduled distillation** | Invoked on a configurable schedule (default: daily) to perform batch pattern extraction and knowledge distillation across all transactions in the time window. |
 | **On-demand recall** | Invoked by other agents (Planning, Reviewer) when they need historical context. The requesting agent sets `next_agent: { "name": "agent_memory", "reason": "context_retrieval" }` in its output. |
 
@@ -97,7 +97,7 @@ The Memory Agent receives one of three input types depending on the invocation t
 {
   "trigger": "post_chain",
   "transaction_id": "txn_20250601_001",
-  "log_path": "system/logs/txn_20250601_001.jsonl"
+  "log_path": "system/logs/20260601.log"
 }
 ```
 
@@ -218,11 +218,11 @@ Each knowledge file in `context/memory/` follows this structure:
 
 ---
 
-## ARL Connection
+## Orchestration Connection
 
 ### Context Assembly Integration
 
-ARL's Context Assembly station (Station 3) must include `context/memory/` files in the prompt concatenation order:
+The orchestration layer's Context Assembly stage must include `context/memory/` files in the prompt concatenation order:
 
 **Updated Loading Order:**
 1. `context/instructions.md` — How to interpret the prompt
@@ -237,7 +237,7 @@ Memory files are loaded after governance (so governance always takes precedence)
 
 - Knowledge files are cached in Redis alongside agent definitions.
 - Cache invalidation occurs whenever the Memory Agent writes updates to `context/memory/`.
-- ARL must implement a cache-refresh signal that the Memory Agent triggers after each distillation cycle.
+- The orchestration layer must implement a cache-refresh signal that the Memory Agent triggers after each distillation cycle.
 
 ### Storage
 
