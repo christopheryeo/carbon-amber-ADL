@@ -177,7 +177,40 @@ The `resources` field in messages tracks all refs with their resolution status.
 When the user asks "what's the plan for today?" or similar, read the latest file in `plans/` (by date in filename, e.g., `2026-02-23-plans.md`) and present a **summary table grouped by priority**. Each priority group should be a table with columns: `#`, `Task`, `Status`, `Effort`. Use status icons: 🆕 New, 🔄 In Progress, ✅ Done. Include totals at the bottom.
 
 ### Development Auditing
+
 When an item in the plans file is executed during a development session, its results **must be audited** at the end of execution. The findings and verification checks must be written to the appropriate accompanying audit file (e.g., `plans/2026-02-23 Audit.md`) to capture a permanent trial of development progress. This ensures transparency and prevents plan status icons from diverging from the actual codebase state. Always update the audit file with specific pass/fail outcomes against the task's objectives.
+
+### Audit File Formatting (`plans/YYYY-MM-DD Audit.md`)
+
+Each completed task must be recorded as an individual block in the following exact format — **do not use summary bullet lists**:
+
+```markdown
+## [Task Number] [Task name]
+**Status:** ✅ Done
+**Files:** `path/to/file1.md`, `path/to/file2.md`
+**Objective:** One sentence describing the goal of the task.
+**Verification Checklist:**
+- [x] Specific thing that was verified or done
+- [x] Another specific verification item
+```
+
+Rules:
+- Every task gets its **own `## N.N` heading** — never group multiple tasks under one heading
+- `Status` is always `✅ Done` once executed
+- `Files` lists the exact files modified (use backtick-quoted relative paths)
+- `Objective` is a single clear sentence of what the task accomplished
+- `Verification Checklist` items start with `- [x]` (checked) and describe specific, concrete outcomes — not vague summaries
+- Tasks in the same priority group share a single `## Priority N: <Name>` parent header with no sub-introduction or summary section; individual `## N.N` blocks follow directly
+
+### Plans File Formatting (`plans/YYYY-MM-DD-plans.md`)
+
+When a task is completed, both the **task-level icon** and the **priority section heading** must be updated:
+
+1. **Task icon**: Change `🆕` → `✅` for each completed item (e.g., `#### 2.1 ✅ Fix memory agent ID mismatch`)
+2. **Priority heading**: Append `✅ Done` to the heading once all items in a priority group are complete (e.g., `### 🔴 Priority 2: HIGH Severity Fixes ✅ Done`)
+3. **Status tracking table** (where present): Update `❌` rows to `✅ Done` for items completed during the session
+
+Both the audit file and the plans file must be updated **together** at the end of each task — never update one without the other.
 
 ## Log Files
 
