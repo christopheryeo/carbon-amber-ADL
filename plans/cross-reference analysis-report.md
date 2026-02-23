@@ -153,7 +153,7 @@ These findings compare message_schema.json against message_format.md and agent p
 
 - Standardise CAP-AUD-R identifier format across all files (A2).
 
-- Update instructions.md to reflect the full agent chain including Dispatch, Reasoning, and Execution agents (B2).
+- Update instructions.md to reflect the full agent chain including Dispatch, Reasoning, and Action agents (B2).
 
 - Archive or delete superseded placeholder files: action.md, interpretation.md, perception.md (B3).
 

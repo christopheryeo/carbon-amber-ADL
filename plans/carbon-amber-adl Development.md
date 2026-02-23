@@ -592,15 +592,137 @@ Standalone Interpretation Agent becomes **redundant**.
 
 ---
 
+## Part 6: Planning Agent Functionality Review
+
+**Date:** 2026-02-23
+**File Reviewed:** `agent/operational/planning.md` v1.2.0 (747 lines)
+**Cross-Referenced Against:** `context/governance/message_format.md` v1.6.0, `context/application.md` v1.3, `schema/message_schema.json` v1.2.0
+
+### Overall Assessment: Largely Functional — 90%
+
+The Planning Agent is the most complete and well-defined agent in the project. It has everything needed for an LLM to produce correct DAG-based execution workflows for the common use cases.
+
+---
+
+### ✅ Verified Areas (12/12 Pass)
+
+| Area | Assessment |
+|------|-----------|
+| Output format | Fully specified JSON schema with 8 task fields + 5 workflow-level fields |
+| 9-step construction process | Clear algorithmic steps from goal ingestion through validation |
+| Deduplication logic | Well-defined semantic equivalence rules with auditable dedup log |
+| Dependency rules | Comprehensive table covering 16 task types with correct rationale |
+| Execution groups | Clear tier-based grouping with parallelism marking |
+| Ref system | Full `input_refs`/`output_refs`/`derived_refs` lifecycle with registration rules |
+| Scope validation | Error conditions defined with proper error codes |
+| Examples | 3 detailed examples (simple, dedup, partial out-of-scope) with full JSON |
+| Common mistakes | 11 anti-patterns with corrections |
+| Pre-execution validation | Stale input detection + governance path format checks |
+| `next_agent` routing | Correctly points to `dispatch_agent` |
+| Traceability | Full `source_goals` traceability back to Goal Agent output |
+
+---
+
+### ⚠️ Issues Identified
+
+#### Issue P1: Missing Language Detection Dependency
+**Severity: MEDIUM**
+
+`application.md` Section 6.8 explicitly mandates the dependency chain: `CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001` (extract audio → detect language → transcribe).
+
+However, `planning.md`'s Dependency Rules table (Step 5) shows:
+- Transcription depends on: **Audio extraction** only
+- Language detection depends on: **Audio extraction** only
+
+These are listed as independent parallel tasks, but `application.md` requires language detection **before** transcription. The dependency should be:
+
+```
+Audio extraction (CAP-PRE-002)
+    ├── Language detection (CAP-AUD-004)
+    │       └── Transcription (CAP-AUD-001)  ← should depend on language detection
+    └── Speaker diarization (CAP-AUD-002)
+```
+
+Additionally, **Example 1** in `planning.md` skips language detection entirely — task_7 (transcription) depends only on task_5 (audio extraction) with no language detection task in the workflow.
+
+**Fix required:** Update the Dependency Rules table so that Transcription depends on both Audio Extraction and Language Detection. Update Example 1 to include a language detection task before transcription.
+
+---
+
+#### Issue P2: Incomplete Capability Coverage in Weight Table
+**Severity: LOW**
+
+The `estimated_weight` table (Step 8) does not cover all capabilities defined in `application.md`:
+
+| Missing Capability | Category |
+|-------------------|----------|
+| CAP-ACQ-003 (Instagram download) | Acquisition |
+| CAP-ACQ-004 (TikTok download) | Acquisition |
+| CAP-ACQ-005 (Direct upload) | Acquisition |
+| CAP-PRE-004 (Video segmentation) | Pre-processing |
+| CAP-PRE-005 (Resolution normalisation) | Pre-processing |
+| CAP-AUD-005 (Audio event detection) | Audio analysis |
+| CAP-AUD-R001/R002/R003 (All audience analysis) | Audience analysis |
+| CAP-SYN-003 (Report generation) | Synthesis |
+| CAP-DAT-001/002/003 (All data management) | Data management |
+
+The Planning Agent would have to guess weights for these capabilities rather than following explicit guidance.
+
+---
+
+#### Issue P3: Incomplete Dependency Rules Table
+**Severity: LOW**
+
+The Dependency Rules table (Step 5) does not cover the following capabilities from `application.md`:
+
+| Missing Task Type | Required Dependency (per `application.md`) |
+|-------------------|-------------------------------------------|
+| Audio event detection (CAP-AUD-005) | Audio extraction (CAP-PRE-002) |
+| Speaker stance analysis (CAP-SPK-002) | Speaker sentiment (CAP-SPK-001) + Facial attributes (CAP-VIS-006) |
+| Speaker profiling (CAP-SPK-003) | Transcription (CAP-AUD-001) + Diarization (CAP-AUD-002) + Speaker sentiment (CAP-SPK-001) |
+| Audience sentiment (CAP-AUD-R001) | Frame extraction (CAP-PRE-003) |
+| Crowd density estimation (CAP-AUD-R002) | Frame extraction (CAP-PRE-003) |
+| Audience engagement scoring (CAP-AUD-R003) | Audience sentiment (CAP-AUD-R001) + Facial attributes (CAP-VIS-006) |
+| Action recognition (CAP-VIS-004) | Frame extraction (CAP-PRE-003) |
+| Scene understanding (CAP-VIS-005) | Frame extraction (CAP-PRE-003) |
+| Deepfake detection (CAP-VIS-007) | Frame extraction (CAP-PRE-003) |
+| Data management (CAP-DAT-*) | Varies — generally depends on analysis outputs |
+
+Without these rules, the Planning Agent must infer dependencies from context rather than following explicit specification.
+
+---
+
+#### Issue P4: Example 2 Missing Full Workflow Output
+**Severity: LOW**
+
+Example 2 (Multi-Objective With Deduplication) shows the Goal Agent input and the deduplication analysis, but does not include the full Planning Agent workflow output. This means there is no example demonstrating:
+- How language detection is sequenced in the DAG
+- How a 13-task workflow looks after deduplication from 18 raw goals
+- The full `execution_groups` structure for a complex multi-objective workflow
+
+---
+
+### Summary of Planning Agent Issues
+
+| # | Issue | Severity | Effort |
+|---|-------|----------|--------|
+| P1 | Missing language detection → transcription dependency | MEDIUM | ~15 min |
+| P2 | Incomplete weight table (12 capabilities missing) | LOW | ~10 min |
+| P3 | Incomplete dependency rules table (10 task types missing) | LOW | ~20 min |
+| P4 | Example 2 missing full workflow output | LOW | ~30 min |
+
+---
+
 ## Document Metadata
 
-- **Report Date:** 2026-02-21
+- **Report Date:** 2026-02-21 (Parts 1–5), 2026-02-23 (Part 6)
 - **Log Analyzed:** 20260221-1.md (89KB)
 - **Agents Evaluated:** objective_agent, goal_agent, planning_agent
 - **Recommended Changes:** 3 new agents (dispatch), 2 consolidated agents (execution), 1 repositioned agent (reasoning)
+- **Planning Agent Review:** 12 areas verified, 1 medium issue, 3 low issues
 - **Critical Issues:** 2 (parent_message_id integrity, duplicate planning execution)
-- **Medium Issues:** 2
-- **Low Issues:** 2
+- **Medium Issues:** 3 (including P1 language detection dependency)
+- **Low Issues:** 5 (including P2–P4)
 
 ---
 
