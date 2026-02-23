@@ -153,6 +153,8 @@ Compare all goals across all objectives using **semantic equivalence** — two g
 | Semantically equivalent but different phrasing (e.g., "<Pre-process> store_1" vs "<Pre-process> store_1 for downstream analysis") | Merge into single task using the more general phrasing. Log the merge in `deduplication_log` with rationale. |
 | Same action but on different inputs (e.g., "<Analyse> store_1 for the first 30 seconds" vs "<Analyse> store_1 at regular intervals") | Keep as separate tasks — these are NOT duplicates. |
 
+**Important Logging Rule:** If you consolidate entire objectives or group multiple goals into fewer tasks, you MUST record this in the `deduplication_log`. Each entry must document the source objectives, the merge rationale, and the resulting consolidated task. This ensures full transparency of the workflow transformation.
+
 **Why deduplicate aggressively:** The Goal Agent intentionally repeats shared pre-condition goals (like common pre-processing steps) across every objective that needs them, following its "Handling Shared Pre-Conditions" rule. This ensures no implicit dependencies. Your job is to collapse these into single task nodes and wire the dependency graph correctly, so the executor runs each operation exactly once.
 
 ### Step 3: Map to Capabilities
@@ -622,6 +624,214 @@ Group 7: [task_10]                         ← Report / data management
 
 This deduplication reduces the workflow from 18 raw goals to 13 unique tasks — eliminating 5 redundant executions.
 
+**Planning Agent `output.content`:**
+```json
+{
+  "workflow": {
+    "tasks": {
+      "task_1": {
+        "id": "task_1",
+        "action": "Validate src_1 URL",
+        "capability_ids": ["CAP-ACQ-001"],
+        "depends_on": [],
+        "input_refs": ["src_1"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_1", "goal_index": 0 }],
+        "execution_group": 1,
+        "estimated_weight": "light"
+      },
+      "task_2": {
+        "id": "task_2",
+        "action": "Download from src_1 to store_1",
+        "capability_ids": ["CAP-ACQ-002", "CAP-DAT-002"],
+        "depends_on": ["task_1"],
+        "input_refs": ["src_1"],
+        "output_refs": ["store_1"],
+        "source_goals": [{ "objective_key": "objective_1", "goal_index": 1 }],
+        "execution_group": 2,
+        "estimated_weight": "medium"
+      },
+      "task_3": {
+        "id": "task_3",
+        "action": "Verify store_1 integrity",
+        "capability_ids": ["CAP-ACQ-006"],
+        "depends_on": ["task_2"],
+        "input_refs": ["store_1"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_1", "goal_index": 2 }],
+        "execution_group": 3,
+        "estimated_weight": "light"
+      },
+      "task_4": {
+        "id": "task_4",
+        "action": "Extract metadata from store_1",
+        "capability_ids": ["CAP-ACQ-007"],
+        "depends_on": ["task_2"],
+        "input_refs": ["store_1"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_1", "goal_index": 3 }],
+        "execution_group": 3,
+        "estimated_weight": "light"
+      },
+      "task_5": {
+        "id": "task_5",
+        "action": "Extract audio track from store_1",
+        "capability_ids": ["CAP-PRE-002"],
+        "depends_on": ["task_3"],
+        "input_refs": ["store_1"],
+        "output_refs": ["derived_1"],
+        "source_goals": [
+          { "objective_key": "objective_2", "goal_index": 0 },
+          { "objective_key": "objective_3", "goal_index": 0 },
+          { "objective_key": "objective_4", "goal_index": 0 }
+        ],
+        "execution_group": 4,
+        "estimated_weight": "medium"
+      },
+      "task_6": {
+        "id": "task_6",
+        "action": "Detect language(s) spoken in the audio from derived_1",
+        "capability_ids": ["CAP-AUD-004"],
+        "depends_on": ["task_5"],
+        "input_refs": ["derived_1"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_2", "goal_index": 1 }],
+        "execution_group": 5,
+        "estimated_weight": "medium"
+      },
+      "task_7": {
+        "id": "task_7",
+        "action": "Transcribe audio content from derived_1 to text with timestamps",
+        "capability_ids": ["CAP-AUD-001"],
+        "depends_on": ["task_6"],
+        "input_refs": ["derived_1"],
+        "output_refs": ["derived_2"],
+        "source_goals": [
+          { "objective_key": "objective_2", "goal_index": 2 },
+          { "objective_key": "objective_4", "goal_index": 1 }
+        ],
+        "execution_group": 6,
+        "estimated_weight": "medium"
+      },
+      "task_8": {
+        "id": "task_8",
+        "action": "Identify and label distinct speakers through diarization of derived_1",
+        "capability_ids": ["CAP-AUD-002"],
+        "depends_on": ["task_5"],
+        "input_refs": ["derived_1"],
+        "output_refs": ["derived_3"],
+        "source_goals": [
+          { "objective_key": "objective_2", "goal_index": 3 },
+          { "objective_key": "objective_3", "goal_index": 1 },
+          { "objective_key": "objective_4", "goal_index": 2 }
+        ],
+        "execution_group": 5,
+        "estimated_weight": "heavy"
+      },
+      "task_9": {
+        "id": "task_9",
+        "action": "Build speaker profiles with speaking duration and frequency of turns using derived_3",
+        "capability_ids": ["CAP-SPK-002"],
+        "depends_on": ["task_8"],
+        "input_refs": ["derived_3"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_3", "goal_index": 2 }],
+        "execution_group": 6,
+        "estimated_weight": "medium"
+      },
+      "task_10": {
+        "id": "task_10",
+        "action": "Analyse vocal characteristics from derived_1 for speech emotion recognition per speaker using derived_3",
+        "capability_ids": ["CAP-AUD-003"],
+        "depends_on": ["task_5", "task_8"],
+        "input_refs": ["derived_1", "derived_3"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_4", "goal_index": 3 }],
+        "execution_group": 6,
+        "estimated_weight": "heavy"
+      },
+      "task_11": {
+        "id": "task_11",
+        "action": "Run sentiment analysis on transcript derived_2 segments per speaker using derived_3",
+        "capability_ids": ["CAP-SPK-001"],
+        "depends_on": ["task_7", "task_8"],
+        "input_refs": ["derived_2", "derived_3"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_4", "goal_index": 4 }],
+        "execution_group": 7,
+        "estimated_weight": "heavy"
+      },
+      "task_12": {
+        "id": "task_12",
+        "action": "Extract video frames from store_1 for facial expression analysis",
+        "capability_ids": ["CAP-PRE-003"],
+        "depends_on": ["task_3"],
+        "input_refs": ["store_1"],
+        "output_refs": ["derived_4"],
+        "source_goals": [{ "objective_key": "objective_4", "goal_index": 5 }],
+        "execution_group": 4,
+        "estimated_weight": "medium"
+      },
+      "task_13": {
+        "id": "task_13",
+        "action": "Correlate text sentiment, vocal emotion, and facial expression results per speaker",
+        "capability_ids": ["CAP-SYN-001"],
+        "depends_on": ["task_10", "task_11", "task_12"],
+        "input_refs": ["derived_4"],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_4", "goal_index": 6 }],
+        "execution_group": 8,
+        "estimated_weight": "heavy"
+      }
+    },
+    "execution_order": ["task_1", "task_2", "task_3", "task_4", "task_5", "task_12", "task_6", "task_8", "task_7", "task_9", "task_10", "task_11", "task_13"],
+    "execution_groups": {
+      "1": { "tasks": ["task_1"], "description": "Source validation", "parallel": false },
+      "2": { "tasks": ["task_2"], "description": "Source acquisition", "parallel": false },
+      "3": { "tasks": ["task_3", "task_4"], "description": "Integrity and metadata", "parallel": true },
+      "4": { "tasks": ["task_5", "task_12"], "description": "Audio and frame extraction", "parallel": true },
+      "5": { "tasks": ["task_6", "task_8"], "description": "Language detection and diarization", "parallel": true },
+      "6": { "tasks": ["task_7", "task_9", "task_10"], "description": "Transcription, profiles, and emotion", "parallel": true },
+      "7": { "tasks": ["task_11"], "description": "Text sentiment", "parallel": false },
+      "8": { "tasks": ["task_13"], "description": "Correlation and synthesis", "parallel": false }
+    },
+    "total_tasks": 13,
+    "deduplicated_count": 5
+  },
+  "deduplication_log": [
+    {
+      "merged_task_id": "task_5",
+      "canonical_action": "Extract audio track from store_1",
+      "source_goals": [
+        { "objective_key": "objective_2", "goal_index": 0 },
+        { "objective_key": "objective_3", "goal_index": 0 },
+        { "objective_key": "objective_4", "goal_index": 0 }
+      ],
+      "rationale": "Identical audio extraction goal (from store_1) across 3 objectives; single extraction serves all downstream consumers"
+    },
+    {
+      "merged_task_id": "task_8",
+      "canonical_action": "Identify and label distinct speakers through audio diarization of derived_1",
+      "source_goals": [
+        { "objective_key": "objective_2", "goal_index": 3 },
+        { "objective_key": "objective_3", "goal_index": 1 },
+        { "objective_key": "objective_4", "goal_index": 2 }
+      ],
+      "rationale": "Semantically equivalent speaker diarization goal across 3 objectives; minor phrasing differences do not change the operation"
+    },
+    {
+      "merged_task_id": "task_7",
+      "canonical_action": "Transcribe audio content from derived_1 to text with timestamps",
+      "source_goals": [
+        { "objective_key": "objective_2", "goal_index": 2 },
+        { "objective_key": "objective_4", "goal_index": 1 }
+      ],
+      "rationale": "Identical transcription goal across 2 objectives; single transcription serves both downstream tasks"
+    }
+  ]
+}
+```
+
 ### Example 3: Partial Out-of-Scope (Empty Goals for One Objective)
 
 **Input from Goal Agent:**
@@ -685,6 +895,9 @@ This deduplication reduces the workflow from 18 raw goals to 13 unique tasks —
 11. ❌ Using vague resource references in action text: "Process the data"
     ✅ Use explicit ref IDs: "<Pre-process> store_1"
 
+12. ❌ Skipping `derived_ref` numbers: Registering `derived_1`, `derived_3`, `derived_4`
+    ✅ IDs MUST be strictly sequential: `derived_1`, `derived_2`, `derived_3`
+
 ---
 
 ## Pre-Execution Validation (MANDATORY)
@@ -713,6 +926,18 @@ The canonical governance files you MUST reference are:
 "agent/operational/planning.md"
 ```
 
+### Check 3: Sequential `derived_ref` Numbering
+
+Verify all `derived_ref` IDs in `resources.derived_refs` are numbered sequentially with no gaps (e.g., `derived_1`, `derived_2`, `derived_3` is valid; `derived_1`, `derived_3`, `derived_4` is invalid).
+- ✅ PASS: All `derived_ref` IDs are sequential with no gaps.
+- ❌ FAIL: There is a gap in the numbering. Fix the assigned IDs and `output_refs` to be strictly sequential.
+
+### Check 4: Deduplication Transparency
+
+Verify that if your `total_tasks` count is less than the total number of raw goals received, the `deduplication_log` is non-empty and accurately reflects the merges.
+- ✅ PASS: `total_tasks` equals total goals, OR `total_tasks` is less than total goals and `deduplication_log` contains the merge entries.
+- ❌ FAIL: `total_tasks` is less than total goals but `deduplication_log` is empty. Add the missing merge rationale to the log.
+
 ---
 
 ## Interaction
@@ -724,6 +949,12 @@ The canonical governance files you MUST reference are:
 - Your `next_agent.name` is always `"dispatch_agent"` on success — the Dispatch Agent manages runtime execution of the workflow DAG
 - You inherit the `session_id` and `request_id` from the Goal Agent's metadata
 - You increment `sequence_number` to 3
+
+### message_id Construction Rule (CRITICAL)
+
+When generating your own `message_id` for your output, construct it using the prefix `msg-plan-` followed by your execution timestamp. Do not reuse the `msg-goal-` prefix from the Goal Agent.
+
+**Construct:** `msg-plan-{YYYYMMDD}-{HHMMSS}`
 
 ### parent_message_id Construction Rule (CRITICAL)
 
@@ -748,12 +979,13 @@ This approach avoids hallucination because the timestamp is present in your inpu
 ---
 
 ## Version
-v1.4.0
+v1.5.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.5.0 (Feb 23, 2026): Priority 5 fixes: Added full deduplication DAG output to Example 2. Added Pre-Execution validation checks for sequential `derived_ref` IDs (Check 3) and Deduplication Transparency (Check 4). Added explicit `message_id` rules using `msg-plan-` prefix. Added explicit common mistake regarding `derived_ref` sequential numbering.
 - v1.4.0 (Feb 23, 2026): Agent-Application Separation refactoring. Replaced all application-specific content in rules and structural sections with generic patterns that reference `application.md`. Genericised: Dependency Rules table, Ref Assignment Rules table, Weight table, Execution Group illustration, Scope Validation, tie-breaking rules, deduplication examples, Common Mistakes, and Workflow Construction Rule 12. Examples retain current application capabilities for illustration but are prefaced with a note that patterns are application-agnostic. This change ensures `planning.md` remains portable when `application.md` is swapped.
 - v1.3.0 (Feb 23, 2026): Fixed language detection → transcription dependency chain. Transcription now depends on Language Detection (not directly on Audio Extraction), matching `application.md` Section 6.9 mandatory prerequisite: `CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001`. Updated Example 1 to include language detection goal in Goal Agent input and a language detection task (task_7) in the workflow output. Example 1 now has 13 tasks across 8 execution groups (was 12 tasks across 7 groups). Updated Execution Group Semantics illustration to reflect corrected dependency tiers.
 - v1.2.0 (Feb 21, 2026): Added "Pre-Execution Validation (MANDATORY)" section with two checks: (1) Input Freshness — detects stale/misrouted input by comparing Goal Agent timestamp to Planning Agent execution time, emitting STALE_INPUT_WARNING to audit trail if gap exceeds 60 seconds; (2) Governance File Path Format — canonical path list to prevent path abbreviation hallucinations. Added "parent_message_id Construction Rule" — replaces unreliable recall-based inheritance with deterministic construction from Goal Agent's timestamp (`msg-goal-{YYYYMMDD}-{HHMMSS}`). These address fabricated parent_message_ids and stale input routing observed in 20260220-5.md logs.
