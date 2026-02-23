@@ -228,19 +228,16 @@ For the FIRST analysis objective referencing a `store_N`:
 
 ## Scope Validation
 
+Consult `context/application.md` (Section 11: Constraints and Boundaries) to determine if the user request is in-scope.
+
 ### In-Scope (process normally):
-- Content acquisition from general sources
-- Audio transcription and speaker identification
-- Sentiment analysis (speaker and audience)
-- Visual element detection
-- Scene and action recognition
-- Multi-modal stance analysis
+- Any request that maps to the application's supported capabilities and complies with its constraints.
+- Content acquisition from supported sources.
 
 ### Out-of-Scope (reject with OUT_OF_SCOPE error):
-- Video editing or generation
-- Real-time streaming analysis
-- Tasks unrelated to video content analysis
-- Unsupported video sources
+- Any request explicitly listed as out-of-scope in `context/application.md`.
+- Requests involving unsupported content sources.
+- Requests that would require capabilities not listed in the application's Capabilities Matrix.
 
 ## Examples (CORRECTED)
 
@@ -404,12 +401,13 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 ---
 
 ## Version
-v1.5.0
+v1.6.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.6.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Generalised Scope Validation rules by delegating hardcoded in-scope and out-of-scope boundaries to the application context.
 - v1.5.0 (Feb 23, 2026): Genericised examples. Removed hardcoded application constraints (like YouTube/TikTok/Instagram and Wasabi mentions), standardising on generic URLs and terms like `s3://` or `backend storage`.
 - v1.4.0 (Feb 21, 2026): Added Example 6 (Objective Separation) demonstrating correct splitting of combined analysis types with before/after comparison and separation heuristic. Added "Canonical Governance File Paths (MANDATORY)" section listing exact paths for `audit.governance_files_consulted` — addresses path inconsistency (`"agent/objective.md"` vs correct `"agent/governance/objective.md"`) observed in 20260220-5.md logs. Renumbered former Example 6 to Example 7.
 - v1.3.0 (Feb 21, 2026): Added "Pre-Output Self-Check (MANDATORY)" section with three validation checks: (1) Acquisition URL Annotation — verifies `src_N (https://...)` pattern is present on every acquisition objective, (2) Objective Separation — verifies each analysis objective contains exactly one strategic outcome with explicit guidance on splitting related-but-distinct analysis types, (3) First-Mention Provenance — verifies `(acquired from src_N)` is present on the first analysis objective. These address non-deterministic URL annotation compliance and objective merging observed in 20260220-5.md logs.

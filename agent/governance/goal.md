@@ -152,17 +152,16 @@ Consult `context/application.md` (Section 6.11: Capability-to-Goal Decomposition
 
 ## Scope Validation
 
+Consult `context/application.md` (Section 11: Constraints and Boundaries) to determine if the objective is in-scope.
+
 ### In-Scope (process normally):
-- Any objective that maps to one or more capabilities in the Capabilities Matrix
-- Objectives involving supported content sources
-- Objectives requiring any combination of audio, visual, speaker, audience, or scene analysis
+- Any objective that maps to one or more capabilities in the Capabilities Matrix.
+- Objectives involving supported content sources as defined in the application context.
 
 ### Out-of-Scope (reject with OUT_OF_SCOPE error):
-- Objectives requiring video editing, generation, or modification
-- Objectives requiring real-time streaming analysis
-- Objectives involving unsupported video sources
-- Objectives unrelated to video content analysis
-- Objectives that would require capabilities not listed in the Capabilities Matrix
+- Any request explicitly listed as out-of-scope in `context/application.md`.
+- Objectives involving unsupported content sources.
+- Objectives that would require capabilities not listed in the Capabilities Matrix.
 
 **If an objective is partially in-scope:** Generate goals for the in-scope portions and flag the out-of-scope portions in the `audit.compliance_notes` field with a clear explanation.
 
@@ -515,12 +514,13 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 ---
 
 ## Version
-v1.9.0
+v1.10.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.10.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Generalised Scope Validation boundaries by referring to the application context.
 - v1.9.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Removed video-specific Goal Decomposition Patterns (Patterns A-J) and replaced them with a generic reference to the application context (`application.md`).
 - v1.8.0 (Feb 23, 2026): Genericised examples to remove hardcoded YouTube/Instagram/TikTok examples. Generalised storage references replacing Wasabi mentions with generic file storage backends.
 - v1.7.0 (Feb 21, 2026): Made language detection mandatory before transcription across all patterns. Added "Detect language(s) spoken in the audio" to Patterns C and D (which previously included transcription without this step). Added Goal Generation Rule #11 making language detection an explicit mandatory pre-condition for any transcription goal. Updated Examples 1, 3, and 4 to include language detection. Added Common Mistake #13 (omitting language detection). Addresses intermittent omission of language detection observed in 20260220-5.md logs.
