@@ -96,7 +96,7 @@ Each task in the `tasks` object has the following fields:
 | `execution_group` | integer | Yes | The execution group this task belongs to. Tasks in the same group have all their dependencies satisfied simultaneously. See Execution Groups. |
 | `input_refs` | array of strings | Yes | Ref IDs consumed by this task (e.g., `["src_1"]`, `["store_1"]`, `["derived_1"]`). Lists every resource this task reads from. Empty array `[]` if the task does not consume a tracked resource. |
 | `output_refs` | array of strings | Yes | Ref IDs produced or populated by this task (e.g., `["store_1"]`, `["derived_1"]`). Lists every resource this task writes to. Empty array `[]` if the task does not produce a tracked resource. |
-| `estimated_weight` | string | Yes | Approximate computational cost: `"light"` (validation, metadata), `"medium"` (extraction, transcription), `"heavy"` (multi-modal analysis, model inference) |
+| `estimated_weight` | string | Yes | Approximate computational cost: `"light"` (validation, metadata), `"medium"` (data retrieval, pre-processing), `"heavy"` (multi-step analysis, model inference). Consult the weight table in Step 8 for mapping from capability patterns. |
 
 ---
 
@@ -121,13 +121,13 @@ The `deduplication_log` array records every merge decision for auditability:
   "deduplication_log": [
     {
       "merged_task_id": "task_5",
-      "canonical_action": "Extract audio track from store_1",
+      "canonical_action": "<description of generic pre-processing task on store_1>",
       "source_goals": [
         { "objective_key": "objective_2", "goal_index": 0 },
         { "objective_key": "objective_3", "goal_index": 0 },
         { "objective_key": "objective_4", "goal_index": 0 }
       ],
-      "rationale": "Identical audio extraction goal appeared in 3 objectives; merged into single task node with all dependants wired to it"
+      "rationale": "Identical pre-processing goal appeared in 3 objectives; merged into single task node with all dependants wired to it"
     }
   ]
 }
@@ -150,10 +150,10 @@ Compare all goals across all objectives using **semantic equivalence** — two g
 | Condition | Action |
 |-----------|--------|
 | Exact text match across objectives | Merge into single task. Record all source goals in `source_goals`. |
-| Semantically equivalent but different phrasing (e.g., "Extract audio track from store_1" vs "Extract audio track from store_1 for speech analysis") | Merge into single task using the more general phrasing. Log the merge in `deduplication_log` with rationale. |
-| Same action but on different inputs (e.g., "Extract frames from store_1 for the first 30 seconds" vs "Extract frames from store_1 at regular intervals") | Keep as separate tasks — these are NOT duplicates. |
+| Semantically equivalent but different phrasing (e.g., "<Pre-process> store_1" vs "<Pre-process> store_1 for downstream analysis") | Merge into single task using the more general phrasing. Log the merge in `deduplication_log` with rationale. |
+| Same action but on different inputs (e.g., "<Analyse> store_1 for the first 30 seconds" vs "<Analyse> store_1 at regular intervals") | Keep as separate tasks — these are NOT duplicates. |
 
-**Why deduplicate aggressively:** The Goal Agent intentionally repeats shared pre-condition goals (like audio extraction) across every objective that needs them, following its "Handling Shared Pre-Conditions" rule. This ensures no implicit dependencies. Your job is to collapse these into single task nodes and wire the dependency graph correctly, so the executor runs each operation exactly once.
+**Why deduplicate aggressively:** The Goal Agent intentionally repeats shared pre-condition goals (like common pre-processing steps) across every objective that needs them, following its "Handling Shared Pre-Conditions" rule. This ensures no implicit dependencies. Your job is to collapse these into single task nodes and wire the dependency graph correctly, so the executor runs each operation exactly once.
 
 ### Step 3: Map to Capabilities
 
@@ -167,30 +167,32 @@ For each task, determine which resource ref IDs it consumes (`input_refs`) and w
 
 #### Ref Assignment Rules
 
-| Task Type | `input_refs` | `output_refs` | Derived Ref Registration |
-|-----------|-------------|--------------|--------------------------|
-| URL validation | `["src_N"]` | `[]` | None |
-| Video download | `["src_N"]` | `["store_N"]` | None (store_N already defined by Objective Agent) |
-| File integrity verification | `["store_N"]` | `[]` | None |
-| Metadata extraction | `["store_N"]` | `[]` | None |
-| Audio extraction | `["store_N"]` | `["derived_N"]` | Register `derived_N` with `asset_type: "audio_track"`, `parent_ref_id: "store_N"`, `capability_id: "CAP-PRE-002"` |
-| Frame extraction | `["store_N"]` | `["derived_N"]` | Register `derived_N` with `asset_type: "frame_set"`, `parent_ref_id: "store_N"`, `capability_id: "CAP-PRE-003"` |
-| Transcription | `["derived_N"]` (audio) | `["derived_M"]` | Register `derived_M` with `asset_type: "transcript"`, `parent_ref_id: "derived_N"`, `capability_id: "CAP-AUD-001"` |
-| Speaker diarization | `["derived_N"]` (audio) | `["derived_M"]` | Register `derived_M` with `asset_type: "diarization_map"`, `parent_ref_id: "derived_N"`, `capability_id: "CAP-AUD-002"` |
-| Analysis tasks | Relevant `derived_N` refs | `[]` | None (analysis results are output content, not derived assets) |
-| Multi-modal fusion | Multiple `derived_N` refs | `[]` | None |
+For each task, determine `input_refs` and `output_refs` based on the capability's I/O Asset Types defined in `context/application.md` Section 6.9.
+
+**General patterns:**
+
+| Task Category | `input_refs` | `output_refs` | Derived Ref Registration |
+|--------------|-------------|--------------|--------------------------|
+| Source validation | `["src_N"]` | `[]` | None |
+| Source acquisition | `["src_N"]` | `["store_N"]` | None (store_N already defined by Objective Agent) |
+| Integrity/metadata tasks | `["store_N"]` | `[]` | None |
+| Pre-processing tasks | `["store_N"]` or `["derived_N"]` | `["derived_M"]` | Register `derived_M` with the `asset_type` and `capability_id` from `application.md` Section 6.9 I/O Asset Types table |
+| Analysis tasks | Relevant `derived_N` refs | `[]` or `["derived_M"]` | Register if producing a new intermediate asset; none if producing final analysis output |
+| Synthesis/fusion tasks | Multiple `derived_N` refs | `[]` or `["derived_M"]` | Register if producing a new intermediate asset |
+
+**Important:** Consult `application.md` Section 6.9 (I/O Asset Types) for the specific `asset_type` and `capability_id` to use when registering derived refs for each capability.
 
 #### Derived Ref Registration
 
-When a task produces a new intermediate asset (audio track, frame set, transcript, etc.), you MUST register a corresponding `derived_ref` entry in the message's `resources.derived_refs` array:
+When a task produces a new intermediate asset, you MUST register a corresponding `derived_ref` entry in the message's `resources.derived_refs` array:
 
 ```json
 {
   "ref_id": "derived_1",
   "parent_ref_id": "store_1",
   "storage_uri": null,
-  "asset_type": "audio_track",
-  "capability_id": "CAP-PRE-002",
+  "asset_type": "<from application.md Section 6.9 I/O Asset Types>",
+  "capability_id": "<CAP-XXX-NNN from the capability being executed>",
   "created_at_sequence": null,
   "status": "pending"
 }
@@ -208,33 +210,30 @@ For each task, determine which other tasks must complete before it can begin. Ap
 
 #### Dependency Rules
 
-| Task Type | Depends On | Rationale |
-|-----------|-----------|-----------|
-| URL validation | Nothing | First action in any acquisition workflow |
-| Video download | URL validation | Cannot download without confirming URL is valid |
-| File integrity verification | Video download | Cannot verify a file that hasn't been downloaded |
-| Metadata extraction | Video download | Requires the downloaded file |
-| Audio extraction | File integrity verification | Operate on verified file only |
-| Frame extraction | File integrity verification | Operate on verified file only |
-| Language detection | Audio extraction | Requires extracted audio track |
-| Transcription | Language detection | Language must be detected before transcription model can be configured for the correct language (per `application.md` Section 6.9: `CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001`) |
-| Speaker diarization | Audio extraction | Requires extracted audio track |
-| Sentiment analysis (text) | Transcription, Speaker diarization | Requires transcript segments mapped to speakers |
-| Speech emotion recognition | Audio extraction, Speaker diarization | Requires audio segments per speaker |
-| Facial expression analysis | Frame extraction | Requires extracted video frames |
-| Scene segmentation | Frame extraction | Requires extracted video frames |
-| Object detection | Frame extraction | Requires extracted video frames |
-| OCR (text in video) | Object detection | Requires detected text-bearing objects |
-| Multi-modal fusion/correlation | All contributing analysis tasks | Cannot fuse results that don't exist yet |
-| Report generation | Multi-modal fusion (if present), or all analysis tasks | Final synthesis step |
-| Result indexing | Report generation | Index the final outputs |
+For each task, determine dependencies by consulting `context/application.md` Section 6.9 (Capability Dependencies). The prerequisite rules in that section define mandatory ordering between capabilities.
+
+**General dependency patterns:**
+
+| Task Category | Depends On | Rationale |
+|--------------|-----------|----------|
+| Source validation | Nothing | First action in any acquisition workflow |
+| Source acquisition | Source validation | Cannot acquire without confirming source is valid |
+| Integrity verification | Source acquisition | Cannot verify a resource that hasn't been acquired |
+| Metadata extraction | Source acquisition | Requires the acquired resource |
+| Pre-processing tasks | Integrity verification | Operate on verified resources only |
+| Analysis tasks | Pre-processing tasks that produce their required inputs | See `application.md` Section 6.9 Prerequisite Rules for specific chains |
+| Synthesis/fusion tasks | All contributing analysis tasks | Cannot synthesise results that don't exist yet |
+| Report generation | Synthesis tasks (if present), or all analysis tasks | Final output step |
+| Data management tasks | Report generation or relevant analysis outputs | Index/store the final outputs |
+
+**IMPORTANT:** The table above provides generic patterns only. For the specific capability prerequisite chains in this application, you MUST consult `application.md` Section 6.9 Prerequisite Rules. Those rules define mandatory ordering (e.g., transitive chains where capability A must complete before capability B, which must complete before capability C).
 
 #### Dependency Resolution Rules
 
 1. **Transitive reduction**: Only record direct dependencies. If task_3 depends on task_2 and task_2 depends on task_1, do NOT list task_1 in task_3's `depends_on` — the transitive dependency is implicit.
 2. **Cross-objective dependencies**: After deduplication, a task from objective_3 may depend on a deduplicated task that originated from objective_2. This is expected and correct.
 3. **No circular dependencies**: The workflow MUST be a DAG. If circular dependencies are detected, this indicates a Goal Agent error — flag in `audit.compliance_notes`.
-4. **Extraction vs. Analysis distinction**: Pre-processing tasks (frame/audio extraction) depend only on verified input files, NOT on analysis results. When a Goal Agent goal phrases extraction as "corresponding to speaker segments," separate the extraction (CAP-PRE) from the segment-aligned analysis (CAP-VIS/CAP-SPK). The extraction task depends on file integrity; the analysis task depends on both the extraction AND the segment source (e.g., diarization).
+4. **Pre-processing vs. Analysis distinction**: Pre-processing tasks depend only on verified input resources, NOT on analysis results. When a Goal Agent goal phrases pre-processing as dependent on analysis output (e.g., "corresponding to identified segments"), separate the pre-processing from the segment-aligned analysis. The pre-processing task depends on integrity verification; the analysis task depends on both the pre-processing output AND the segment source.
 
 ### Step 6: Assign Execution Groups
 
@@ -251,22 +250,22 @@ Tasks within the same execution group MAY be executed in parallel if they have n
 
 Produce a topological sort of all task IDs. This is a valid sequential execution order — executing tasks in this exact order guarantees all dependencies are satisfied.
 
-**Tie-breaking rule**: When multiple tasks could appear next (same dependency tier), order by:
-1. Acquisition tasks first (CAP-ACQ-*)
-2. Pre-processing tasks second (CAP-PRE-*)
-3. Analysis tasks third (CAP-AUD-*, CAP-SPK-*, CAP-AUD-R*, CAP-VIS-*)
-4. Synthesis tasks fourth (CAP-SYN-*)
-5. Data management tasks last (CAP-DAT-*)
+**Tie-breaking rule**: When multiple tasks could appear next (same dependency tier), order by the capability category sequence defined in `context/application.md` Capabilities Matrix. The general ordering is:
+1. Acquisition tasks first
+2. Pre-processing tasks second
+3. Analysis tasks third
+4. Synthesis tasks fourth
+5. Data management tasks last
 
 ### Step 8: Estimate Task Weights
 
-Assign an `estimated_weight` to each task based on its capability mapping:
+Assign an `estimated_weight` to each task based on its capability mapping. Consult `context/application.md` Section 6 to understand the computational characteristics of each capability:
 
-| Weight | Capability Pattern | Examples |
-|--------|--------------------|----------|
-| `light` | CAP-ACQ-001, CAP-ACQ-006, CAP-ACQ-007 | URL validation, file integrity check, metadata extraction |
-| `medium` | CAP-ACQ-002/003/004, CAP-PRE-*, CAP-AUD-001, CAP-AUD-004 | Video download, audio/frame extraction, transcription, language detection |
-| `heavy` | CAP-AUD-002/003, CAP-SPK-*, CAP-AUD-R*, CAP-VIS-*, CAP-SYN-001/002 | Diarization, emotion recognition, sentiment analysis, visual analysis, multi-modal fusion |
+| Weight | General Pattern | Typical Characteristics |
+|--------|-----------------|------------------------|
+| `light` | Validation, metadata, integrity checks | Fast operations with minimal computation |
+| `medium` | Data acquisition, pre-processing, simple analysis | Moderate I/O or single-model operations |
+| `heavy` | Multi-step analysis, model inference, cross-modal synthesis | Computationally expensive operations requiring ML models or multi-source correlation |
 
 ### Step 9: Validate Workflow
 
@@ -296,7 +295,7 @@ Before producing output, verify:
 9. `execution_groups` must partition all tasks into dependency-satisfying tiers
 10. NEVER generate tasks that fall outside the platform's Capabilities Matrix
 11. NEVER invent new goals — only organize and deduplicate goals received from the Goal Agent
-12. Ref-Based Storage Resolution Rule: all task actions referencing stored video content must use the `store_N` ref ID (e.g., "Extract audio track from store_1"), never the original source URL. Similarly, tasks consuming derived assets must reference the `derived_N` ref ID. Task `input_refs` and `output_refs` fields must mirror the ref IDs mentioned in the action text.
+12. Ref-Based Storage Resolution Rule: all task actions referencing stored content must use the `store_N` ref ID (e.g., \"<Pre-process> store_1\"), never the original source URL. Similarly, tasks consuming derived assets must reference the `derived_N` ref ID. Task `input_refs` and `output_refs` fields must mirror the ref IDs mentioned in the action text.
 13. Every task MUST have both `input_refs` and `output_refs` arrays — use empty array `[]` when a task does not consume or produce tracked resources
 14. New `derived_refs` created by the workflow MUST be registered in the message's `resources.derived_refs` array with `status: "pending"`
 
@@ -307,15 +306,13 @@ Before producing output, verify:
 Execution groups represent tiers of tasks that can begin simultaneously because all their dependencies are in earlier groups. The executor MAY choose to run tasks within a group in parallel, but is not required to.
 
 ```
-Group 1: [task_1]                          ← URL validation (no deps)
-Group 2: [task_2]                          ← Video download (depends on task_1)
-Group 3: [task_3, task_4]                  ← Integrity check + metadata (depend on task_2, independent of each other)
-Group 4: [task_5, task_6]                  ← Audio extraction + frame extraction (depend on task_3, independent)
-Group 5: [task_7, task_9]                  ← Language detection + diarization (depend on task_5, independent)
-Group 6: [task_8, task_10, task_12]        ← Transcription (depends on task_7) + emotion + facial analysis
-Group 7: [task_11]                         ← Sentiment analysis (depends on task_8 + task_9)
-Group 8: [task_13]                         ← Multi-modal correlation
-Group 9: [task_14]                         ← Report generation
+Group 1: [task_1]                          ← Source validation (no deps)
+Group 2: [task_2]                          ← Source acquisition (depends on task_1)
+Group 3: [task_3, task_4]                  ← Integrity + metadata (depend on task_2, independent of each other)
+Group 4: [task_5, task_6]                  ← Pre-processing A + B (depend on task_3, independent)
+Group 5: [task_7, task_8]                  ← Analysis tasks (depend on task_5 and/or task_6)
+Group 6: [task_9]                          ← Synthesis (depends on all analysis tasks)
+Group 7: [task_10]                         ← Report / data management
 ```
 
 ---
@@ -323,9 +320,9 @@ Group 9: [task_14]                         ← Report generation
 ## Scope Validation
 
 ### In-Scope (process normally):
-- Any set of goals that map to capabilities in the Capabilities Matrix
-- Goals involving supported sources (YouTube, Instagram, TikTok, direct uploads)
-- Goals requiring any combination of audio, visual, speaker, audience, or scene analysis
+- Any set of goals that map to capabilities in `context/application.md` Section 6 (Capabilities Matrix)
+- Goals involving supported sources defined in `context/application.md` Section 7
+- Goals requiring any combination of capabilities listed in the Capabilities Matrix
 
 ### Error Conditions:
 
@@ -340,7 +337,9 @@ Group 9: [task_14]                         ← Report generation
 
 ## Examples
 
-### Example 1: Simple Sentiment Analysis (2 Objectives, With Deduplication)
+> **Note:** The following examples use capabilities from the currently configured application (`context/application.md`). The same workflow construction patterns apply regardless of the application — only the specific capability IDs, task actions, and domain terminology change.
+
+### Example 1: Multi-Analysis Workflow (2 Objectives, No Deduplication)
 
 **Input from Goal Agent:**
 ```json
@@ -348,8 +347,8 @@ Group 9: [task_14]                         ← Report generation
   "objective_1": {
     "objective": "Obtain video content from src_1 and store as store_1",
     "goals": [
-      "Validate that src_1 is a reachable YouTube URL",
-      "Download video content from src_1 to platform file storage as store_1",
+      "Validate that src_1 is a reachable source URL",
+      "Download content from src_1 to platform file storage as store_1",
       "Verify store_1 (acquired from src_1) file integrity and format compatibility",
       "Extract video metadata from store_1 including duration, resolution, and frame rate"
     ]
@@ -377,7 +376,7 @@ Group 9: [task_14]                         ← Report generation
     "tasks": {
       "task_1": {
         "id": "task_1",
-        "action": "Validate that src_1 is a reachable YouTube URL",
+        "action": "Validate that src_1 is a reachable source URL",
         "capability_ids": ["CAP-ACQ-001"],
         "depends_on": [],
         "input_refs": ["src_1"],
@@ -388,7 +387,7 @@ Group 9: [task_14]                         ← Report generation
       },
       "task_2": {
         "id": "task_2",
-        "action": "Download video content from src_1 to platform file storage as store_1",
+        "action": "Download content from src_1 to platform file storage as store_1",
         "capability_ids": ["CAP-ACQ-002", "CAP-DAT-002"],
         "depends_on": ["task_1"],
         "input_refs": ["src_1"],
@@ -410,7 +409,7 @@ Group 9: [task_14]                         ← Report generation
       },
       "task_4": {
         "id": "task_4",
-        "action": "Extract video metadata from store_1 including duration, resolution, and frame rate",
+        "action": "Extract metadata from store_1 including duration, dimensions, and attributes",
         "capability_ids": ["CAP-ACQ-007"],
         "depends_on": ["task_2"],
         "input_refs": ["store_1"],
@@ -521,8 +520,8 @@ Group 9: [task_14]                         ← Report generation
     },
     "execution_order": ["task_1", "task_2", "task_3", "task_4", "task_5", "task_6", "task_7", "task_9", "task_8", "task_10", "task_12", "task_11", "task_13"],
     "execution_groups": {
-      "1": { "tasks": ["task_1"], "description": "URL validation", "parallel": false },
-      "2": { "tasks": ["task_2"], "description": "Video download to Wasabi", "parallel": false },
+      "1": { "tasks": ["task_1"], "description": "Source validation", "parallel": false },
+      "2": { "tasks": ["task_2"], "description": "Source acquisition to storage", "parallel": false },
       "3": { "tasks": ["task_3", "task_4"], "description": "File verification and metadata extraction", "parallel": true },
       "4": { "tasks": ["task_5", "task_6"], "description": "Audio and frame extraction", "parallel": true },
       "5": { "tasks": ["task_7", "task_9"], "description": "Language detection and speaker diarization", "parallel": true },
@@ -662,8 +661,8 @@ This deduplication reduces the workflow from 18 raw goals to 13 unique tasks —
 3. ❌ Generating tasks not in the Goal Agent's output: Adding "Normalize video resolution" when no goal requested it
    ✅ Only create tasks that correspond to goals received from the Goal Agent
 
-4. ❌ Referencing original source URL in analysis task actions: "Extract audio from https://youtu.be/xyz"
-   ✅ Ref-Based Storage Resolution: "Extract audio track from store_1"
+4. ❌ Referencing original source URL in task actions: "<Analyse> https://example.com/xyz"
+   ✅ Ref-Based Storage Resolution: "<Pre-process> store_1"
 
 5. ❌ Putting all tasks in a single execution group
    ✅ Partition into groups by dependency tier — this reveals parallelism opportunities
@@ -683,8 +682,8 @@ This deduplication reduces the workflow from 18 raw goals to 13 unique tasks —
 10. ❌ Forgetting to register `derived_refs`: Task produces `derived_1` in `output_refs` but no entry in `resources.derived_refs`
     ✅ Every new `derived_N` in `output_refs` must have a corresponding entry in `resources.derived_refs` with `status: "pending"`
 
-11. ❌ Using vague resource references in action text: "Extract audio from the video"
-    ✅ Use explicit ref IDs: "Extract audio track from store_1"
+11. ❌ Using vague resource references in action text: "Process the data"
+    ✅ Use explicit ref IDs: "<Pre-process> store_1"
 
 ---
 
@@ -749,12 +748,13 @@ This approach avoids hallucination because the timestamp is present in your inpu
 ---
 
 ## Version
-v1.3.0
+v1.4.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.4.0 (Feb 23, 2026): Agent-Application Separation refactoring. Replaced all application-specific content in rules and structural sections with generic patterns that reference `application.md`. Genericised: Dependency Rules table, Ref Assignment Rules table, Weight table, Execution Group illustration, Scope Validation, tie-breaking rules, deduplication examples, Common Mistakes, and Workflow Construction Rule 12. Examples retain current application capabilities for illustration but are prefaced with a note that patterns are application-agnostic. This change ensures `planning.md` remains portable when `application.md` is swapped.
 - v1.3.0 (Feb 23, 2026): Fixed language detection → transcription dependency chain. Transcription now depends on Language Detection (not directly on Audio Extraction), matching `application.md` Section 6.9 mandatory prerequisite: `CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001`. Updated Example 1 to include language detection goal in Goal Agent input and a language detection task (task_7) in the workflow output. Example 1 now has 13 tasks across 8 execution groups (was 12 tasks across 7 groups). Updated Execution Group Semantics illustration to reflect corrected dependency tiers.
 - v1.2.0 (Feb 21, 2026): Added "Pre-Execution Validation (MANDATORY)" section with two checks: (1) Input Freshness — detects stale/misrouted input by comparing Goal Agent timestamp to Planning Agent execution time, emitting STALE_INPUT_WARNING to audit trail if gap exceeds 60 seconds; (2) Governance File Path Format — canonical path list to prevent path abbreviation hallucinations. Added "parent_message_id Construction Rule" — replaces unreliable recall-based inheritance with deterministic construction from Goal Agent's timestamp (`msg-goal-{YYYYMMDD}-{HHMMSS}`). These address fabricated parent_message_ids and stale input routing observed in 20260220-5.md logs.
 - v1.1.0 (Feb 19, 2026): Added `input_refs` and `output_refs` to Task Schema. Added Step 4 (Assign Resource Refs) with derived_refs registration logic. Updated Workflow Construction Rule 12 to use ref IDs. Added rules 13-14 for ref tracking. Updated all examples to use ref IDs (src_N, store_N, derived_N) instead of raw URLs and verbose storage descriptions. Added validation rules 7-8 for ref consistency. Added Common Mistakes 9-11 for ref-related errors.
