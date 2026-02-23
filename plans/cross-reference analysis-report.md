@@ -78,10 +78,10 @@ These findings track files that are outdated, superseded, or significantly behin
 | # | Severity | File A | File B | Description |
 |---|----------|--------|--------|-------------|
 | B1 | **HIGH** | schema v1.2.0 | msg_format v1.6.0 | message_schema.json (v1.2.0, Feb 19) is significantly behind message_format.md (v1.6.0, Feb 20). Schema may not validate newer message fields or constraints correctly. |
-| B2 | **MEDIUM** | instructions.md | dispatch/reasoning/execution | instructions.md (v2.0.0, Feb 10) predates Dispatch Agent, Reasoning Agent, and Execution Agent (all Feb 21). The prompt assembly contract does not mention these newer agents. |
+| B2 | **MEDIUM** | instructions.md | dispatch/reasoning/execution | instructions.md (v2.0.0, Feb 10) predates Dispatch Agent, Reasoning Agent, and Action Agent (all Feb 21). The prompt assembly contract does not mention these newer agents. |
 | B3 | **MEDIUM** | action.md / interpretation.md / perception.md | execution.md | Three placeholder files (v0.1.0, Feb 9) in agent/executional/ are superseded by the unified execution.md (v1.0.0, Feb 21). Stale files should be archived or deleted to avoid confusion. |
 | B4 | **LOW** | learning.md | (architecture) | learning.md remains a placeholder (v0.1.0, Feb 9) with no substantive content. If the Learning Agent is not yet implemented, consider adding a note to that effect in the README or architecture docs. |
-| B5 | **MEDIUM** | application_template.md | application.md | Template (v1.0.0, Feb 9) is outdated: Section 3 lists only Objective and Goal agents (missing Planning Agent). Section 9 Operational Core omits Dispatch Agent. Executional Core uses placeholder names instead of Execution Agent. |
+| B5 | **MEDIUM** | application_template.md | application.md | Template (v1.0.0, Feb 9) is outdated: Section 3 lists only Objective and Goal agents (missing Planning Agent). Section 9 Operational Core omits Dispatch Agent. Executional Core uses placeholder names instead of Action Agent. |
 
 ### 4.3 Category C: Structural and Reference Issues
 
@@ -89,7 +89,7 @@ These findings identify missing references, broken cross-links, and structural g
 
 | # | Severity | File A | File B | Description |
 |---|----------|--------|--------|-------------|
-| C1 | **HIGH** | message_format.md | application.md | Agent Chain Flow diagram (steps [4]–[5]) lists Execution Agent capabilities as "CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT" but omits CAP-AUD-R entirely. application.md defines CAP-AUD-R001/R002/R003 as valid capabilities. |
+| C1 | **HIGH** | message_format.md | application.md | Agent Chain Flow diagram (steps [4]–[5]) lists Action Agent capabilities as "CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT" but omits CAP-AUD-R entirely. application.md defines CAP-AUD-R001/R002/R003 as valid capabilities. |
 | C2 | **MEDIUM** | instructions.md | schema/message_schema.json | instructions.md defines the 6-step prompt assembly order but does not mention loading schema/message_schema.json. If the schema is used for validation, its loading should be documented. |
 | C3 | **LOW** | memory.md | (architecture) | memory.md references concepts not defined in any other file: "circuit breaker", "10-hop limit", and "SLM to LLM escalation". These should either be documented in a shared glossary or removed if obsolete. |
 | C4 | **LOW** | memory.md | audit.md | memory.md Knowledge Filing section says files are loaded by "ARL during Context Assembly stage (Station 3)" — this references the old orchestration name and an undocumented "Station 3" concept. |

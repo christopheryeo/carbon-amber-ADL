@@ -10,18 +10,18 @@ Version 1.0.0 | 21 February 2026
 
 ## 1. Executive Summary
 
-This report documents a significant restructuring of the carbon-amber-ADL agent architecture. The changes address an architectural gap identified between the Planning Agent (which produces a static DAG-based execution plan) and the former Executional Core agents (which could only process one task at a time). The restructure introduces a new Dispatch Agent, consolidates three deprecated agents into a unified Execution Agent, and repositions the Reasoning Agent for synthesis tasks.
+This report documents a significant restructuring of the carbon-amber-ADL agent architecture. The changes address an architectural gap identified between the Planning Agent (which produces a static DAG-based execution plan) and the former Executional Core agents (which could only process one task at a time). The restructure introduces a new Dispatch Agent, consolidates three deprecated agents into a unified Action Agent, and repositions the Reasoning Agent for synthesis tasks.
 
 ### Key Changes at a Glance
 
 | Change Type | Agent | Description |
 |---|---|---|
 | **NEW** | **Dispatch Agent** | Runtime DAG executor bridging Planning and Execution |
-| **NEW** | **Execution Agent** | Unified tool-calling agent replacing three deprecated agents |
+| **NEW** | **Action Agent** | Unified tool-calling agent replacing three deprecated agents |
 | **REWRITTEN** | **Reasoning Agent** | Repositioned from placeholder to dedicated CAP-SYN synthesis agent |
-| **DEPRECATED** | **Perception Agent** | Replaced by Execution Agent |
+| **DEPRECATED** | **Perception Agent** | Replaced by Action Agent |
 | **DEPRECATED** | **Interpretation Agent** | Eliminated; responsibilities absorbed by Execution and Reasoning agents |
-| **DEPRECATED** | **Action Agent** | Replaced by Execution Agent |
+| **DEPRECATED** | **Action Agent** | Replaced by Action Agent |
 
 ---
 
@@ -61,7 +61,7 @@ These issues resulted in fragile workflow execution where task failures could si
 | [2] | Goal Agent | Governance | Goals and sub-goals |
 | [3] | Planning Agent | Operational | Static DAG execution plan |
 | [4] | **Dispatch Agent** | Operational | Runtime DAG execution, task dispatch, failure handling |
-| [5] | **Execution Agent** | Executional | MCP tool invocation for all tool-calling capabilities |
+| [5] | **Action Agent** | Executional | MCP tool invocation for all tool-calling capabilities |
 | [5] | **Reasoning Agent** | Operational | CAP-SYN multi-modal synthesis, timelines, reports |
 | [6] | Memory Agent | Operational | Post-chain audit and knowledge capture |
 
@@ -88,7 +88,7 @@ The Dispatch Agent receives the execution workflow (DAG) from the Planning Agent
 
 - **Task Dispatch:** Selects the next ready task(s) from the current execution group and routes them to the correct downstream agent based on capability type.
 
-- **Agent Routing:** Routes CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT tasks to the Execution Agent; routes CAP-SYN tasks to the Reasoning Agent.
+- **Agent Routing:** Routes CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT tasks to the Action Agent; routes CAP-SYN tasks to the Reasoning Agent.
 
 - **Ref Resolution:** Resolves input_refs for each task by looking up the ref_registry to provide concrete storage URIs. Refs are immutable within a session.
 
@@ -102,7 +102,7 @@ The Dispatch Agent produces two categories of output: Phase A (task_dispatch) is
 
 ---
 
-## 5. New Agent: Execution Agent
+## 5. New Agent: Action Agent
 
 | Property | Value |
 |---|---|
@@ -113,11 +113,11 @@ The Dispatch Agent produces two categories of output: Phase A (task_dispatch) is
 
 ### 5.1 Primary Function
 
-The Execution Agent receives a single task from the Dispatch Agent and executes it by invoking the appropriate tools via MCP (Model Context Protocol). It resolves input references, selects and configures the correct tool for the task's capability, executes the tool, structures the output, and returns results to the Dispatch Agent. Each invocation handles exactly one task.
+The Action Agent receives a single task from the Dispatch Agent and executes it by invoking the appropriate tools via MCP (Model Context Protocol). It resolves input references, selects and configures the correct tool for the task's capability, executes the tool, structures the output, and returns results to the Dispatch Agent. Each invocation handles exactly one task.
 
 ### 5.2 Capability Coverage
 
-The Execution Agent covers all tool-calling capabilities in the platform's Capability Matrix:
+The Action Agent covers all tool-calling capabilities in the platform's Capability Matrix:
 
 | Capability Group | Example Capabilities | MCP Tools |
 |---|---|---|
@@ -153,7 +153,7 @@ Every task result includes a quality_checks object verifying output_exists, outp
 
 ### 6.2 Key Design Decisions
 
-- **LLM-based reasoning, not tool invocation:** Unlike the Execution Agent which calls MCP tools, the Reasoning Agent performs synthesis through LLM reasoning across multiple completed task outputs.
+- **LLM-based reasoning, not tool invocation:** Unlike the Action Agent which calls MCP tools, the Reasoning Agent performs synthesis through LLM reasoning across multiple completed task outputs.
 
 - **Cross-modal consistency checks:** Every synthesis output includes validation that findings are consistent across modalities, with flagging when contradictions are detected.
 
@@ -181,9 +181,9 @@ The following existing files were updated to reflect the new architecture:
 
 ### 7.3 application.md
 
-- **Section 9:** Operational Core table updated to include Dispatch Agent and rewritten Reasoning Agent description. Executional Core table replaced three deprecated agents with unified Execution Agent.
+- **Section 9:** Operational Core table updated to include Dispatch Agent and rewritten Reasoning Agent description. Executional Core table replaced three deprecated agents with unified Action Agent.
 
-- **Section 10:** Phase 3 execution steps rewritten to describe the Dispatch Agent's role in DAG execution, task routing to Execution Agent and Reasoning Agent, and failure handling with downstream impact analysis.
+- **Section 10:** Phase 3 execution steps rewritten to describe the Dispatch Agent's role in DAG execution, task routing to Action Agent and Reasoning Agent, and failure handling with downstream impact analysis.
 
 ---
 

@@ -333,7 +333,7 @@ These are judgment calls, not mechanical loops.
 
 ---
 
-## Part 3: Execution Agents After Dispatch Implementation
+## Part 3: Action Agents After Dispatch Implementation
 
 ### The Foundational Question
 
@@ -420,7 +420,7 @@ Planning Agent
     ↓ (static DAG)
 Dispatch Agent
     ↓ dispatches task-by-task
-    ├── execution_agent  (for tool-calling tasks)
+    ├── action_agent  (for tool-calling tasks)
     │       ↓ returns result
     │   Dispatch Agent (updates refs, picks next task)
     │
@@ -433,7 +433,7 @@ Final Output to user
 
 ---
 
-### Agent 1: `execution_agent` (New)
+### Agent 1: `action_agent` (New)
 **Replaces: Perception Agent + Action Agent**
 
 #### Role
@@ -471,7 +471,7 @@ Execute a single task by calling the appropriate MCP tool and producing structur
 #### Why Merge Perception and Action?
 At single-task level, "perceiving" input and "acting" on it are two halves of same operation. Separating into two LLM calls doubles cost without meaningful reasoning gain.
 
-The execution_agent is fundamentally a **tool-calling agent**:
+The action_agent is fundamentally a **tool-calling agent**:
 - Understands what tool to call
 - Knows how to call it correctly
 - Packages result properly
@@ -484,7 +484,7 @@ The execution_agent is fundamentally a **tool-calling agent**:
 #### Role
 Synthesise results across multiple completed tasks to produce higher-level conclusions and insights.
 
-#### Key Difference from execution_agent
+#### Key Difference from action_agent
 - **Does NOT call MCP tools**
 - **Reasons across already-produced outputs**
 - Sits in Operational Core (as currently defined)
@@ -532,7 +532,7 @@ Dispatch_agent invokes reasoning_agent when synthesis tasks appear:
 Original function: "Contextualizes results based on user queries, transforming raw perceptual data into meaningful, query-relevant interpretations"
 
 This splits between two new agents:
-- **execution_agent:** Result structuring (raw model output → clean JSON with populated refs)
+- **action_agent:** Result structuring (raw model output → clean JSON with populated refs)
 - **reasoning_agent:** Contextualisation (results → meaningful in context of user question)
 
 Standalone Interpretation Agent becomes **redundant**.
@@ -545,12 +545,12 @@ Standalone Interpretation Agent becomes **redundant**.
 
 | Agent | Layer | Responsibility | Tool-Calling | Input | Output |
 |-------|-------|-----------------|--------------|-------|--------|
-| **execution_agent** | Executional | Call MCP tools, validate inputs, structure results | Yes | Single task + resolved input_refs | Structured result with output_refs |
+| **action_agent** | Executional | Call MCP tools, validate inputs, structure results | Yes | Single task + resolved input_refs | Structured result with output_refs |
 | **reasoning_agent** | Operational | Synthesise across tasks, answer user questions, resolve conflicts | No | Multiple completed task outputs | High-level insights, user-facing answers |
 | **dispatch_agent** | Operational | Manage DAG execution, route tasks, resolve refs, track state | No | Static DAG from planning_agent | Task dispatches + runtime state updates |
-| ~~perception_agent~~ | ~~Executional~~ | ~~Merged into execution_agent~~ | — | — | — |
-| ~~action_agent~~ | ~~Executional~~ | ~~Merged into execution_agent~~ | — | — | — |
-| ~~interpretation_agent~~ | ~~Operational~~ | ~~Split into execution_agent + reasoning_agent~~ | — | — | — |
+| ~~perception_agent~~ | ~~Executional~~ | ~~Merged into action_agent~~ | — | — | — |
+| ~~action_agent~~ | ~~Executional~~ | ~~Merged into action_agent~~ | — | — | — |
+| ~~interpretation_agent~~ | ~~Operational~~ | ~~Split into action_agent + reasoning_agent~~ | — | — | — |
 
 ---
 
@@ -558,12 +558,12 @@ Standalone Interpretation Agent becomes **redundant**.
 
 | Capability ID Range | Task Type | Responsible Agent | Example |
 |---|---|---|---|
-| CAP-ACQ-\* | Video acquisition | execution_agent | Download video from YouTube |
-| CAP-PRE-\* | Preprocessing | execution_agent | Extract audio, convert format |
-| CAP-AUD-\* | Audio analysis | execution_agent | Transcribe, diarize, detect language |
-| CAP-VIS-\* | Visual analysis | execution_agent | Detect scenes, identify objects, extract frames |
-| CAP-SPK-\* | Speaker analysis | execution_agent | Identify speakers, extract embeddings |
-| CAP-DAT-\* | Data structuring | execution_agent | Format outputs, validate structures |
+| CAP-ACQ-\* | Video acquisition | action_agent | Download video from YouTube |
+| CAP-PRE-\* | Preprocessing | action_agent | Extract audio, convert format |
+| CAP-AUD-\* | Audio analysis | action_agent | Transcribe, diarize, detect language |
+| CAP-VIS-\* | Visual analysis | action_agent | Detect scenes, identify objects, extract frames |
+| CAP-SPK-\* | Speaker analysis | action_agent | Identify speakers, extract embeddings |
+| CAP-DAT-\* | Data structuring | action_agent | Format outputs, validate structures |
 | CAP-SYN-\* | Synthesis/reasoning | reasoning_agent | Correlate modalities, build timelines, answer questions |
 
 ---
@@ -572,7 +572,7 @@ Standalone Interpretation Agent becomes **redundant**.
 
 ### Phase 1: Foundation (Critical)
 - [ ] Implement `dispatch_agent` with task selection and ref resolution
-- [ ] Create `execution_agent` by consolidating perception + action responsibilities
+- [ ] Create `action_agent` by consolidating perception + action responsibilities
 - [ ] Test single-task execution pipeline with dispatch → execution → dispatch flow
 
 ### Phase 2: Operational (High)

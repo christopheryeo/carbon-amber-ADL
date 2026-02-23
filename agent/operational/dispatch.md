@@ -109,7 +109,7 @@ The Dispatch Agent maintains a workflow state object throughout the execution li
         "attempts": 1,
         "dispatched_at": "2026-02-21T10:00:01+08:00",
         "completed_at": "2026-02-21T10:00:02+08:00",
-        "assigned_agent": "execution_agent",
+        "assigned_agent": "action_agent",
         "result_summary": "URL validated successfully"
       },
       "task_5": {
@@ -117,7 +117,7 @@ The Dispatch Agent maintains a workflow state object throughout the execution li
         "attempts": 1,
         "dispatched_at": "2026-02-21T10:00:15+08:00",
         "completed_at": null,
-        "assigned_agent": "execution_agent",
+        "assigned_agent": "action_agent",
         "result_summary": null
       },
       "task_7": {
@@ -163,17 +163,17 @@ Determine whether this is an **initial invocation** (receiving the DAG from Plan
 | Invocation Type | Input Source | Action |
 |----------------|-------------|--------|
 | Initial | `planning_agent` | Parse the full workflow from `output.content.workflow`. Initialize `workflow_state` with all tasks set to `pending`. Populate `ref_registry` from `resources.source_refs`, `resources.storage_refs`, and `resources.derived_refs`. |
-| Callback | `execution_agent` or `reasoning_agent` | Parse the task result. Update the corresponding task in `workflow_state.task_states`. Update `ref_registry` with any newly resolved `derived_refs` (storage URIs and status). |
+| Callback | `action_agent` or `reasoning_agent` | Parse the task result. Update the corresponding task in `workflow_state.task_states`. Update `ref_registry` with any newly resolved `derived_refs` (storage URIs and status). |
 
 ### Step 2: Update Ref Registry (Callback Only)
 
-When an Execution Agent or Reasoning Agent returns results that produce new derived assets:
+When an Action Agent or Reasoning Agent returns results that produce new derived assets:
 
 1. Extract `output_refs` from the completed task's result
 2. For each `output_ref`, update the `ref_registry` entry with the actual `storage_uri` and set `status` to `"created"`
 3. Update the corresponding entry in `resources.derived_refs` in the message
 
-**Why this matters:** Downstream tasks reference `derived_N` in their `input_refs`. Without resolving the URI, the next Execution Agent cannot locate the asset. The Dispatch Agent is the only agent with visibility across the full workflow state to perform this resolution.
+**Why this matters:** Downstream tasks reference `derived_N` in their `input_refs`. Without resolving the URI, the next Action Agent cannot locate the asset. The Dispatch Agent is the only agent with visibility across the full workflow state to perform this resolution.
 
 ### Step 3: Handle Failures (Callback Only)
 
@@ -215,18 +215,18 @@ From the set of `ready` tasks:
 
 | Capability Category | Target Agent | Rationale |
 |-------------------|-------------|-----------|
-| CAP-ACQ-* (Acquisition) | `execution_agent` | Tool-calling task: MCP invocation |
-| CAP-PRE-* (Pre-Processing) | `execution_agent` | Tool-calling task: MCP invocation |
-| CAP-AUD-* (Audio Analysis) | `execution_agent` | Tool-calling task: MCP invocation |
-| CAP-SPK-* (Speaker Analysis) | `execution_agent` | Tool-calling task: MCP invocation |
-| CAP-AUD-R* (Audience Analysis) | `execution_agent` | Tool-calling task: MCP invocation |
-| CAP-VIS-* (Visual Analysis) | `execution_agent` | Tool-calling task: MCP invocation |
-| CAP-DAT-* (Data Management) | `execution_agent` | Tool-calling task: MCP invocation |
+| CAP-ACQ-* (Acquisition) | `action_agent` | Tool-calling task: MCP invocation |
+| CAP-PRE-* (Pre-Processing) | `action_agent` | Tool-calling task: MCP invocation |
+| CAP-AUD-* (Audio Analysis) | `action_agent` | Tool-calling task: MCP invocation |
+| CAP-SPK-* (Speaker Analysis) | `action_agent` | Tool-calling task: MCP invocation |
+| CAP-AUD-R* (Audience Analysis) | `action_agent` | Tool-calling task: MCP invocation |
+| CAP-VIS-* (Visual Analysis) | `action_agent` | Tool-calling task: MCP invocation |
+| CAP-DAT-* (Data Management) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-SYN-001 (Multi-Modal Fusion) | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
 | CAP-SYN-002 (Timeline Reconstruction) | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
 | CAP-SYN-003 (Report Generation) | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
 
-**Why the split:** Execution Agent tasks invoke external tools via MCP (ffmpeg, Whisper-X, YOLO, etc.) — they are tool-calling tasks. Reasoning Agent tasks synthesize outputs from multiple completed tasks into higher-level conclusions — they require LLM reasoning, not tool invocation.
+**Why the split:** Action Agent tasks invoke external tools via MCP (ffmpeg, Whisper-X, YOLO, etc.) — they are tool-calling tasks. Reasoning Agent tasks synthesize outputs from multiple completed tasks into higher-level conclusions — they require LLM reasoning, not tool invocation.
 
 ### Step 6: Construct Dispatch Message
 
@@ -262,7 +262,7 @@ Planning Agent creates derived_ref → status: "pending", storage_uri: null
     ↓
 Dispatch Agent dispatches task that produces derived_ref
     ↓
-Execution Agent executes task, stores asset, returns storage_uri
+Action Agent executes task, stores asset, returns storage_uri
     ↓
 Dispatch Agent receives callback, updates ref_registry:
     derived_N → status: "created", storage_uri: "wasabi://..."
@@ -274,8 +274,8 @@ Dispatch Agent dispatches downstream task that consumes derived_ref
 ### Resolution Rules
 
 1. **Source refs** (`src_N`): URIs are known from the initial message. No resolution needed — copy from `resources.source_refs`.
-2. **Storage refs** (`store_N`): URI is `null` until the acquisition task completes. Once the Execution Agent returns the `storage_uri`, update the registry.
-3. **Derived refs** (`derived_N`): URI is `null` at planning time. Updated when the producing Execution Agent returns.
+2. **Storage refs** (`store_N`): URI is `null` until the acquisition task completes. Once the Action Agent returns the `storage_uri`, update the registry.
+3. **Derived refs** (`derived_N`): URI is `null` at planning time. Updated when the producing Action Agent returns.
 4. **Dispatch blocking**: A task MUST NOT be dispatched if any of its `input_refs` have `status: "pending"` in the registry. Wait for the producing task to complete first.
 
 ---
@@ -327,7 +327,7 @@ When the orchestration layer supports parallel dispatch:
 ### In-Scope (process normally):
 - Any valid workflow DAG produced by the Planning Agent
 - Workflows with any combination of CAP-* tasks
-- Workflows requiring both Execution Agent and Reasoning Agent routing
+- Workflows requiring both Action Agent and Reasoning Agent routing
 
 ### Error Conditions:
 
@@ -406,7 +406,7 @@ When the orchestration layer supports parallel dispatch:
     "content_type": "task_dispatch"
   },
   "next_agent": {
-    "name": "execution_agent",
+    "name": "action_agent",
     "reason": "CAP-ACQ-001 is a tool-calling task requiring MCP invocation"
   }
 }
@@ -414,10 +414,10 @@ When the orchestration layer supports parallel dispatch:
 
 ### Example 2: Callback with Ref Resolution
 
-**Input from Execution Agent** (task_5 completed — audio extraction):
+**Input from Action Agent** (task_5 completed — audio extraction):
 ```json
 {
-  "agent": { "name": "execution_agent", "type": "executional" },
+  "agent": { "name": "action_agent", "type": "executional" },
   "output": {
     "content": {
       "task_result": {
@@ -483,7 +483,7 @@ When the orchestration layer supports parallel dispatch:
 
 ### Example 4: Failure with Downstream Skipping
 
-**Execution Agent returns failure for task_5 (audio extraction) after 3 attempts:**
+**Action Agent returns failure for task_5 (audio extraction) after 3 attempts:**
 
 **Dispatch Agent actions:**
 1. Mark task_5 as `failed` (3 attempts exhausted)
@@ -505,9 +505,9 @@ When the orchestration layer supports parallel dispatch:
 - Your `agent.type` is `"operational"`
 - On **initial invocation**: sequence_number is 4 (after planning_agent at 3)
 - On **callback invocations**: sequence_number increments from the returning agent's sequence_number
-- Your `input.source` is `"planning_agent"` (initial) or `"execution_agent"`/`"reasoning_agent"` (callbacks)
+- Your `input.source` is `"planning_agent"` (initial) or `"action_agent"`/`"reasoning_agent"` (callbacks)
 - Your `next_agent.name` is:
-  - `"execution_agent"` when dispatching CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT tasks
+  - `"action_agent"` when dispatching CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT tasks
   - `"reasoning_agent"` when dispatching CAP-SYN tasks
   - `"memory_agent"` when emitting the final workflow_complete message
 - You inherit `session_id` and `request_id` from the Planning Agent's metadata
@@ -533,7 +533,7 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 2. ❌ Dispatching Group N+1 tasks before Group N is fully complete (including retries)
    ✅ Wait for all tasks in a group to reach terminal state (complete, failed, or skipped) before advancing
 
-3. ❌ Routing a CAP-SYN task to `execution_agent`: CAP-SYN tasks require cross-task synthesis, not tool invocation
+3. ❌ Routing a CAP-SYN task to `action_agent`: CAP-SYN tasks require cross-task synthesis, not tool invocation
    ✅ Route CAP-SYN-001, CAP-SYN-002, CAP-SYN-003 to `reasoning_agent`
 
 4. ❌ Retrying a non-recoverable failure: wasting attempts on corrupt files or missing capabilities
@@ -566,4 +566,4 @@ v1.0.0
 February 21, 2026
 
 ## Changelog
-- v1.0.0 (Feb 21, 2026): Initial release. Defines the Dispatch Agent as the runtime DAG executor within the Operational Core. Covers: task dispatch with agent routing (execution_agent for tool-calling tasks, reasoning_agent for CAP-SYN synthesis tasks), ref resolution lifecycle, failure handling with retry policy and downstream impact assessment, parallel dispatch rules, workflow state management, and completion signalling. Introduces Phase A (task_dispatch) and Phase B (workflow_complete) output formats. Positioned at sequence_number 4 between planning_agent and executional agents.
+- v1.0.0 (Feb 21, 2026): Initial release. Defines the Dispatch Agent as the runtime DAG executor within the Operational Core. Covers: task dispatch with agent routing (action_agent for tool-calling tasks, reasoning_agent for CAP-SYN synthesis tasks), ref resolution lifecycle, failure handling with retry policy and downstream impact assessment, parallel dispatch rules, workflow state management, and completion signalling. Introduces Phase A (task_dispatch) and Phase B (workflow_complete) output formats. Positioned at sequence_number 4 between planning_agent and executional agents.
