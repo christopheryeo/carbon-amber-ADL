@@ -62,8 +62,6 @@ Sentient Agentic AI/
 │   │   ├── learning.md
 │   │   └── memory.md
 │   └── executional/
-│       ├── perception.md
-│       ├── interpretation.md
 │       └── action.md
 ├── schema/                          ← Machine-readable validation schemas
 │   └── message_schema.json
@@ -328,7 +326,7 @@ The orchestration layer (n8n) handles:
 ---
 
 ## Last Updated
-February 20, 2026
+February 23, 2026
 
 ---
 
@@ -336,6 +334,14 @@ February 20, 2026
 
 | Version | Date       | Description                                                                              |
 |:--------|:-----------|:-----------------------------------------------------------------------------------------|
+| v2.4.0  | 2026-02-23 | Agent-Application Separation Phase 1 & 2: Decoupled all agent definitions from          |
+|         |            | application-specific content. Added Dispatch Agent (`agent/operational/dispatch.md`),   |
+|         |            | Reasoning Agent (`agent/operational/reasoning.md`), and Action Agent                    |
+|         |            | (`agent/executional/action.md`). Removed deprecated `perception.md` and                 |
+|         |            | `interpretation.md`. Added Planning Agent (`agent/operational/planning.md`).             |
+|         |            | Overhauled `message_schema.json` (v1.6.0) to enforce CAP-ID format and DAG structure.   |
+|         |            | Updated `memory.md` to fix agent ID, output format, and removed undefined concepts.     |
+|         |            | Updated application template to reflect current 7-agent architecture.                   |
 | v2.3.0  | 2026-02-20 | Added Acquisition URL Annotation Rule to `objective.md` (v1.2.0) — acquisition           |
 |         |            | objectives now include the original URL as a parenthetical on src_N for explicit          |
 |         |            | traceability (e.g., `src_1 (https://...)`). Updated `goal.md` (v1.3.0) to reflect        |

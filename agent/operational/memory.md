@@ -39,7 +39,7 @@ Capture information from completed audit logs in `system/logs/`, distill that in
 
 - Capture key decision outcomes from the agent chain, including:
   - **Successful resolution paths** — which goal decompositions and execution plans led to COMPLETE status with high-quality outputs.
-  - **Failed or escalated paths** — which chains terminated in error, required model escalation (SLM to LLM), or exceeded hop limits (circuit breaker triggers).
+  - **Failed or escalated paths** — which chains terminated in error, required model escalation (SLM-to-LLM escalation: switching from a small language model to a large language model when task complexity exceeds the SLM's capability threshold), or exceeded hop limits (circuit breaker: a safety mechanism that terminates any agent chain exceeding 10 sequential agent invocations).
   - **Governance interventions** — instances where agent instructions conflicted with governance policies and were rejected, along with the resolution.
   - **Reasoning feedback** — quality synthesis outcomes from the Reasoning Agent, identifying gaps or recurring errors across execution cycles.
 - Tag each decision record with outcome classification: `SUCCESS`, `PARTIAL`, `FAILURE`, `ESCALATED`, `REJECTED`.
@@ -304,7 +304,7 @@ Memory files are loaded after governance (so governance always takes precedence)
 2. Knowledge distillation must be idempotent — processing the same logs twice must not create duplicate entries.
 3. The Memory Agent must not modify or delete audit log files. Logs are immutable; the Memory Agent has read-only access.
 4. When invoked for on-demand recall, the Memory Agent searches existing knowledge files and returns relevant entries without performing new distillation.
-5. The Memory Agent must respect the circuit breaker — if invoked as part of a chain, it counts toward the 10-hop limit.
+5. The Memory Agent must respect the circuit breaker (the 10-hop limit that terminates any agent chain exceeding 10 sequential invocations) — if invoked as part of a chain, it counts toward this hop limit.
 
 ---
 

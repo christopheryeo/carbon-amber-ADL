@@ -43,17 +43,14 @@ All main project files (excluding worktree copies). Coverage includes agent prom
 | agent/operational/reasoning.md | v1.0.0 | Feb 21 | Active — CAP-SYN handler |
 | agent/operational/memory.md | v1.0.0 | Feb 13 | Active — Post-chain memory |
 | agent/operational/learning.md | v0.1.0 | Feb 9 | PLACEHOLDER — Not implemented |
-| agent/executional/execution.md | v1.0.0 | Feb 21 | Active — Unified tool agent |
-| agent/executional/action.md | v0.1.0 | Feb 9 | STALE — Superseded by execution.md |
-| agent/executional/interpretation.md | v0.1.0 | Feb 9 | STALE — Superseded by execution.md |
-| agent/executional/perception.md | v0.1.0 | Feb 9 | STALE — Superseded by execution.md |
-| context/application.md | v1.3 | Feb 21 | Active — DSTA application context |
-| context/instructions.md | v2.0.0 | Feb 10 | OUTDATED — Predates newer agents |
-| context/governance/message_format.md | v1.6.0 | Feb 20 | Active — Message spec |
+| agent/executional/action.md | v1.0.0 | Feb 23 | Active — Unified tool agent (renamed from execution.md) |
+| context/application.md | v1.3 | Feb 23 | Active — DSTA application context |
+| context/instructions.md | v2.1.0 | Feb 23 | Active — Updated for current 7-agent architecture |
+| context/governance/message_format.md | v1.6.0 | Feb 23 | Active — Message spec |
 | context/governance/audit.md | v1.4.0 | Feb 20 | Active — Audit requirements |
 | context/governance/fileformat.md | v1.0.0 | Feb 9 | Active — Format governance |
-| schema/message_schema.json | v1.2.0 | Feb 19 | OUTDATED — Behind message_format.md |
-| template/application_template.md | v1.0.0 | Feb 9 | OUTDATED — Missing newer agents |
+| schema/message_schema.json | v1.6.0 | Feb 23 | Active — Updated to match message_format.md |
+| template/application_template.md | v2.0.0 | Feb 23 | Active — Updated for 7-agent architecture |
 
 ---
 
@@ -65,11 +62,11 @@ These findings identify cases where the same concept is referred to using differ
 
 | # | Severity | File A | File B | Description |
 |---|----------|--------|--------|-------------|
-| A1 | **HIGH** | memory.md | dispatch.md | Memory agent ID mismatch: memory.md defines agent.name as "agent_memory" but dispatch.md routes post-chain work to "memory_agent". One must be corrected for routing to work. |
-| A2 | **MEDIUM** | application.md | goal.md | CAP-AUD-R identifier format inconsistency: application.md uses "CAP-AUD-R001/R002/R003" (no dash before number), goal.md uses "CAP-AUD-Rxxx", dispatch.md and planning.md use "CAP-AUD-R*" wildcard. Standardise on one convention. |
-| A3 | **MEDIUM** | memory.md | instructions.md | Orchestration layer naming: memory.md references "ARL" as the orchestration platform, while instructions.md and application.md use "n8n". If ARL was renamed to n8n, memory.md needs updating. |
-| A4 | **HIGH** | memory.md | (architecture) | memory.md references a "Reviewer Agent" that does not exist anywhere in the current agent architecture. This is either a stale reference or an undocumented agent. |
-| A5 | **LOW** | goal.md | goal.md | Common Mistakes numbering in goal.md is non-sequential: runs 1–6, then jumps to 10, 11, back to 7, 8, 9, then 12, 13. While functional, it hinders readability and maintenance. |
+| A1 | **HIGH** | memory.md | dispatch.md | Memory agent ID mismatch: memory.md defines agent.name as "agent_memory" but dispatch.md routes post-chain work to "memory_agent". One must be corrected for routing to work. **✅ RESOLVED (Feb 23)** — `memory.md` updated to `"memory_agent"`. |
+| A2 | **MEDIUM** | application.md | goal.md | CAP-AUD-R identifier format inconsistency: application.md uses "CAP-AUD-R001/R002/R003" (no dash before number), goal.md uses "CAP-AUD-Rxxx", dispatch.md and planning.md use "CAP-AUD-R*" wildcard. Standardise on one convention. **✅ RESOLVED (Feb 23)** — All files standardised to `CAP-AUD-R001/R002/R003`. |
+| A3 | **MEDIUM** | memory.md | instructions.md | Orchestration layer naming: memory.md references "ARL" as the orchestration platform, while instructions.md and application.md use "n8n". If ARL was renamed to n8n, memory.md needs updating. **✅ RESOLVED (Feb 23)** — `memory.md` updated to "the orchestration layer (n8n)". |
+| A4 | **HIGH** | memory.md | (architecture) | memory.md references a "Reviewer Agent" that does not exist anywhere in the current agent architecture. This is either a stale reference or an undocumented agent. **✅ RESOLVED (Feb 23)** — All "Reviewer Agent" references replaced with "Reasoning Agent". |
+| A5 | **LOW** | goal.md | goal.md | Common Mistakes numbering in goal.md is non-sequential: runs 1–6, then jumps to 10, 11, back to 7, 8, 9, then 12, 13. While functional, it hinders readability and maintenance. **✅ RESOLVED (Feb 23)** — Renumbered sequentially 1–13. |
 
 ### 4.2 Category B: Version and Staleness Issues
 
@@ -77,11 +74,11 @@ These findings track files that are outdated, superseded, or significantly behin
 
 | # | Severity | File A | File B | Description |
 |---|----------|--------|--------|-------------|
-| B1 | **HIGH** | schema v1.2.0 | msg_format v1.6.0 | message_schema.json (v1.2.0, Feb 19) is significantly behind message_format.md (v1.6.0, Feb 20). Schema may not validate newer message fields or constraints correctly. |
-| B2 | **MEDIUM** | instructions.md | dispatch/reasoning/execution | instructions.md (v2.0.0, Feb 10) predates Dispatch Agent, Reasoning Agent, and Action Agent (all Feb 21). The prompt assembly contract does not mention these newer agents. |
-| B3 | **MEDIUM** | action.md / interpretation.md / perception.md | execution.md | Three placeholder files (v0.1.0, Feb 9) in agent/executional/ are superseded by the unified execution.md (v1.0.0, Feb 21). Stale files should be archived or deleted to avoid confusion. |
+| B1 | **HIGH** | schema v1.2.0 | msg_format v1.6.0 | message_schema.json (v1.2.0, Feb 19) is significantly behind message_format.md (v1.6.0, Feb 20). Schema may not validate newer message fields or constraints correctly. **✅ RESOLVED (Feb 23)** — Schema updated to v1.6.0 with CAP-ID pattern enforcement and DAG structure validation. |
+| B2 | **MEDIUM** | instructions.md | dispatch/reasoning/action | instructions.md (v2.0.0, Feb 10) predates Dispatch Agent, Reasoning Agent, and Action Agent (all Feb 21). The prompt assembly contract does not mention these newer agents. **✅ RESOLVED (Feb 23)** — `instructions.md` updated to v2.1.0 listing all 7 active agents. |
+| B3 | **MEDIUM** | action.md / interpretation.md / perception.md | execution.md | Three placeholder files (v0.1.0, Feb 9) in agent/executional/ are superseded by the unified action.md (renamed from execution.md Feb 23). **✅ RESOLVED (Feb 23)** — `perception.md` and `interpretation.md` deleted. `action.md` is now the active unified tool agent. |
 | B4 | **LOW** | learning.md | (architecture) | learning.md remains a placeholder (v0.1.0, Feb 9) with no substantive content. If the Learning Agent is not yet implemented, consider adding a note to that effect in the README or architecture docs. |
-| B5 | **MEDIUM** | application_template.md | application.md | Template (v1.0.0, Feb 9) is outdated: Section 3 lists only Objective and Goal agents (missing Planning Agent). Section 9 Operational Core omits Dispatch Agent. Executional Core uses placeholder names instead of Action Agent. |
+| B5 | **MEDIUM** | application_template.md | application.md | Template (v1.0.0, Feb 9) is outdated: Section 3 lists only Objective and Goal agents (missing Planning Agent). Section 9 Operational Core omits Dispatch Agent. Executional Core uses placeholder names instead of Action Agent. **✅ RESOLVED (Feb 23)** — Template updated to v2.0.0 reflecting current 7-agent architecture. |
 
 ### 4.3 Category C: Structural and Reference Issues
 
@@ -89,11 +86,11 @@ These findings identify missing references, broken cross-links, and structural g
 
 | # | Severity | File A | File B | Description |
 |---|----------|--------|--------|-------------|
-| C1 | **HIGH** | message_format.md | application.md | Agent Chain Flow diagram (steps [4]–[5]) lists Action Agent capabilities as "CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT" but omits CAP-AUD-R entirely. application.md defines CAP-AUD-R001/R002/R003 as valid capabilities. |
+| C1 | **HIGH** | message_format.md | application.md | Agent Chain Flow diagram (steps [4]–[5]) lists Action Agent capabilities as "CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT" but omits CAP-AUD-R entirely. application.md defines CAP-AUD-R001/R002/R003 as valid capabilities. **✅ RESOLVED (Feb 23)** — `CAP-AUD-R` added to message_format.md flow. |
 | C2 | **MEDIUM** | instructions.md | schema/message_schema.json | instructions.md defines the 6-step prompt assembly order but does not mention loading schema/message_schema.json. If the schema is used for validation, its loading should be documented. |
-| C3 | **LOW** | memory.md | (architecture) | memory.md references concepts not defined in any other file: "circuit breaker", "10-hop limit", and "SLM to LLM escalation". These should either be documented in a shared glossary or removed if obsolete. |
-| C4 | **LOW** | memory.md | audit.md | memory.md Knowledge Filing section says files are loaded by "ARL during Context Assembly stage (Station 3)" — this references the old orchestration name and an undocumented "Station 3" concept. |
-| C5 | **MEDIUM** | application.md Sec 3 | template Sec 3 | application.md Section 3 correctly lists Objective, Goal, and Planning agents. Template Section 3 only lists Objective and Goal, missing the Planning Agent entry. |
+| C3 | **LOW** | memory.md | (architecture) | memory.md references concepts not defined in any other file: "circuit breaker", "10-hop limit", and "SLM to LLM escalation". **✅ RESOLVED (Feb 23)** — Inline definitions added to both occurrences in `memory.md`. |
+| C4 | **LOW** | memory.md | audit.md | memory.md Knowledge Filing section says files are loaded by "ARL during Context Assembly stage (Station 3)" — this references the old orchestration name and an undocumented "Station 3" concept. **✅ RESOLVED (Feb 23)** — "ARL" replaced with "the orchestration layer" throughout `memory.md`. |
+| C5 | **MEDIUM** | application.md Sec 3 | template Sec 3 | application.md Section 3 correctly lists Objective, Goal, and Planning agents. Template Section 3 only lists Objective and Goal, missing the Planning Agent entry. **✅ RESOLVED (Feb 23)** — Template updated to v2.0.0. |
 
 ### 4.4 Category D: Content Contradictions
 

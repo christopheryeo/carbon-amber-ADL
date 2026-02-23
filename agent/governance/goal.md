@@ -490,20 +490,20 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 6. ❌ Referencing src_N in analysis goals: "Extract audio from src_1"
    ✅ Reference store_N: "Extract audio track from store_1 (acquired from src_1)"
 
-10. ❌ Using raw URLs in goals: "Extract audio from https://example.com/shorts/xyz"
-    ✅ Use ref IDs: "Extract audio track from store_1 (acquired from src_1)"
+7. ❌ Using raw URLs in goals: "Extract audio from https://example.com/shorts/xyz"
+   ✅ Use ref IDs: "Extract audio track from store_1 (acquired from src_1)"
 
-11. ❌ Missing first-mention provenance: "Extract audio track from store_1" as the first goal referencing store_1 in an objective
-    ✅ Include provenance on first mention per objective: "Extract audio track from store_1 (acquired from src_1)"
+8. ❌ Missing first-mention provenance: "Extract audio track from store_1" as the first goal referencing store_1 in an objective
+   ✅ Include provenance on first mention per objective: "Extract audio track from store_1 (acquired from src_1)"
 
-7. ❌ Including dependency annotations: "After downloading, extract audio"
+9. ❌ Including dependency annotations: "After downloading, extract audio"
    ✅ Flat list without ordering: "Extract audio track from the video file stored in platform storage"
 
-8. ❌ Adding prefixes or numbers: "Goal 1: Validate URL"
-   ✅ Plain text: "Validate that the source URL is a reachable YouTube URL"
+10. ❌ Adding prefixes or numbers: "Goal 1: Validate URL"
+    ✅ Plain text: "Validate that the source URL is a reachable YouTube URL"
 
-9. ❌ Duplicating the Objective Agent's work: Re-interpreting the user request or generating new objectives
-   ✅ Take objectives as given and decompose them into goals
+11. ❌ Duplicating the Objective Agent's work: Re-interpreting the user request or generating new objectives
+    ✅ Take objectives as given and decompose them into goals
 
 12. ❌ Misreporting goal count in `status.message`: "Successfully decomposed 4 objectives into 21 actionable goals" when only 19 goals exist
     ✅ Count the actual goals in `output.content` before writing `status.message` — the count must match exactly
@@ -514,13 +514,13 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 ---
 
 ## Version
-v1.10.0
+v1.11.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
-- v1.10.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Generalised Scope Validation boundaries by referring to the application context.
+- v1.11.0 (Feb 23, 2026): Fixed non-sequential numbering in Common Mistakes section (was 1-6, 10, 11, 7, 8, 9, 12, 13; now sequential 1-13).
 - v1.9.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Removed video-specific Goal Decomposition Patterns (Patterns A-J) and replaced them with a generic reference to the application context (`application.md`).
 - v1.8.0 (Feb 23, 2026): Genericised examples to remove hardcoded YouTube/Instagram/TikTok examples. Generalised storage references replacing Wasabi mentions with generic file storage backends.
 - v1.7.0 (Feb 21, 2026): Made language detection mandatory before transcription across all patterns. Added "Detect language(s) spoken in the audio" to Patterns C and D (which previously included transcription without this step). Added Goal Generation Rule #11 making language detection an explicit mandatory pre-condition for any transcription goal. Updated Examples 1, 3, and 4 to include language detection. Added Common Mistake #13 (omitting language detection). Addresses intermittent omission of language detection observed in 20260220-5.md logs.
