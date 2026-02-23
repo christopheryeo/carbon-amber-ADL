@@ -216,8 +216,8 @@ For each task, determine which other tasks must complete before it can begin. Ap
 | Metadata extraction | Video download | Requires the downloaded file |
 | Audio extraction | File integrity verification | Operate on verified file only |
 | Frame extraction | File integrity verification | Operate on verified file only |
-| Transcription | Audio extraction | Requires extracted audio track |
 | Language detection | Audio extraction | Requires extracted audio track |
+| Transcription | Language detection | Language must be detected before transcription model can be configured for the correct language (per `application.md` Section 6.9: `CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001`) |
 | Speaker diarization | Audio extraction | Requires extracted audio track |
 | Sentiment analysis (text) | Transcription, Speaker diarization | Requires transcript segments mapped to speakers |
 | Speech emotion recognition | Audio extraction, Speaker diarization | Requires audio segments per speaker |
@@ -311,10 +311,11 @@ Group 1: [task_1]                          ← URL validation (no deps)
 Group 2: [task_2]                          ← Video download (depends on task_1)
 Group 3: [task_3, task_4]                  ← Integrity check + metadata (depend on task_2, independent of each other)
 Group 4: [task_5, task_6]                  ← Audio extraction + frame extraction (depend on task_3, independent)
-Group 5: [task_7, task_8, task_9]          ← Transcription, diarization, language detection (depend on task_5)
-Group 6: [task_10, task_11, task_12]       ← Sentiment, emotion, facial analysis
-Group 7: [task_13]                         ← Multi-modal correlation
-Group 8: [task_14]                         ← Report generation
+Group 5: [task_7, task_9]                  ← Language detection + diarization (depend on task_5, independent)
+Group 6: [task_8, task_10, task_12]        ← Transcription (depends on task_7) + emotion + facial analysis
+Group 7: [task_11]                         ← Sentiment analysis (depends on task_8 + task_9)
+Group 8: [task_13]                         ← Multi-modal correlation
+Group 9: [task_14]                         ← Report generation
 ```
 
 ---
@@ -357,6 +358,7 @@ Group 8: [task_14]                         ← Report generation
     "objective": "From store_1 (acquired from src_1), determine speaker sentiment through multi-modal analysis",
     "goals": [
       "Extract audio track from store_1 (acquired from src_1)",
+      "Detect language(s) spoken in the audio from store_1",
       "Transcribe audio content to text with timestamps using speech-to-text",
       "Identify and label distinct speakers through diarization",
       "Analyse vocal characteristics for speech emotion recognition per speaker",
@@ -441,43 +443,43 @@ Group 8: [task_14]                         ← Report generation
       },
       "task_7": {
         "id": "task_7",
-        "action": "Transcribe audio content from derived_1 to text with timestamps using speech-to-text",
-        "capability_ids": ["CAP-AUD-001"],
+        "action": "Detect language(s) spoken in the audio from derived_1",
+        "capability_ids": ["CAP-AUD-004"],
         "depends_on": ["task_5"],
         "input_refs": ["derived_1"],
-        "output_refs": ["derived_3"],
+        "output_refs": [],
         "source_goals": [{ "objective_key": "objective_2", "goal_index": 1 }],
         "execution_group": 5,
         "estimated_weight": "medium"
       },
       "task_8": {
         "id": "task_8",
+        "action": "Transcribe audio content from derived_1 to text with timestamps using speech-to-text",
+        "capability_ids": ["CAP-AUD-001"],
+        "depends_on": ["task_7"],
+        "input_refs": ["derived_1"],
+        "output_refs": ["derived_3"],
+        "source_goals": [{ "objective_key": "objective_2", "goal_index": 2 }],
+        "execution_group": 6,
+        "estimated_weight": "medium"
+      },
+      "task_9": {
+        "id": "task_9",
         "action": "Identify and label distinct speakers through diarization of derived_1",
         "capability_ids": ["CAP-AUD-002"],
         "depends_on": ["task_5"],
         "input_refs": ["derived_1"],
         "output_refs": ["derived_4"],
-        "source_goals": [{ "objective_key": "objective_2", "goal_index": 2 }],
-        "execution_group": 5,
-        "estimated_weight": "heavy"
-      },
-      "task_9": {
-        "id": "task_9",
-        "action": "Analyse vocal characteristics from derived_1 for speech emotion recognition per speaker using derived_4",
-        "capability_ids": ["CAP-AUD-003"],
-        "depends_on": ["task_5", "task_8"],
-        "input_refs": ["derived_1", "derived_4"],
-        "output_refs": [],
         "source_goals": [{ "objective_key": "objective_2", "goal_index": 3 }],
-        "execution_group": 6,
+        "execution_group": 5,
         "estimated_weight": "heavy"
       },
       "task_10": {
         "id": "task_10",
-        "action": "Run sentiment analysis on derived_3 transcript segments per speaker using derived_4",
-        "capability_ids": ["CAP-SPK-001"],
-        "depends_on": ["task_7", "task_8"],
-        "input_refs": ["derived_3", "derived_4"],
+        "action": "Analyse vocal characteristics from derived_1 for speech emotion recognition per speaker using derived_4",
+        "capability_ids": ["CAP-AUD-003"],
+        "depends_on": ["task_5", "task_9"],
+        "input_refs": ["derived_1", "derived_4"],
         "output_refs": [],
         "source_goals": [{ "objective_key": "objective_2", "goal_index": 4 }],
         "execution_group": 6,
@@ -485,38 +487,50 @@ Group 8: [task_14]                         ← Report generation
       },
       "task_11": {
         "id": "task_11",
-        "action": "Analyse facial expressions from derived_2 frames per speaker segment using derived_4",
-        "capability_ids": ["CAP-VIS-006"],
-        "depends_on": ["task_6", "task_8"],
-        "input_refs": ["derived_2", "derived_4"],
+        "action": "Run sentiment analysis on derived_3 transcript segments per speaker using derived_4",
+        "capability_ids": ["CAP-SPK-001"],
+        "depends_on": ["task_8", "task_9"],
+        "input_refs": ["derived_3", "derived_4"],
         "output_refs": [],
         "source_goals": [{ "objective_key": "objective_2", "goal_index": 5 }],
-        "execution_group": 6,
+        "execution_group": 7,
         "estimated_weight": "heavy"
       },
       "task_12": {
         "id": "task_12",
-        "action": "Correlate text sentiment, vocal emotion, and facial expression results per speaker",
-        "capability_ids": ["CAP-SYN-001"],
-        "depends_on": ["task_9", "task_10", "task_11"],
-        "input_refs": [],
+        "action": "Analyse facial expressions from derived_2 frames per speaker segment using derived_4",
+        "capability_ids": ["CAP-VIS-006"],
+        "depends_on": ["task_6", "task_9"],
+        "input_refs": ["derived_2", "derived_4"],
         "output_refs": [],
         "source_goals": [{ "objective_key": "objective_2", "goal_index": 6 }],
-        "execution_group": 7,
+        "execution_group": 6,
+        "estimated_weight": "heavy"
+      },
+      "task_13": {
+        "id": "task_13",
+        "action": "Correlate text sentiment, vocal emotion, and facial expression results per speaker",
+        "capability_ids": ["CAP-SYN-001"],
+        "depends_on": ["task_10", "task_11", "task_12"],
+        "input_refs": [],
+        "output_refs": [],
+        "source_goals": [{ "objective_key": "objective_2", "goal_index": 7 }],
+        "execution_group": 8,
         "estimated_weight": "heavy"
       }
     },
-    "execution_order": ["task_1", "task_2", "task_3", "task_4", "task_5", "task_6", "task_7", "task_8", "task_9", "task_10", "task_11", "task_12"],
+    "execution_order": ["task_1", "task_2", "task_3", "task_4", "task_5", "task_6", "task_7", "task_9", "task_8", "task_10", "task_12", "task_11", "task_13"],
     "execution_groups": {
       "1": { "tasks": ["task_1"], "description": "URL validation", "parallel": false },
       "2": { "tasks": ["task_2"], "description": "Video download to Wasabi", "parallel": false },
       "3": { "tasks": ["task_3", "task_4"], "description": "File verification and metadata extraction", "parallel": true },
       "4": { "tasks": ["task_5", "task_6"], "description": "Audio and frame extraction", "parallel": true },
-      "5": { "tasks": ["task_7", "task_8"], "description": "Transcription and speaker diarization", "parallel": true },
-      "6": { "tasks": ["task_9", "task_10", "task_11"], "description": "Multi-modal analysis (vocal, text, visual)", "parallel": true },
-      "7": { "tasks": ["task_12"], "description": "Multi-modal correlation and synthesis", "parallel": false }
+      "5": { "tasks": ["task_7", "task_9"], "description": "Language detection and speaker diarization", "parallel": true },
+      "6": { "tasks": ["task_8", "task_10", "task_12"], "description": "Transcription, emotion recognition, and facial analysis", "parallel": true },
+      "7": { "tasks": ["task_11"], "description": "Sentiment analysis on transcript per speaker", "parallel": false },
+      "8": { "tasks": ["task_13"], "description": "Multi-modal correlation and synthesis", "parallel": false }
     },
-    "total_tasks": 12,
+    "total_tasks": 13,
     "deduplicated_count": 0
   },
   "deduplication_log": []
@@ -735,12 +749,13 @@ This approach avoids hallucination because the timestamp is present in your inpu
 ---
 
 ## Version
-v1.2.0
+v1.3.0
 
 ## Last Updated
-February 21, 2026
+February 23, 2026
 
 ## Changelog
+- v1.3.0 (Feb 23, 2026): Fixed language detection → transcription dependency chain. Transcription now depends on Language Detection (not directly on Audio Extraction), matching `application.md` Section 6.9 mandatory prerequisite: `CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001`. Updated Example 1 to include language detection goal in Goal Agent input and a language detection task (task_7) in the workflow output. Example 1 now has 13 tasks across 8 execution groups (was 12 tasks across 7 groups). Updated Execution Group Semantics illustration to reflect corrected dependency tiers.
 - v1.2.0 (Feb 21, 2026): Added "Pre-Execution Validation (MANDATORY)" section with two checks: (1) Input Freshness — detects stale/misrouted input by comparing Goal Agent timestamp to Planning Agent execution time, emitting STALE_INPUT_WARNING to audit trail if gap exceeds 60 seconds; (2) Governance File Path Format — canonical path list to prevent path abbreviation hallucinations. Added "parent_message_id Construction Rule" — replaces unreliable recall-based inheritance with deterministic construction from Goal Agent's timestamp (`msg-goal-{YYYYMMDD}-{HHMMSS}`). These address fabricated parent_message_ids and stale input routing observed in 20260220-5.md logs.
 - v1.1.0 (Feb 19, 2026): Added `input_refs` and `output_refs` to Task Schema. Added Step 4 (Assign Resource Refs) with derived_refs registration logic. Updated Workflow Construction Rule 12 to use ref IDs. Added rules 13-14 for ref tracking. Updated all examples to use ref IDs (src_N, store_N, derived_N) instead of raw URLs and verbose storage descriptions. Added validation rules 7-8 for ref consistency. Added Common Mistakes 9-11 for ref-related errors.
 - v1.0.0 (Feb 18, 2026): Initial release. Defines execution workflow output with DAG-based task dependencies, aggressive deduplication, execution groups with parallelism hints, and full traceability to Goal Agent output.
