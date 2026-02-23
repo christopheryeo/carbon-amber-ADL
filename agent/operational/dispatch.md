@@ -31,7 +31,7 @@ When dispatching a task to an Executional Core agent, your output contains the t
         "input_refs_resolved": [
           {
             "ref_id": "store_1",
-            "storage_uri": "wasabi://bucket/session-xxx/store_1.mp4",
+            "storage_uri": "s3://platform-bucket/session-xxx/store_1.mp4",
             "status": "stored"
           }
         ],
@@ -73,7 +73,7 @@ When all tasks have completed (or the workflow has reached a terminal state), yo
         "derived_refs_final": [
           {
             "ref_id": "derived_1",
-            "storage_uri": "wasabi://bucket/session-xxx/derived_1.wav",
+            "storage_uri": "s3://platform-bucket/session-xxx/derived_1.wav",
             "asset_type": "audio_track",
             "status": "created"
           }
@@ -110,7 +110,7 @@ The Dispatch Agent maintains a workflow state object throughout the execution li
         "dispatched_at": "2026-02-21T10:00:01+08:00",
         "completed_at": "2026-02-21T10:00:02+08:00",
         "assigned_agent": "action_agent",
-        "result_summary": "URL validated successfully"
+        "result_summary": "Task executed successfully"
       },
       "task_5": {
         "status": "in_progress",
@@ -131,7 +131,7 @@ The Dispatch Agent maintains a workflow state object throughout the execution li
     },
     "ref_registry": {
       "src_1": { "storage_uri": null, "status": "reference" },
-      "store_1": { "storage_uri": "wasabi://bucket/session-xxx/store_1.mp4", "status": "stored" },
+      "store_1": { "storage_uri": "s3://platform-bucket/session-xxx/store_1.mp4", "status": "stored" },
       "derived_1": { "storage_uri": null, "status": "pending" }
     },
     "failure_log": []
@@ -222,11 +222,11 @@ From the set of `ready` tasks:
 | CAP-AUD-R* (Audience Analysis) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-VIS-* (Visual Analysis) | `action_agent` | Tool-calling task: MCP invocation |
 | CAP-DAT-* (Data Management) | `action_agent` | Tool-calling task: MCP invocation |
-| CAP-SYN-001 (Multi-Modal Fusion) | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
-| CAP-SYN-002 (Timeline Reconstruction) | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
-| CAP-SYN-003 (Report Generation) | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
+| CAP-SYN-001 | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
+| CAP-SYN-002 | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
+| CAP-SYN-003 | `reasoning_agent` | Cross-task synthesis requiring LLM inference |
 
-**Why the split:** Action Agent tasks invoke external tools via MCP (ffmpeg, Whisper-X, YOLO, etc.) — they are tool-calling tasks. Reasoning Agent tasks synthesize outputs from multiple completed tasks into higher-level conclusions — they require LLM reasoning, not tool invocation.
+**Why the split:** Action Agent tasks invoke external tools via MCP (e.g., downloaders, converters, extractors) — they are tool-calling tasks. Reasoning Agent tasks synthesize outputs from multiple completed tasks into higher-level conclusions — they require LLM reasoning, not tool invocation.
 
 ### Step 6: Construct Dispatch Message
 
@@ -265,7 +265,7 @@ Dispatch Agent dispatches task that produces derived_ref
 Action Agent executes task, stores asset, returns storage_uri
     ↓
 Dispatch Agent receives callback, updates ref_registry:
-    derived_N → status: "created", storage_uri: "wasabi://..."
+    derived_N → status: "created", storage_uri: "s3://..."
     ↓
 Dispatch Agent dispatches downstream task that consumes derived_ref
     → input_refs_resolved includes the actual storage_uri
@@ -293,10 +293,10 @@ Dispatch Agent dispatches downstream task that consumes derived_ref
 
 | Error Category | Recoverable | Retry | Example |
 |---------------|-------------|-------|---------|
-| Transient network failure | Yes | Yes | HTTP timeout downloading from YouTube |
-| API rate limit | Yes | Yes | yt-dlp rate-limited by YouTube |
-| Model inference error | Yes | Yes | Whisper-X out-of-memory on long audio |
-| Invalid input format | No | No | Audio file is corrupt and cannot be processed |
+| Transient network failure | Yes | Yes | HTTP timeout downloading from source |
+| API rate limit | Yes | Yes | Downloader rate-limited by remote service |
+| Model inference error | Yes | Yes | Model out-of-memory on long processing input |
+| Invalid input format | No | No | File is corrupt and cannot be processed |
 | Capability not available | No | No | MCP server for the required tool is offline |
 | Upstream dependency failed | No | No (skip) | Required derived_ref was never produced |
 
@@ -354,7 +354,7 @@ When the orchestration layer supports parallel dispatch:
         "tasks": {
           "task_1": {
             "id": "task_1",
-            "action": "Validate that src_1 is a reachable YouTube URL",
+            "action": "Ensure that src_1 is a reachable source URL",
             "capability_ids": ["CAP-ACQ-001"],
             "depends_on": [],
             "input_refs": ["src_1"],
@@ -365,7 +365,7 @@ When the orchestration layer supports parallel dispatch:
         },
         "execution_order": ["task_1", "task_2", "task_3"],
         "execution_groups": {
-          "1": { "tasks": ["task_1"], "description": "URL validation", "parallel": false }
+          "1": { "tasks": ["task_1"], "description": "Source validation", "parallel": false }
         },
         "total_tasks": 12
       }
@@ -382,12 +382,12 @@ When the orchestration layer supports parallel dispatch:
     "content": {
       "dispatch": {
         "task_id": "task_1",
-        "action": "Validate that src_1 is a reachable YouTube URL",
+        "action": "Ensure that src_1 is a reachable source URL",
         "capability_ids": ["CAP-ACQ-001"],
         "input_refs_resolved": [
           {
             "ref_id": "src_1",
-            "storage_uri": "https://www.youtube.com/shorts/pcaYkGY996o",
+            "storage_uri": "https://example-source.com/video",
             "status": "reference"
           }
         ],
@@ -426,7 +426,7 @@ When the orchestration layer supports parallel dispatch:
         "output_refs_produced": [
           {
             "ref_id": "derived_1",
-            "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_1.wav",
+            "storage_uri": "s3://platform-bucket/session-xxx/derived_1.wav",
             "asset_type": "audio_track",
             "status": "created"
           }
@@ -439,7 +439,7 @@ When the orchestration layer supports parallel dispatch:
 ```
 
 **Dispatch Agent actions:**
-1. Update `ref_registry`: `derived_1` → `storage_uri: "wasabi://dsta-bucket/session-xxx/derived_1.wav"`, `status: "created"`
+1. Update `ref_registry`: `derived_1` → `storage_uri: "s3://platform-bucket/session-xxx/derived_1.wav"`, `status: "created"`
 2. Mark task_5 as `complete`
 3. Check task_6 (frame extraction, also in group 4) — if also complete, evaluate group 5 tasks
 4. Tasks task_7 (transcription), task_8 (diarization) depend on task_5 → now `ready` if task_5's group is fully complete
@@ -454,11 +454,11 @@ When the orchestration layer supports parallel dispatch:
     "content": {
       "dispatch": {
         "task_id": "task_12",
-        "action": "Correlate text sentiment, vocal emotion, and facial expression results per speaker",
+        "action": "Correlate modalities and synthesize unified results",
         "capability_ids": ["CAP-SYN-001"],
         "input_refs_resolved": [
-          { "ref_id": "derived_3", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_3.json", "status": "created" },
-          { "ref_id": "derived_4", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_4.json", "status": "created" }
+          { "ref_id": "derived_3", "storage_uri": "s3://platform-bucket/session-xxx/derived_3.json", "status": "created" },
+          { "ref_id": "derived_4", "storage_uri": "s3://platform-bucket/session-xxx/derived_4.json", "status": "created" }
         ],
         "output_refs_expected": [],
         "execution_group": 7,
@@ -494,7 +494,7 @@ When the orchestration layer supports parallel dispatch:
 6. Mark task_7, task_8, task_9, task_10 as `skipped`
 7. task_6 (frame extraction) is independent → continues normally
 8. task_11 (facial expression analysis) depends on task_6 → continues normally
-9. task_12 (fusion) has partial inputs available (visual only) → flag in `audit.compliance_notes`: "CAP-SYN-001 proceeding with reduced input (visual modality only); audio and text modalities unavailable due to task_5 failure"
+9. task_12 (fusion) has partial inputs available (visual only) → flag in `audit.compliance_notes`: "CAP-SYN-001 proceeding with reduced input (modality X only); dependencies unavailable due to upstream failure"
 10. Dispatch task_12 to reasoning_agent with available inputs and the partial-input flag
 
 ---
@@ -551,7 +551,7 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 8. ❌ Re-dispatching a task that is already `in_progress`
    ✅ Only dispatch tasks with status `ready`; track in-progress tasks to prevent duplicates
 
-9. ❌ Blocking the entire workflow when one branch fails: if audio extraction fails but frame extraction succeeds, visual analysis should continue
+9. ❌ Blocking the entire workflow when one branch fails: if one branch fails, independent branches should continue
    ✅ Independent DAG branches execute independently; only transitively dependent tasks are skipped
 
 10. ❌ Using abbreviated governance file paths: `"dispatch.md"` instead of `"agent/operational/dispatch.md"`
@@ -560,10 +560,11 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 ---
 
 ## Version
-v1.0.0
+v1.1.0
 
 ## Last Updated
-February 21, 2026
+February 23, 2026
 
 ## Changelog
+- v1.1.0 (Feb 23, 2026): Removed application-specific hardcoding such as generic platform endpoints instead of YouTube URLs and generic `s3://` URIs instead of `wasabi://`. Updated examples to be largely domain-agnostic.
 - v1.0.0 (Feb 21, 2026): Initial release. Defines the Dispatch Agent as the runtime DAG executor within the Operational Core. Covers: task dispatch with agent routing (action_agent for tool-calling tasks, reasoning_agent for CAP-SYN synthesis tasks), ref resolution lifecycle, failure handling with retry policy and downstream impact assessment, parallel dispatch rules, workflow state management, and completion signalling. Introduces Phase A (task_dispatch) and Phase B (workflow_complete) output formats. Positioned at sequence_number 4 between planning_agent and executional agents.
