@@ -2,7 +2,7 @@
 
 **File:** agent/operational/memory.md
 **Layer:** Operational Core (Layer 2)
-**Agent ID:** `agent_memory`
+**Agent ID:** `memory_agent`
 
 ---
 
@@ -41,7 +41,7 @@ Capture information from completed audit logs in `system/logs/`, distill that in
   - **Successful resolution paths** — which goal decompositions and execution plans led to COMPLETE status with high-quality outputs.
   - **Failed or escalated paths** — which chains terminated in error, required model escalation (SLM to LLM), or exceeded hop limits (circuit breaker triggers).
   - **Governance interventions** — instances where agent instructions conflicted with governance policies and were rejected, along with the resolution.
-  - **Reviewer feedback** — quality validation outcomes from the Reviewer Agent, including pass/fail ratios and common quality issues.
+  - **Reasoning feedback** — quality synthesis outcomes from the Reasoning Agent, identifying gaps or recurring errors across execution cycles.
 - Tag each decision record with outcome classification: `SUCCESS`, `PARTIAL`, `FAILURE`, `ESCALATED`, `REJECTED`.
 
 ### Knowledge Distillation
@@ -80,9 +80,9 @@ The Memory Agent is invoked under the following conditions:
 
 | Trigger | Description |
 |---------|-------------|
-| **Post-chain completion** | Automatically invoked by the orchestration layer (n8n) after a processing chain reaches COMPLETE or terminal ERROR status. It calls `target_agent_id: "agent_memory"` with the transaction_id as input. |
+| **Post-chain completion** | Automatically invoked by the orchestration layer (n8n) after a processing chain reaches COMPLETE or terminal ERROR status. It calls `target_agent_id: "memory_agent"` with the transaction_id as input. |
 | **Scheduled distillation** | Invoked on a configurable schedule (default: daily) to perform batch pattern extraction and knowledge distillation across all transactions in the time window. |
-| **On-demand recall** | Invoked by other agents (Planning, Reviewer) when they need historical context. The requesting agent sets `next_agent: { "name": "agent_memory", "reason": "context_retrieval" }` in its output. |
+| **On-demand recall** | Invoked by other agents when they need historical context. The requesting agent sets `next_agent: { "name": "memory_agent", "reason": "context_retrieval" }` in its output. |
 
 ---
 
@@ -127,39 +127,72 @@ The Memory Agent produces a standard JSON message per `context/governance/messag
 
 ```json
 {
-  "message_id": "msg_memory_001",
-  "timestamp": "2025-06-01T12:00:00Z",
-  "agent": "agent_memory",
-  "input": { "...trigger payload..." },
-  "output": {
-    "action_taken": "distillation | capture | recall",
-    "knowledge_updates": [
-      {
-        "file": "context/memory/error_prevention.md",
-        "category": "error_prevention",
-        "entries_added": 2,
-        "entries_revised": 1,
-        "summary": "Added restricted short-form content early-detection heuristic; revised source-platform age-gate handling."
+  "message_id": "msg-memo-20260601-001",
+  "timestamp": {
+    "executed_at": "2026-06-01T12:00:00Z",
+    "timezone": "UTC"
+  },
+  "agent": {
+    "name": "memory_agent",
+    "type": "operational"
+  },
+  "input": { 
+    "source": "orchestration_layer",
+    "content": {
+      "trigger": "scheduled_distillation",
+      "time_window": {
+        "start": "2026-05-25T00:00:00Z",
+        "end": "2026-06-01T00:00:00Z"
       }
-    ],
-    "recall_result": null,
-    "statistics": {
-      "transactions_processed": 47,
-      "patterns_identified": 5,
-      "decisions_catalogued": 23,
-      "knowledge_entries_written": 3
+    }
+  },
+  "output": {
+    "content_type": "knowledge_update",
+    "content": {
+      "action_taken": "distillation",
+      "knowledge_updates": [
+        {
+          "file": "context/memory/error_prevention.md",
+          "category": "error_prevention",
+          "entries_added": 2,
+          "entries_revised": 1,
+          "summary": "Added restricted short-form content early-detection heuristic; revised source-platform age-gate handling."
+        }
+      ],
+      "recall_result": null,
+      "statistics": {
+        "transactions_processed": 47,
+        "patterns_identified": 5,
+        "decisions_catalogued": 23,
+        "knowledge_entries_written": 3
+      }
     }
   },
   "next_agent": {
     "name": null,
     "reason": "COMPLETE — knowledge distillation cycle finished"
   },
-  "status": "success",
-  "error": null,
+  "status": {
+    "code": "success",
+    "message": "Knowledge distillation cycle completed successfully"
+  },
+  "error": {
+    "has_error": false,
+    "error_code": null,
+    "error_message": null,
+    "retry_count": 0,
+    "recoverable": true
+  },
   "metadata": {
-    "session_id": "sess_20250601",
+    "session_id": "sess_20260601",
     "request_id": "req_memory_batch_001",
-    "sequence_number": 1
+    "sequence_number": 1,
+    "parent_message_id": null
+  },
+  "resources": {
+    "source_refs": [],
+    "storage_refs": [],
+    "derived_refs": []
   },
   "audit": {
     "compliance_notes": "Knowledge files written to context/memory/ per governance standards. No governance conflicts detected.",
@@ -282,7 +315,7 @@ The Memory Agent transforms Carbon Amber from a **stateless** request-processing
 - **Objective and Goal Agents** can reference domain knowledge to produce better-informed strategic decompositions.
 - **Planning Agents** can leverage operational heuristics to create more efficient execution plans.
 - **Executional Agents** can anticipate known failure modes and apply preventive measures.
-- **Reviewer Agents** can compare outputs against historical quality benchmarks.
+- **Reasoning Agents** can identify quality benchmarks during synthesis.
 
 This creates a virtuous feedback loop: better knowledge leads to better processing, which generates better logs, which distills into better knowledge.
 

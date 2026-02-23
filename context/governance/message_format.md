@@ -208,7 +208,7 @@ All agent communications must use the following JSON structure:
   },
   "output": {
     "content": [
-      "Obtain video content from src_1 and store as store_1",
+      "Obtain video content from src_1 (https://www.youtube.com/watch?v=abc123) and store as store_1",
       "From store_1 (acquired from src_1), analyze speaker sentiment through multi-modal analysis"
     ],
     "content_type": "objectives"
@@ -282,14 +282,14 @@ All agent communications must use the following JSON structure:
   "input": {
     "source": "objective_agent",
     "content": [
-      "Obtain video content from src_1 and store as store_1",
+      "Obtain video content from src_1 (https://www.youtube.com/watch?v=abc123) and store as store_1",
       "From store_1 (acquired from src_1), analyze speaker sentiment through multi-modal analysis"
     ]
   },
   "output": {
     "content": {
       "objective_1": {
-        "objective": "Obtain video content from src_1 and store as store_1",
+        "objective": "Obtain video content from src_1 (https://www.youtube.com/watch?v=abc123) and store as store_1",
         "goals": [
           "Validate that src_1 is a reachable YouTube URL",
           "Download video content from src_1 to platform file storage (Wasabi) as store_1",
@@ -301,6 +301,7 @@ All agent communications must use the following JSON structure:
         "objective": "From store_1 (acquired from src_1), analyze speaker sentiment through multi-modal analysis",
         "goals": [
           "Extract audio track from store_1 (acquired from src_1)",
+          "Detect language(s) spoken in the audio track",
           "Transcribe audio content to text with timestamps",
           "Identify and label distinct speakers through diarization",
           "Analyse vocal characteristics for speech emotion recognition per speaker",
@@ -317,7 +318,7 @@ All agent communications must use the following JSON structure:
   },
   "status": {
     "code": "success",
-    "message": "Successfully decomposed 2 objectives into 10 actionable goals"
+    "message": "Successfully decomposed 2 objectives into 11 actionable goals"
   },
   "error": {
     "has_error": false,
@@ -359,7 +360,7 @@ All agent communications must use the following JSON structure:
   "audit": {
     "compliance_notes": "Objectives successfully decomposed into actionable goals. Storage Resolution Rule applied using ref IDs: acquisition goals reference src_1 with explicit store_1 target; analysis goals reference store_1 (acquired from src_1) on first mention per First-Mention Provenance Rule. All goals map to platform capabilities.",
     "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/governance/goal.md"],
-    "reasoning": "Objective 1 (video acquisition) decomposed into 4 goals: validate src_1, download src_1 to Wasabi as store_1, verify store_1 integrity, extract store_1 metadata. Objective 2 (sentiment analysis) decomposed into 6 goals following audio-first pipeline. First goal in objective 2 includes provenance: 'store_1 (acquired from src_1)'; subsequent goals use bare ref IDs per First-Mention Provenance Rule."
+    "reasoning": "Objective 1 (video acquisition) decomposed into 4 goals: validate src_1, download src_1 to Wasabi as store_1, verify store_1 integrity, extract store_1 metadata. Objective 2 (sentiment analysis) decomposed into 7 goals following audio-first pipeline (including language detection before transcription). First goal in objective 2 includes provenance: 'store_1 (acquired from src_1)'; subsequent goals use bare ref IDs per First-Mention Provenance Rule."
   }
 }
 ```
@@ -446,7 +447,7 @@ User Request
 
 Steps [1]–[6] form the main request chain. Each agent receives the message from the previous agent, processes it, updates the relevant fields, and passes it to the next agent.
 
-Steps [4]–[5] form an iterative loop: the Dispatch Agent dispatches one or more tasks, the Action Agent (for tool-calling tasks: CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT) or the Reasoning Agent (for synthesis tasks: CAP-SYN) processes each task and returns results to the Dispatch Agent. This loop continues until all tasks in the workflow DAG are complete, failed, or skipped. See `agent/operational/dispatch.md` for the full dispatch specification.
+Steps [4]–[5] form an iterative loop: the Dispatch Agent dispatches one or more tasks, the Action Agent (for tool-calling tasks: CAP-ACQ, CAP-PRE, CAP-AUD, CAP-AUD-R, CAP-SPK, CAP-VIS, CAP-DAT) or the Reasoning Agent (for synthesis tasks: CAP-SYN) processes each task and returns results to the Dispatch Agent. This loop continues until all tasks in the workflow DAG are complete, failed, or skipped. See `agent/operational/dispatch.md` for the full dispatch specification.
 
 Step [7] is a post-chain process: after the chain reaches COMPLETE or terminal ERROR status, the orchestration layer invokes the Memory Agent to process the transaction's audit logs and distill institutional knowledge. The Memory Agent may also be invoked on a schedule for batch distillation, or on-demand by other agents for context retrieval. See `agent/operational/memory.md` for full specification.
 
