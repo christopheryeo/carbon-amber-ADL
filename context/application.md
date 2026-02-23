@@ -74,9 +74,9 @@ Governance files are **authoritative** and take precedence over any conflicting 
 
 ### Description
 
-This application enables comprehensive video content analysis through autonomous AI agents that collaborate to extract insights from audio, visual, and contextual elements of video content from sources such as YouTube, Instagram, and TikTok.
+This application enables comprehensive video content analysis through autonomous AI agents that collaborate to extract insights from audio, visual, and contextual elements of video content from generalized source URLs and direct file uploads.
 
-The platform integrates n8n as its orchestration engine and leverages multiple AI agents organized into Governance, Operational, and Executional cores to perform sophisticated multi-modal video analysis tasks autonomously.
+The platform integrates an orchestration engine and leverages multiple AI agents organized into Governance, Operational, and Executional cores to perform sophisticated multi-modal video analysis tasks autonomously.
 
 ---
 
@@ -100,13 +100,13 @@ The platform supports the following capability categories. When decomposing user
 
 | ID | Capability | Description | Tools/Models |
 |----|------------|-------------|--------------|
-| CAP-ACQ-001 | URL Validation | Validate that a provided URL belongs to a supported source (YouTube, Instagram, TikTok) and is reachable | Custom URL validator, platform API checks |
-| CAP-ACQ-002 | Video Download (YouTube) | Download video content from YouTube given a valid URL | yt-dlp |
-| CAP-ACQ-003 | Video Download (Instagram) | Download video content from Instagram given a valid URL | instaloader, yt-dlp |
-| CAP-ACQ-004 | Video Download (TikTok) | Download video content from TikTok given a valid URL | yt-dlp, TikTok API |
+| CAP-ACQ-001 | URL Validation | Validate that a provided URL belongs to a supported source and is reachable | Custom URL validator, platform API checks |
+| CAP-ACQ-002 | Video Download (Platform A) | Download video content from Platform A given a valid URL | video-downloader-cli |
+| CAP-ACQ-003 | Video Download (Platform B) | Download video content from Platform B given a valid URL | video-downloader-cli |
+| CAP-ACQ-004 | Video Download (Platform C) | Download video content from Platform C given a valid URL | video-downloader-cli, Platform API |
 | CAP-ACQ-005 | Direct Upload Ingestion | Accept and register video files uploaded directly by users | Platform upload handler (MP4, MOV, AVI, WEBM) |
 | CAP-ACQ-006 | File Integrity Verification | Verify that downloaded or uploaded video files are complete, uncorrupted, and in a supported format | ffprobe, file checksum validation |
-| CAP-ACQ-007 | Metadata Extraction | Extract video metadata including duration, resolution, codec, frame rate, and file size | ffprobe, yt-dlp metadata |
+| CAP-ACQ-007 | Metadata Extraction | Extract video metadata including duration, resolution, codec, frame rate, and file size | ffprobe, downloader metadata |
 
 ### 6.2 Video Pre-Processing
 
@@ -169,7 +169,7 @@ The platform supports the following capability categories. When decomposing user
 | ID | Capability | Description | Tools/Models |
 |----|------------|-------------|--------------|
 | CAP-DAT-001 | Result Indexing | Index analysis results and metadata for search and retrieval | Elasticsearch (Vector Core) |
-| CAP-DAT-002 | File Storage | Store downloaded video files, extracted assets, and generated reports | Wasabi |
+| CAP-DAT-002 | File Storage | Store downloaded video files, extracted assets, and generated reports | S3-compatible File Storage |
 | CAP-DAT-003 | Context Caching | Cache intermediate results and agent context for session continuity | Redis |
 
 ### 6.9 Capability Dependencies and I/O Reference
@@ -228,9 +228,9 @@ This mapping defines which MCP servers and tools correspond to each capability. 
 | Capability ID | MCP Server | Tool | Parameters |
 |--------------|------------|------|------------|
 | CAP-ACQ-001 | `acquisition` | `url_validator` | `url`, `platform` |
-| CAP-ACQ-002 | `acquisition` | `youtube_downloader` | `url`, `output_path`, `format` |
-| CAP-ACQ-003 | `acquisition` | `instagram_downloader` | `url`, `output_path` |
-| CAP-ACQ-004 | `acquisition` | `tiktok_downloader` | `url`, `output_path` |
+| CAP-ACQ-002 | `acquisition` | `platform_a_downloader` | `url`, `output_path`, `format` |
+| CAP-ACQ-003 | `acquisition` | `platform_b_downloader` | `url`, `output_path` |
+| CAP-ACQ-004 | `acquisition` | `platform_c_downloader` | `url`, `output_path` |
 | CAP-ACQ-005 | `acquisition` | `upload_registrar` | `file_path`, `output_path` |
 | CAP-ACQ-006 | `acquisition` | `integrity_checker` | `file_uri`, `expected_format` |
 | CAP-ACQ-007 | `acquisition` | `metadata_extractor` | `file_uri` |
@@ -269,7 +269,7 @@ The application can process inputs from the following sources:
 
 | Source Type | Examples |
 |-------------|----------|
-| Social Media | YouTube, Instagram, TikTok |
+| Social Media / Web Platforms | Generic video platforms, internal enterprise video domains |
 | Direct Upload | Video file uploads (MP4, MOV, AVI, WEBM) |
 
 ---
@@ -280,18 +280,18 @@ The platform leverages these technologies (for agent awareness when planning tas
 
 | Category | Technologies |
 |----------|--------------|
-| Orchestration | n8n, Model Context Protocol (MCP) |
+| Orchestration | Flow engine, Model Context Protocol (MCP) |
 | LLMs | Phase 1: Gemini (online API); Phase 2: Llama 4 (on-premise) |
 | Transcription & Diarization | OpenAI Whisper-X, pyannote.audio |
 | Video Processing | ffmpeg, ffprobe, OpenCV, PySceneDetect |
-| Video Download | yt-dlp, instaloader |
+| Video Download | video-downloader-cli |
 | Image & Visual Analysis | Mistral (image analysis), YOLO (object detection) |
 | Video Analysis | Flux AI |
 | OCR | Tesseract, PaddleOCR |
 | Database | Elasticsearch (Vector Core) |
 | Cache | Redis |
 | Data Collection | SERP API, Firecrawl |
-| File Storage | Wasabi |
+| File Storage | S3-compatible object storage |
 | Specialized Models | Sentient-developed sentiment models, speech emotion models, multi-modal stance models, deepfake detection models |
 
 ---
@@ -366,7 +366,7 @@ When decomposing requests, agents must observe these boundaries:
 | **Governance** | All operations must comply with policies in `context/governance/` |
 
 ### In-Scope Requests
-- Video download from supported sources (YouTube, Instagram, TikTok)
+- Video download from supported sources
 - Audio transcription and speaker identification
 - Sentiment analysis (speaker and audience)
 - Visual element detection (objects, banners, placards, text)
