@@ -54,11 +54,11 @@ When the Goal Agent encounters these patterns, it MUST resolve references as fol
 
 | Objective Type | Goal Agent Resolution |
 |---------------|----------------------|
-| Acquisition objective (contains src_N (URL) and store_N) | Goals include src_N URL validation, download from src_N to Wasabi as store_N, store_N integrity verification, and store_N metadata extraction. Note: The objective text includes a URL annotation on src_N (e.g., "src_1 (https://...)") for traceability — goals reference bare src_N without the annotation. |
+| Acquisition objective (contains src_N (URL) and store_N) | Goals include src_N URL validation, download from src_N to file storage as store_N, store_N integrity verification, and store_N metadata extraction. Note: The objective text includes a URL annotation on src_N (e.g., "src_1 (https://...)") for traceability — goals reference bare src_N without the annotation. |
 | Analysis objective (references store_N) | Goals operate on store_N. The FIRST goal in each objective that references store_N must include provenance: "store_N (acquired from src_N)". Subsequent goals use bare store_N. |
 
 ### Why This Matters
-- The source URL is an external, potentially volatile reference. Once acquired and stored in Wasabi as store_N, all processing operates on the durable, integrity-verified copy.
+- The source URL is an external, potentially volatile reference. Once acquired and stored as store_N, all processing operates on the durable, integrity-verified copy.
 - Ref IDs provide structured traceability from source to storage to derived assets.
 - If the Goal Agent generates goals that reference src_N for analysis objectives, downstream agents may attempt to re-download, wasting bandwidth and risking failures.
 
@@ -68,11 +68,11 @@ Within EACH objective's goal list, the FIRST goal that references a store_N must
 
 ### Goal Phrasing for Storage Resolution
 
-- ✅ **Acquisition goals**: "Download video content from src_1 to platform file storage (Wasabi) as store_1"
+- ✅ **Acquisition goals**: "Download video content from src_1 to platform file storage as store_1"
 - ✅ **First analysis goal in objective**: "Extract audio track from store_1 (acquired from src_1)"
 - ✅ **Subsequent analysis goals**: "Transcribe audio content to text with timestamps"
 - ❌ **Analysis goals**: "Extract audio track from src_1" — NEVER reference src_N in analysis goals
-- ❌ **Analysis goals**: "Extract audio track from https://www.youtube.com/watch?v=xyz" — NEVER use raw URLs
+- ❌ **Analysis goals**: "Extract audio track from https://example.com/watch?v=xyz" — NEVER use raw URLs
 
 ---
 
@@ -153,8 +153,8 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 **Trigger:** Objectives containing "obtain", "download", "get", "access", or "process" with src_N and store_N ref IDs.
 
 **Goal pattern:**
-1. Validate that src_N is a reachable URL from a supported platform (YouTube, Instagram, TikTok) or is a valid uploaded file
-2. Download video content from src_N to platform file storage (Wasabi) as store_N / Register uploaded file src_N in platform file storage (Wasabi) as store_N
+1. Validate that src_N is a reachable URL from a supported source or is a valid uploaded file
+2. Download video content from src_N to platform file storage as store_N / Register uploaded file src_N in platform file storage as store_N
 3. Verify downloaded/uploaded file integrity and format compatibility for store_N
 4. Extract video metadata (duration, resolution, codec, frame rate) from store_N
 
@@ -267,7 +267,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 
 ### In-Scope (process normally):
 - Any objective that maps to one or more capabilities in the Capabilities Matrix
-- Objectives involving supported sources (YouTube, Instagram, TikTok, direct uploads)
+- Objectives involving supported content sources
 - Objectives requiring any combination of audio, visual, speaker, audience, or scene analysis
 
 ### Out-of-Scope (reject with OUT_OF_SCOPE error):
@@ -288,7 +288,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 **Input from Objective Agent:**
 ```json
 [
-  "Obtain video content from src_1 (https://www.youtube.com/shorts/iQ3yXScDuEA) and store as store_1",
+  "Obtain video content from src_1 (https://example-platform.com/shorts/iQ3yXScDuEA) and store as store_1",
   "From store_1 (acquired from src_1), determine speaker sentiment through multi-modal analysis"
 ]
 ```
@@ -298,10 +298,10 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 {
   "content": {
     "objective_1": {
-      "objective": "Obtain video content from src_1 (https://www.youtube.com/shorts/iQ3yXScDuEA) and store as store_1",
+      "objective": "Obtain video content from src_1 (https://example-platform.com/shorts/iQ3yXScDuEA) and store as store_1",
       "goals": [
-        "Validate that src_1 is a reachable YouTube URL",
-        "Download video content from src_1 to platform file storage (Wasabi) as store_1",
+        "Validate that src_1 is a reachable video URL",
+        "Download video content from src_1 to platform file storage as store_1",
         "Verify downloaded file integrity and format compatibility for store_1",
         "Extract video metadata including duration, resolution, and frame rate from store_1"
       ]
@@ -329,7 +329,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 **Input from Objective Agent:**
 ```json
 [
-  "Obtain video content from src_1 (https://www.youtube.com/watch?v=protest2024) and store as store_1",
+  "Obtain video content from src_1 (https://example-platform.com/watch?v=protest2024) and store as store_1",
   "From store_1 (acquired from src_1), generate transcript",
   "From store_1, identify visual signage"
 ]
@@ -340,10 +340,10 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 {
   "content": {
     "objective_1": {
-      "objective": "Obtain video content from src_1 (https://www.youtube.com/watch?v=protest2024) and store as store_1",
+      "objective": "Obtain video content from src_1 (https://example-platform.com/watch?v=protest2024) and store as store_1",
       "goals": [
-        "Validate that src_1 is a reachable YouTube URL",
-        "Download video content from src_1 to platform file storage (Wasabi) as store_1",
+        "Validate that src_1 is a reachable video URL",
+        "Download video content from src_1 to platform file storage as store_1",
         "Verify downloaded file integrity and format compatibility for store_1",
         "Extract video metadata including duration, resolution, and frame rate from store_1"
       ]
@@ -371,12 +371,12 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 }
 ```
 
-### Example 3: Audience Reaction and Speaker Stance (Instagram)
+### Example 3: Audience Reaction and Speaker Stance (Shorts)
 
 **Input from Objective Agent:**
 ```json
 [
-  "Obtain video content from src_1 (https://www.instagram.com/reel/abc123) and store as store_1",
+  "Obtain video content from src_1 (https://example-platform2.com/reel/abc123) and store as store_1",
   "From store_1 (acquired from src_1), assess audience sentiment and reactions",
   "From store_1, determine speaker stance and position"
 ]
@@ -387,10 +387,10 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 {
   "content": {
     "objective_1": {
-      "objective": "Obtain video content from src_1 (https://www.instagram.com/reel/abc123) and store as store_1",
+      "objective": "Obtain video content from src_1 (https://example-platform2.com/reel/abc123) and store as store_1",
       "goals": [
-        "Validate that src_1 is a reachable Instagram URL",
-        "Download video content from src_1 to platform file storage (Wasabi) as store_1",
+        "Validate that src_1 is a reachable video URL",
+        "Download video content from src_1 to platform file storage as store_1",
         "Verify downloaded file integrity and format compatibility for store_1",
         "Extract video metadata including duration, resolution, and frame rate from store_1"
       ]
@@ -441,7 +441,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
       "objective": "Process uploaded video file src_1 (meeting_recording.mp4) and register as store_1",
       "goals": [
         "Validate that uploaded file src_1 exists and is in a supported format",
-        "Register src_1 in platform file storage (Wasabi) as store_1",
+        "Register src_1 in platform file storage as store_1",
         "Verify uploaded file integrity and check for corruption for store_1",
         "Extract video metadata including duration, resolution, and frame rate from store_1"
       ]
@@ -464,12 +464,12 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 }
 ```
 
-### Example 5: TikTok Speaker Identification
+### Example 5: General Platform Speaker Identification
 
 **Input from Objective Agent:**
 ```json
 [
-  "Obtain video content from src_1 (https://www.tiktok.com/@user/video/123456) and store as store_1",
+  "Obtain video content from src_1 (https://example-platform3.com/@user/video/123456) and store as store_1",
   "From store_1 (acquired from src_1), identify speakers",
   "From store_1, transcribe speaker content",
   "From store_1, analyze speaker emotional state"
@@ -481,10 +481,10 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 {
   "content": {
     "objective_1": {
-      "objective": "Obtain video content from src_1 (https://www.tiktok.com/@user/video/123456) and store as store_1",
+      "objective": "Obtain video content from src_1 (https://example-platform3.com/@user/video/123456) and store as store_1",
       "goals": [
-        "Validate that src_1 is a reachable TikTok URL",
-        "Download video content from src_1 to platform file storage (Wasabi) as store_1",
+        "Validate that src_1 is a reachable video URL",
+        "Download video content from src_1 to platform file storage as store_1",
         "Verify downloaded file integrity and format compatibility for store_1",
         "Extract video metadata including duration, resolution, and frame rate from store_1"
       ]
@@ -525,7 +525,7 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 **Input from Objective Agent:**
 ```json
 [
-  "Obtain video content from src_1 (https://www.youtube.com/watch?v=example) and store as store_1",
+  "Obtain video content from src_1 (https://example.com/watch?v=example) and store as store_1",
   "From store_1 (acquired from src_1), transcribe audio",
   "Generate subtitles and embed them in the video"
 ]
@@ -536,10 +536,10 @@ Use these patterns as templates when decomposing common objective types. Adapt a
 {
   "content": {
     "objective_1": {
-      "objective": "Obtain video content from src_1 (https://www.youtube.com/watch?v=example) and store as store_1",
+      "objective": "Obtain video content from src_1 (https://example.com/watch?v=example) and store as store_1",
       "goals": [
-        "Validate that src_1 is a reachable YouTube URL",
-        "Download video content from src_1 to platform file storage (Wasabi) as store_1",
+        "Validate that src_1 is a reachable video URL",
+        "Download video content from src_1 to platform file storage as store_1",
         "Verify downloaded file integrity and format compatibility for store_1",
         "Extract video metadata including duration, resolution, and frame rate from store_1"
       ]
@@ -587,31 +587,31 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 ## Common Mistakes to Avoid
 
 1. ❌ Goals that are too vague: "Analyse the video"
-   ✅ Specific actions: "Extract audio track from the video file stored in platform storage (Wasabi)"
+   ✅ Specific actions: "Extract audio track from the video file stored in platform storage"
 
 2. ❌ Combining multiple actions: "Download and verify video from URL"
-   ✅ Separate goals: "Download video content from [URL] to platform file storage (Wasabi)" + "Verify downloaded file integrity"
+   ✅ Separate goals: "Download video content from [URL] to platform file storage" + "Verify downloaded file integrity"
 
 3. ❌ Omitting pre-conditions: Jumping straight to "Run sentiment analysis" without acquisition/extraction
-   ✅ Include all steps: URL validation → download to Wasabi → verify → extract audio → transcribe → analyse
+   ✅ Include all steps: URL validation → download to storage → verify → extract audio → transcribe → analyse
 
 4. ❌ Goals outside platform capabilities: "Stream video in real-time for live analysis"
    ✅ Only generate goals that map to the Capabilities Matrix
 
 5. ❌ Dropping ref IDs in acquisition goals: "Download the video" without specifying which ref
-   ✅ Carry forward ref IDs: "Download video content from src_1 to platform file storage (Wasabi) as store_1"
+   ✅ Carry forward ref IDs: "Download video content from src_1 to platform file storage as store_1"
 
 6. ❌ Referencing src_N in analysis goals: "Extract audio from src_1"
    ✅ Reference store_N: "Extract audio track from store_1 (acquired from src_1)"
 
-10. ❌ Using raw URLs in goals: "Extract audio from https://www.youtube.com/shorts/xyz"
+10. ❌ Using raw URLs in goals: "Extract audio from https://example.com/shorts/xyz"
     ✅ Use ref IDs: "Extract audio track from store_1 (acquired from src_1)"
 
 11. ❌ Missing first-mention provenance: "Extract audio track from store_1" as the first goal referencing store_1 in an objective
     ✅ Include provenance on first mention per objective: "Extract audio track from store_1 (acquired from src_1)"
 
 7. ❌ Including dependency annotations: "After downloading, extract audio"
-   ✅ Flat list without ordering: "Extract audio track from the video file stored in platform storage (Wasabi)"
+   ✅ Flat list without ordering: "Extract audio track from the video file stored in platform storage"
 
 8. ❌ Adding prefixes or numbers: "Goal 1: Validate URL"
    ✅ Plain text: "Validate that the source URL is a reachable YouTube URL"
@@ -628,12 +628,13 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 ---
 
 ## Version
-v1.7.0
+v1.8.0
 
 ## Last Updated
-February 21, 2026
+February 23, 2026
 
 ## Changelog
+- v1.8.0 (Feb 23, 2026): Genericised examples to remove hardcoded YouTube/Instagram/TikTok examples. Generalised storage references replacing Wasabi mentions with generic file storage backends.
 - v1.7.0 (Feb 21, 2026): Made language detection mandatory before transcription across all patterns. Added "Detect language(s) spoken in the audio" to Patterns C and D (which previously included transcription without this step). Added Goal Generation Rule #11 making language detection an explicit mandatory pre-condition for any transcription goal. Updated Examples 1, 3, and 4 to include language detection. Added Common Mistake #13 (omitting language detection). Addresses intermittent omission of language detection observed in 20260220-5.md logs.
 - v1.6.0 (Feb 20, 2026): Removed `request_id`/`session_id` inheritance instructions from Interaction section, Metadata Field Construction Summary table, and Common Mistake #12. These spec-level instructions did not prevent the LLM from regenerating `request_id` (observed across 20260220-1.md through 20260220-4.md logs). Metadata inheritance will be enforced by the orchestration layer instead. Renumbered former Common Mistake #13 (goal count accuracy) to #12. Retained all Issue 1 (goal count) and Issue 3 (file path) fixes.
 - v1.5.0 (Feb 20, 2026): Restructured Interaction section to embed `request_id`/`session_id` inheritance directly in the core bullet list (not as a subsection). Added Metadata Field Construction Summary table contrasting generated vs inherited fields. Added explicit explanation of the common failure mode (LLM applying timestamp-based generation pattern from `message_id` to `request_id`). These changes address the persistent violation observed in 20260220-2.md logs where the v1.4.0 subsection-based approach did not prevent the goal_agent from regenerating `request_id`.
