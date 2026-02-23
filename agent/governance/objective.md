@@ -111,14 +111,7 @@ Your `audit.reasoning` field MUST document:
 
 ## Capability Mapping
 
-Map objectives to these categories:
-
-| Category | Analysis Types |
-|--------------------|---------------------------------------------------|
-| Audio Analysis | Transcription, Speaker ID/Diarization, Speech Emotion |
-| Speaker Analysis | Sentiment Analysis, Stance Analysis |
-| Audience Analysis | Audience Sentiment (facial expressions, gestures) |
-| Visual Analysis | Object/Banner/Placard Detection, OCR, Action Recognition, Scene Understanding, Facial Attributes |
+Consult `context/application.md` (Section 6: Capabilities Matrix) for the supported capability categories and analysis types. Map all objectives to these application-specific categories.
 
 ## Acquisition-First Pattern (CRITICAL)
 
@@ -401,12 +394,13 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 ---
 
 ## Version
-v1.6.0
+v1.7.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.7.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Removed hardcoded capability mapping table and replaced it with a reference to the `application.md` Capabilities Matrix.
 - v1.6.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Generalised Scope Validation rules by delegating hardcoded in-scope and out-of-scope boundaries to the application context.
 - v1.5.0 (Feb 23, 2026): Genericised examples. Removed hardcoded application constraints (like YouTube/TikTok/Instagram and Wasabi mentions), standardising on generic URLs and terms like `s3://` or `backend storage`.
 - v1.4.0 (Feb 21, 2026): Added Example 6 (Objective Separation) demonstrating correct splitting of combined analysis types with before/after comparison and separation heuristic. Added "Canonical Governance File Paths (MANDATORY)" section listing exact paths for `audit.governance_files_consulted` — addresses path inconsistency (`"agent/objective.md"` vs correct `"agent/governance/objective.md"`) observed in 20260220-5.md logs. Renumbered former Example 6 to Example 7.
