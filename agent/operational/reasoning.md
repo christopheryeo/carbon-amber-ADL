@@ -32,7 +32,7 @@ For every CAP-SYN task received, you MUST produce a task result:
         "output_refs_produced": [
           {
             "ref_id": "derived_8",
-            "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_8.json",
+            "storage_uri": "s3://platform-bucket/session-xxx/derived_8.json",
             "asset_type": "fused_insights",
             "status": "created"
           }
@@ -89,13 +89,13 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
 
 **Process:**
 1. Load all referenced analysis outputs from their storage URIs
-2. Align outputs temporally — match transcript segments, emotion scores, and facial analysis by timestamp
+2. Align outputs temporally if applicable — match transcript segments, emotion scores, or other temporal data by timestamp
 3. For each temporal segment, correlate findings across modalities:
-   - Text sentiment + vocal emotion → speaker emotional state confidence
-   - Facial expression + vocal emotion → expression-voice congruence
-   - Text content + visual context → contextual interpretation
+   - Example (A/V content): Text sentiment + vocal emotion → speaker emotional state confidence
+   - Example (A/V content): Facial expression + vocal emotion → expression-voice congruence
+   - Example (General): Text content + visual context → contextual interpretation
 4. Identify cross-modal agreements and conflicts
-5. Generate a per-speaker, per-segment fused insight
+5. Generate a per-entity (e.g., per-speaker), per-segment fused insight
 
 **Output Schema:**
 ```json
@@ -133,14 +133,14 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
 
 ### CAP-SYN-002: Timeline Reconstruction
 
-**Purpose:** Build a chronological timeline of events, speaker turns, and key moments across the video.
+**Purpose:** Build a chronological timeline of events, entity turns, and key moments across the analyzed content.
 
-**Input:** Temporal outputs from analysis capabilities — transcripts with timestamps, scene classifications, speaker diarization maps, detection results with frame timestamps.
+**Input:** Temporal outputs from analysis capabilities — transcripts with timestamps, scene classifications, speaker diarization maps, or detection results with timestamps.
 
 **Process:**
 1. Collect all timestamped outputs from completed analysis tasks
-2. Build a unified temporal index merging: speaker turns, scene changes, detected objects/events, emotion shifts, audience reactions
-3. Identify key moments: speaker changes, emotional peaks, visual events (banner appearance, crowd reaction)
+2. Build a unified temporal index merging: speaker turns, scene changes, detected objects/events, emotion shifts, or audience reactions based on available modalities
+3. Identify key moments: entity changes, emotional peaks, visual events (e.g., specific object appearance)
 4. Construct a chronological event list ordered by timestamp
 5. Annotate each event with its source modalities and confidence
 
@@ -159,14 +159,14 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
     {
       "timestamp": 12.5,
       "event_type": "visual_event",
-      "description": "Banner detected: 'Welcome to the Conference'",
+      "description": "Visual event detected: 'Signage reading Welcome'",
       "source_modalities": ["visual"],
       "confidence": "medium"
     },
     {
       "timestamp": 25.0,
-      "event_type": "emotion_shift",
-      "description": "SPEAKER_00 emotional state shifts from neutral to passionate",
+      "event_type": "state_shift",
+      "description": "Entity state shifts from neutral to active",
       "source_modalities": ["audio", "visual", "text"],
       "confidence": "high"
     }
@@ -186,7 +186,7 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
 
 **Process:**
 1. Collect all analysis and synthesis outputs
-2. Organise findings by category: speakers, audience, visual elements, temporal events
+2. Organise findings by category: entities, visual elements, temporal events, etc.
 3. Construct an executive summary answering the user's original question
 4. Build detailed sections for each analysis dimension
 5. Include confidence assessments and methodology notes
@@ -197,7 +197,7 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
 {
   "synthesis_type": "structured_report",
   "report": {
-    "executive_summary": "Analysis of the 45-second YouTube video reveals one primary speaker with calm-neutral delivery...",
+    "executive_summary": "Analysis of the content reveals one primary entity with neutral properties...",
     "sections": [
       {
         "title": "Speaker Analysis",
@@ -212,9 +212,9 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
         ]
       }
     ],
-    "methodology": "Multi-modal analysis combining audio transcription, speech emotion recognition, text sentiment analysis, and facial expression analysis.",
+    "methodology": "Multi-modal analysis combining multiple operational outputs.",
     "limitations": [],
-    "source_capabilities_used": ["CAP-AUD-001", "CAP-AUD-002", "CAP-AUD-003", "CAP-SPK-001", "CAP-VIS-006", "CAP-SYN-001"]
+    "source_capabilities_used": ["CAP-AUD-001", "CAP-AUD-002", "CAP-SPK-001", "CAP-VIS-006", "CAP-SYN-001"]
   }
 }
 ```
@@ -361,12 +361,12 @@ When synthesis fails, return:
 {
   "dispatch": {
     "task_id": "task_12",
-    "action": "Correlate text sentiment, vocal emotion, and facial expression results per speaker",
+    "action": "Correlate modalities and synthesize unified results",
     "capability_ids": ["CAP-SYN-001"],
     "input_refs_resolved": [
-      { "ref_id": "derived_5", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_5.json", "status": "created" },
-      { "ref_id": "derived_6", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_6.json", "status": "created" },
-      { "ref_id": "derived_7", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_7.json", "status": "created" }
+      { "ref_id": "derived_5", "storage_uri": "s3://platform-bucket/session-xxx/derived_5.json", "status": "created" },
+      { "ref_id": "derived_6", "storage_uri": "s3://platform-bucket/session-xxx/derived_6.json", "status": "created" },
+      { "ref_id": "derived_7", "storage_uri": "s3://platform-bucket/session-xxx/derived_7.json", "status": "created" }
     ],
     "output_refs_expected": ["derived_8"],
     "attempt": 1
@@ -389,7 +389,7 @@ When synthesis fails, return:
     "output_refs_produced": [
       {
         "ref_id": "derived_8",
-        "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_8.json",
+        "storage_uri": "s3://platform-bucket/session-xxx/derived_8.json",
         "asset_type": "fused_insights",
         "status": "created"
       }
@@ -445,11 +445,11 @@ When synthesis fails, return:
 {
   "dispatch": {
     "task_id": "task_12",
-    "action": "Correlate text sentiment, vocal emotion, and facial expression results per speaker",
+    "action": "Correlate modalities and synthesize unified results",
     "capability_ids": ["CAP-SYN-001"],
     "input_refs_resolved": [
-      { "ref_id": "derived_5", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_5.json", "status": "created" },
-      { "ref_id": "derived_7", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_7.json", "status": "created" }
+      { "ref_id": "derived_5", "storage_uri": "s3://platform-bucket/session-xxx/derived_5.json", "status": "created" },
+      { "ref_id": "derived_7", "storage_uri": "s3://platform-bucket/session-xxx/derived_7.json", "status": "created" }
     ],
     "output_refs_expected": ["derived_8"],
     "attempt": 1,
@@ -472,7 +472,7 @@ When synthesis fails, return:
     "output_refs_produced": [
       {
         "ref_id": "derived_8",
-        "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_8.json",
+        "storage_uri": "s3://platform-bucket/session-xxx/derived_8.json",
         "asset_type": "fused_insights",
         "status": "created"
       }
@@ -576,10 +576,11 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 ---
 
 ## Version
-v1.0.0
+v1.1.0
 
 ## Last Updated
-February 21, 2026
+February 23, 2026
 
 ## Changelog
+- v1.1.0 (Feb 23, 2026): Genericised examples to remove hardcoded `wasabi://...` URIs or specific media terms like 'YouTube video'. Made capability descriptions more application-agnostic while preserving the synthesis logic structure.
 - v1.0.0 (Feb 21, 2026): Initial release. Redefines the Reasoning Agent from a generic "logical inferences" placeholder to the dedicated cross-task synthesis agent within the Operational Core. Handles CAP-SYN-001 (Multi-Modal Fusion), CAP-SYN-002 (Timeline Reconstruction), and CAP-SYN-003 (Structured Report Generation). Covers: synthesis input loading, temporal alignment, cross-modal consistency checking, confidence assessment with modality coverage, partial-input handling for degraded workflows, and quality validation. Positioned alongside the Action Agent as a peer invoked by the Dispatch Agent for synthesis tasks only. Replaces v0.1.0 placeholder.
