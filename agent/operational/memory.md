@@ -47,10 +47,10 @@ Capture information from completed audit logs in `system/logs/`, distill that in
 ### Knowledge Distillation
 
 - Synthesize raw patterns and decision history into actionable knowledge entries, organized by category:
-  - **Domain Knowledge** — what the system has learned about the application domain through repeated processing (e.g., common video analysis scenarios, typical sentiment patterns).
-  - **Operational Heuristics** — learned shortcuts and optimizations (e.g., "requests involving TikTok short-form video consistently require the Perception Agent to prioritize audio transcription over visual analysis").
-  - **Error Prevention** — known failure modes and their mitigations (e.g., "YouTube URLs with restricted content should be flagged at the Objective Agent stage rather than failing at the Action Agent stage").
-  - **Quality Benchmarks** — established baselines for what constitutes a successful output based on historical Reviewer Agent assessments.
+  - **Domain Knowledge** — what the system has learned about the application domain through repeated processing (e.g., common scenario structures, typical attribute patterns).
+  - **Operational Heuristics** — learned shortcuts and optimizations (e.g., "requests involving short-form content consistently require the Action Agent to prioritize audio extraction over visual analysis").
+  - **Error Prevention** — known failure modes and their mitigations (e.g., "URLs with restricted source content should be flagged at the Objective Agent stage rather than failing at the Action Agent stage").
+  - **Quality Benchmarks** — established baselines for what constitutes a successful output based on historical assessments.
 - Each knowledge entry must include: a source reference (transaction IDs), a confidence score (based on sample size and consistency), and a last-updated timestamp.
 
 ### Knowledge Filing
@@ -116,7 +116,7 @@ The Memory Agent receives one of three input types depending on the invocation t
 ```json
 {
   "trigger": "context_retrieval",
-  "query": "What are known failure modes for TikTok video processing?",
+  "query": "What are known failure modes for short-form content processing?",
   "requesting_agent": "agent_planning"
 }
 ```
@@ -139,7 +139,7 @@ The Memory Agent produces a standard JSON message per `context/governance/messag
         "category": "error_prevention",
         "entries_added": 2,
         "entries_revised": 1,
-        "summary": "Added TikTok restricted content early-detection heuristic; revised YouTube age-gate handling."
+        "summary": "Added restricted short-form content early-detection heuristic; revised source-platform age-gate handling."
       }
     ],
     "recall_result": null,
@@ -167,7 +167,7 @@ The Memory Agent produces a standard JSON message per `context/governance/messag
       "context/governance/audit.md",
       "context/governance/fileformat.md"
     ],
-    "reasoning": "Processed 47 completed transactions from the past 7 days. Identified 5 recurring patterns including a new error cluster around TikTok restricted content. Distilled 3 new knowledge entries and revised 1 existing entry in error_prevention.md. Confidence scores above 0.7 threshold for all entries."
+    "reasoning": "Processed 47 completed transactions from the past 7 days. Identified 5 recurring patterns including a new error cluster around restricted content payloads. Distilled 3 new knowledge entries and revised 1 existing entry in error_prevention.md. Confidence scores above 0.7 threshold for all entries."
   }
 }
 ```
@@ -211,9 +211,9 @@ Each knowledge file in `context/memory/` follows this structure:
 
 | Date | Action | Entry ID | Description |
 |------|--------|----------|-------------|
-| 2025-06-01 | ADDED | MEM-012 | New TikTok restricted content heuristic |
-| 2025-06-01 | REVISED | MEM-007 | Updated YouTube age-gate confidence from 0.6 to 0.85 |
-| 2025-05-28 | ADDED | MEM-011 | Instagram Reels audio extraction optimization |
+| 2025-06-01 | ADDED | MEM-012 | New restricted short-form content heuristic |
+| 2025-06-01 | REVISED | MEM-007 | Updated source age-gate confidence from 0.6 to 0.85 |
+| 2025-05-28 | ADDED | MEM-011 | Content acquisition optimization |
 ```
 
 ---
@@ -289,10 +289,14 @@ This creates a virtuous feedback loop: better knowledge leads to better processi
 ---
 
 ## Last Updated
-February 13, 2026
+February 23, 2026
 
 ## Version
-v1.0.0
+v1.1.0
+
+## Changelog
+- v1.1.0 (Feb 23, 2026): Generalised domain knowledge examples to remove video-specific application dependencies (e.g. TikTok, YouTube, Instagram).
+- v1.0.0 (Feb 13, 2026): Initial release.
 
 ---
 
