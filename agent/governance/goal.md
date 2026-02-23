@@ -146,120 +146,7 @@ Review the generated goals to ensure:
 
 ## Capability-to-Goal Mapping Patterns
 
-Use these patterns as templates when decomposing common objective types. Adapt and extend based on the specific objective context.
-
-### Pattern A: Video Acquisition Objectives
-
-**Trigger:** Objectives containing "obtain", "download", "get", "access", or "process" with src_N and store_N ref IDs.
-
-**Goal pattern:**
-1. Validate that src_N is a reachable URL from a supported source or is a valid uploaded file
-2. Download video content from src_N to platform file storage as store_N / Register uploaded file src_N in platform file storage as store_N
-3. Verify downloaded/uploaded file integrity and format compatibility for store_N
-4. Extract video metadata (duration, resolution, codec, frame rate) from store_N
-
-**Note:** This is the ONLY pattern where src_N appears in goals. All subsequent patterns operate on store_N.
-
-### Pattern B: Audio Transcription Objectives
-
-**Trigger:** Objectives referencing store_N with "transcribe", "transcript", "what is said", or "spoken words".
-
-**Goal pattern:**
-1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Detect language(s) spoken in the audio
-3. Transcribe audio content to text with timestamps
-4. Identify and label distinct speakers (diarization)
-
-### Pattern C: Speaker Sentiment/Emotion Objectives
-
-**Trigger:** Objectives referencing store_N with "sentiment", "emotion", "how do they feel", "tone", or "mood" of speakers.
-
-**Goal pattern:**
-1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Detect language(s) spoken in the audio
-3. Transcribe audio content to text with timestamps
-4. Identify and label distinct speakers
-4. Analyse vocal characteristics for speech emotion recognition
-5. Run sentiment analysis on transcript segments per speaker
-6. Extract video frames from store_N at regular intervals for visual analysis
-7. Correlate text sentiment, vocal emotion, and facial expression results per speaker
-
-### Pattern D: Speaker Stance Objectives
-
-**Trigger:** Objectives referencing store_N with "stance", "position", "opinion", or "viewpoint" of speakers.
-
-**Goal pattern:**
-1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Detect language(s) spoken in the audio
-3. Transcribe audio content to text with timestamps
-4. Identify and label distinct speakers
-4. Run sentiment analysis on transcript segments per speaker
-5. Analyse vocal characteristics for emotional indicators
-6. Extract video frames from store_N for speaker visual appearance and expression analysis
-7. Perform multi-modal stance analysis combining text, vocal, and visual features
-
-### Pattern E: Audience Reaction Objectives
-
-**Trigger:** Objectives referencing store_N with "audience", "crowd", "reaction", or "spectator" sentiment.
-
-**Goal pattern:**
-1. Extract video frames from store_N (acquired from src_N) at regular intervals focusing on audience-visible segments — *first mention provenance*
-2. Detect and localise audience members in frames
-3. Analyse audience facial expressions and body language for sentiment
-4. Estimate crowd density and engagement levels
-5. Score audience engagement over time
-
-### Pattern F: Visual Detection Objectives
-
-**Trigger:** Objectives referencing store_N with "detect", "identify", "find" objects, banners, placards, or specific visual elements.
-
-**Goal pattern:**
-1. Extract video frames from store_N (acquired from src_N) at configurable intervals — *first mention provenance*
-2. Run object detection on extracted frames for [specified target objects]
-3. For detected text-bearing objects (banners, placards, signs): extract text using OCR
-4. Compile detection results with frame timestamps and bounding box locations
-
-### Pattern G: Scene and Action Understanding Objectives
-
-**Trigger:** Objectives referencing store_N with "scene", "environment", "setting", "action", or "what is happening".
-
-**Goal pattern:**
-1. Extract video frames from store_N (acquired from src_N) at regular intervals — *first mention provenance*
-2. Segment video into scenes based on visual transitions
-3. Classify scene environment and context (indoor/outdoor, location type, day/night)
-4. Identify actions and events occurring within each scene segment
-
-### Pattern H: Multi-Modal Comprehensive Analysis
-
-**Trigger:** Objectives requiring combined analysis across audio, visual, and text domains.
-
-**Goal pattern:**
-1. [Include all relevant pre-condition and acquisition goals]
-2. [Include all relevant individual analysis goals from applicable patterns]
-3. Fuse multi-modal analysis outputs into correlated insight set
-4. Reconstruct a chronological timeline of events, speaker turns, and key moments
-5. Generate a structured report summarising all findings
-
-### Pattern I: Video Pre-Processing Objectives
-
-**Trigger:** Objectives explicitly requiring format conversion, segmentation, or normalisation before analysis can proceed (typically generated as sub-goals within other patterns, but may appear as a standalone objective for long or non-standard videos).
-
-**Goal pattern:**
-1. Assess video format and codec compatibility for store_N (acquired from src_N) — *first mention provenance*
-2. Convert store_N to standardised processing format if required
-3. Normalise video resolution for store_N to meet model input requirements if required
-4. Segment store_N into temporal segments for parallel processing (for long-duration videos)
-5. Extract audio track and/or video frames from store_N as required by downstream objectives
-
-### Pattern J: Data Management and Reporting Objectives
-
-**Trigger:** Objectives involving result storage, indexing, or structured report generation (typically the final stage after analysis is complete).
-
-**Goal pattern:**
-1. Index analysis results and metadata in the search and retrieval system
-2. Store generated assets (extracted frames, audio tracks, reports) in file storage
-3. Cache intermediate results for session continuity
-4. Generate structured report summarising all analysis findings
+Consult `context/application.md` (Section 6.11: Capability-to-Goal Decomposition Patterns) for the application-specific patterns to use when decomposing common objective types. Adapt and extend those patterns based on the specific objective context.
 
 ---
 
@@ -628,12 +515,13 @@ When multiple objectives require the same pre-condition (e.g., both "Transcribe 
 ---
 
 ## Version
-v1.8.0
+v1.9.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.9.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Removed video-specific Goal Decomposition Patterns (Patterns A-J) and replaced them with a generic reference to the application context (`application.md`).
 - v1.8.0 (Feb 23, 2026): Genericised examples to remove hardcoded YouTube/Instagram/TikTok examples. Generalised storage references replacing Wasabi mentions with generic file storage backends.
 - v1.7.0 (Feb 21, 2026): Made language detection mandatory before transcription across all patterns. Added "Detect language(s) spoken in the audio" to Patterns C and D (which previously included transcription without this step). Added Goal Generation Rule #11 making language detection an explicit mandatory pre-condition for any transcription goal. Updated Examples 1, 3, and 4 to include language detection. Added Common Mistake #13 (omitting language detection). Addresses intermittent omission of language detection observed in 20260220-5.md logs.
 - v1.6.0 (Feb 20, 2026): Removed `request_id`/`session_id` inheritance instructions from Interaction section, Metadata Field Construction Summary table, and Common Mistake #12. These spec-level instructions did not prevent the LLM from regenerating `request_id` (observed across 20260220-1.md through 20260220-4.md logs). Metadata inheritance will be enforced by the orchestration layer instead. Renumbered former Common Mistake #13 (goal count accuracy) to #12. Retained all Issue 1 (goal count) and Issue 3 (file path) fixes.
