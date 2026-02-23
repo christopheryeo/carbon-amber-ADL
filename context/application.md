@@ -261,6 +261,17 @@ This mapping defines which MCP servers and tools correspond to each capability. 
 | CAP-DAT-002 | `data-management` | `file_storer` | `file_data`, `target_path` |
 | CAP-DAT-003 | `data-management` | `context_cacher` | `context_data`, `cache_key`, `ttl` |
 
+#### Default Execution Parameters
+
+When invoking tools, the Action Agent should apply the following default parameters if they are not explicitly specified in the task:
+
+| Tool | Default Parameters |
+|------|--------------------|
+| `audio_extractor` | `output_format: "wav"`, `sample_rate: 16000` |
+| `frame_extractor` | `interval_seconds: 1.0`, `output_format: "jpg"` |
+| `transcriber` | `timestamps: true` |
+| `object_detector` | `confidence_threshold: 0.5` |
+
 ### 6.11 Capability-to-Goal Decomposition Patterns
 
 Use these patterns as templates when decomposing common objective types for this application. Adapt and extend based on the specific objective context.

@@ -112,11 +112,7 @@ Look up the task's `capability_ids` in `context/application.md` (Section 6.10: C
 Map the task's `input_refs_resolved` to the tool's expected parameters:
 
 1. **URI mapping**: Replace ref IDs in the tool parameters with actual `storage_uri` values from `input_refs_resolved`
-2. **Default parameters**: Apply sensible defaults for parameters not specified in the task:
-   - Audio extraction: `output_format: "wav"`, `sample_rate: 16000`
-   - Frame extraction: `interval_seconds: 1.0`, `output_format: "jpg"`
-   - Transcription: `timestamps: true`
-   - Object detection: `confidence_threshold: 0.5`
+2. **Default parameters**: Apply default parameters as specified in `context/application.md` (Section 6.10: Default Execution Parameters) for parameters not explicitly specified in the task.
 3. **Retry adjustments**: On retry attempts (attempt > 1), consider adjusting parameters:
    - Increase timeout values
    - Reduce batch size
@@ -421,7 +417,7 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 "context/application.md"
 "context/governance/message_format.md"
 "context/governance/audit.md"
-"agent/executional/execution.md"
+"agent/executional/action.md"
 ```
 
 ---
@@ -452,17 +448,18 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 8. ❌ Not recording tool invocations: returning results without `tool_invocations` array
    ✅ Every MCP tool call must be recorded with tool_name, mcp_server, parameters, execution_time_ms, and status
 
-9. ❌ Using abbreviated governance file paths: `"execution.md"` instead of `"agent/executional/execution.md"`
+9. ❌ Using abbreviated governance file paths: `"action.md"` instead of `"agent/executional/action.md"`
    ✅ Use full repository-root-relative paths as listed in the Canonical Governance File Paths section
 
 ---
 
 ## Version
-v1.1.0
+v1.2.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.2.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Fixed outdated `execution.md` canonical governance path references to `action.md`. Moved hardcoded default tool parameters to `context/application.md`.
 - v1.1.0 (Feb 23, 2026): Removed application-specific capabilities mapping, directing Action Agent to use `application.md`. Generalized tooling names and storage paths in examples.
 - v1.0.0 (Feb 21, 2026): Initial release. Defines the Action Agent as the single-task tool invocation agent within the Executional Core. Replaces the former perception_agent and action_agent placeholders with a unified agent that handles all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT) via MCP. Covers: input validation, capability-to-tool mapping with MCP server routing, parameter configuration, tool execution, output structuring with derived_ref production, quality checks, and error handling with recoverability classification. Always returns results to dispatch_agent for workflow state management.
