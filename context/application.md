@@ -69,7 +69,7 @@ Governance files are **authoritative** and take precedence over any conflicting 
 | **Application Name** | DSTA Video Analysis Platform |
 | **Customer** | DSTA (Defence Science and Technology Agency) |
 | **Deployment** | Sentient Agentic AI Platform |
-| **Version** | 1.4 |
+| **Version** | 1.5 |
 | **Last Updated** | February 23, 2026 |
 
 ### Description
@@ -388,6 +388,105 @@ Use these patterns as templates when decomposing common objective types for this
 2. Store generated assets (extracted frames, audio tracks, reports) in file storage
 3. Cache intermediate results for session continuity
 4. Generate structured report summarising all analysis findings
+
+### 6.12 Content Synthesis Output Schemas
+
+When the Reasoning Agent performs CAP-SYN capabilities, it MUST structure its `result_data` according to these application-specific schemas.
+
+#### CAP-SYN-001: Multi-Modal Fusion Schema
+```json
+{
+  "synthesis_type": "multi_modal_fusion",
+  "findings": [
+    {
+      "speaker_id": "SPEAKER_00",
+      "segments": [
+        {
+          "time_range": { "start": 0.0, "end": 3.2 },
+          "text": "Good morning everyone",
+          "text_sentiment": { "label": "neutral", "score": 0.72 },
+          "vocal_emotion": { "label": "calm", "score": 0.85 },
+          "facial_expression": { "label": "neutral", "score": 0.68 },
+          "fused_assessment": {
+            "emotional_state": "calm-neutral",
+            "confidence": "high",
+            "cross_modal_agreement": true,
+            "notes": "All three modalities consistently indicate calm, neutral delivery"
+          }
+        }
+      ],
+      "overall_assessment": {
+        "dominant_emotion": "calm",
+        "sentiment_trajectory": "stable-neutral",
+        "congruence_score": 0.88
+      }
+    }
+  ],
+  "cross_modal_conflicts": [],
+  "global_summary": "Single speaker detected with consistent calm-neutral delivery across all modalities. No cross-modal conflicts identified."
+}
+```
+
+#### CAP-SYN-002: Timeline Reconstruction Schema
+```json
+{
+  "synthesis_type": "timeline_reconstruction",
+  "timeline": [
+    {
+      "timestamp": 0.0,
+      "event_type": "speaker_start",
+      "description": "SPEAKER_00 begins speaking",
+      "source_modalities": ["audio"],
+      "confidence": "high"
+    },
+    {
+      "timestamp": 12.5,
+      "event_type": "visual_event",
+      "description": "Visual event detected: 'Signage reading Welcome'",
+      "source_modalities": ["visual"],
+      "confidence": "medium"
+    },
+    {
+      "timestamp": 25.0,
+      "event_type": "state_shift",
+      "description": "Entity state shifts from neutral to active",
+      "source_modalities": ["audio", "visual", "text"],
+      "confidence": "high"
+    }
+  ],
+  "total_duration_seconds": 45.2,
+  "key_moments": [
+    { "timestamp": 25.0, "reason": "Significant emotional shift detected across all modalities" }
+  ]
+}
+```
+
+#### CAP-SYN-003: Structured Report Generation Schema
+```json
+{
+  "synthesis_type": "structured_report",
+  "report": {
+    "executive_summary": "Analysis of the content reveals one primary entity with neutral properties...",
+    "sections": [
+      {
+        "title": "Speaker Analysis",
+        "findings": [
+          { "finding": "One speaker identified (SPEAKER_00)", "confidence": "high", "sources": ["CAP-AUD-002"] }
+        ]
+      },
+      {
+        "title": "Sentiment Analysis",
+        "findings": [
+          { "finding": "Overall sentiment: neutral with slight positive trend", "confidence": "high", "sources": ["CAP-SPK-001", "CAP-AUD-003"] }
+        ]
+      }
+    ],
+    "methodology": "Multi-modal analysis combining multiple operational outputs.",
+    "limitations": [],
+    "source_capabilities_used": ["CAP-AUD-001", "CAP-AUD-002", "CAP-SPK-001", "CAP-VIS-006", "CAP-SYN-001"]
+  }
+}
+```
 
 ---
 

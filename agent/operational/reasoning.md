@@ -97,39 +97,7 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
 4. Identify cross-modal agreements and conflicts
 5. Generate a per-entity (e.g., per-speaker), per-segment fused insight
 
-**Output Schema:**
-```json
-{
-  "synthesis_type": "multi_modal_fusion",
-  "findings": [
-    {
-      "speaker_id": "SPEAKER_00",
-      "segments": [
-        {
-          "time_range": { "start": 0.0, "end": 3.2 },
-          "text": "Good morning everyone",
-          "text_sentiment": { "label": "neutral", "score": 0.72 },
-          "vocal_emotion": { "label": "calm", "score": 0.85 },
-          "facial_expression": { "label": "neutral", "score": 0.68 },
-          "fused_assessment": {
-            "emotional_state": "calm-neutral",
-            "confidence": "high",
-            "cross_modal_agreement": true,
-            "notes": "All three modalities consistently indicate calm, neutral delivery"
-          }
-        }
-      ],
-      "overall_assessment": {
-        "dominant_emotion": "calm",
-        "sentiment_trajectory": "stable-neutral",
-        "congruence_score": 0.88
-      }
-    }
-  ],
-  "cross_modal_conflicts": [],
-  "global_summary": "Single speaker detected with consistent calm-neutral delivery across all modalities. No cross-modal conflicts identified."
-}
-```
+**Output Schema:** Consult `context/application.md` (Section 6.12) for the expected output schema.
 
 ### CAP-SYN-002: Timeline Reconstruction
 
@@ -144,39 +112,7 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
 4. Construct a chronological event list ordered by timestamp
 5. Annotate each event with its source modalities and confidence
 
-**Output Schema:**
-```json
-{
-  "synthesis_type": "timeline_reconstruction",
-  "timeline": [
-    {
-      "timestamp": 0.0,
-      "event_type": "speaker_start",
-      "description": "SPEAKER_00 begins speaking",
-      "source_modalities": ["audio"],
-      "confidence": "high"
-    },
-    {
-      "timestamp": 12.5,
-      "event_type": "visual_event",
-      "description": "Visual event detected: 'Signage reading Welcome'",
-      "source_modalities": ["visual"],
-      "confidence": "medium"
-    },
-    {
-      "timestamp": 25.0,
-      "event_type": "state_shift",
-      "description": "Entity state shifts from neutral to active",
-      "source_modalities": ["audio", "visual", "text"],
-      "confidence": "high"
-    }
-  ],
-  "total_duration_seconds": 45.2,
-  "key_moments": [
-    { "timestamp": 25.0, "reason": "Significant emotional shift detected across all modalities" }
-  ]
-}
-```
+**Output Schema:** Consult `context/application.md` (Section 6.12) for the expected output schema.
 
 ### CAP-SYN-003: Structured Report Generation
 
@@ -192,32 +128,7 @@ The Reasoning Agent handles exactly three capabilities from the Capabilities Mat
 5. Include confidence assessments and methodology notes
 6. Format as structured JSON (for programmatic consumption) or Markdown (for human reading)
 
-**Output Schema:**
-```json
-{
-  "synthesis_type": "structured_report",
-  "report": {
-    "executive_summary": "Analysis of the content reveals one primary entity with neutral properties...",
-    "sections": [
-      {
-        "title": "Speaker Analysis",
-        "findings": [
-          { "finding": "One speaker identified (SPEAKER_00)", "confidence": "high", "sources": ["CAP-AUD-002"] }
-        ]
-      },
-      {
-        "title": "Sentiment Analysis",
-        "findings": [
-          { "finding": "Overall sentiment: neutral with slight positive trend", "confidence": "high", "sources": ["CAP-SPK-001", "CAP-AUD-003"] }
-        ]
-      }
-    ],
-    "methodology": "Multi-modal analysis combining multiple operational outputs.",
-    "limitations": [],
-    "source_capabilities_used": ["CAP-AUD-001", "CAP-AUD-002", "CAP-SPK-001", "CAP-VIS-006", "CAP-SYN-001"]
-  }
-}
-```
+**Output Schema:** Consult `context/application.md` (Section 6.12) for the expected output schema.
 
 ---
 
@@ -576,11 +487,12 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 ---
 
 ## Version
-v1.1.0
+v1.2.0
 
 ## Last Updated
 February 23, 2026
 
 ## Changelog
+- v1.2.0 (Feb 23, 2026): Agent-Application Separation Phase 2: Removed application-specific detailed synthesis output schemas for CAP-SYN capabilities and replaced them with a generic reference to the application context (`application.md`).
 - v1.1.0 (Feb 23, 2026): Genericised examples to remove hardcoded `wasabi://...` URIs or specific media terms like 'YouTube video'. Made capability descriptions more application-agnostic while preserving the synthesis logic structure.
 - v1.0.0 (Feb 21, 2026): Initial release. Redefines the Reasoning Agent from a generic "logical inferences" placeholder to the dedicated cross-task synthesis agent within the Operational Core. Handles CAP-SYN-001 (Multi-Modal Fusion), CAP-SYN-002 (Timeline Reconstruction), and CAP-SYN-003 (Structured Report Generation). Covers: synthesis input loading, temporal alignment, cross-modal consistency checking, confidence assessment with modality coverage, partial-input handling for degraded workflows, and quality validation. Positioned alongside the Action Agent as a peer invoked by the Dispatch Agent for synthesis tasks only. Replaces v0.1.0 placeholder.
