@@ -28,10 +28,10 @@ For every task received, you MUST produce a task result:
         "capability_ids_executed": ["CAP-PRE-002"],
         "tool_invocations": [
           {
-            "tool_name": "ffmpeg_audio_extract",
+            "tool_name": "audio_extractor",
             "mcp_server": "media-processing",
             "parameters": {
-              "input_uri": "wasabi://dsta-bucket/session-xxx/store_1.mp4",
+              "input_uri": "s3://platform-bucket/session-xxx/store_1.mp4",
               "output_format": "wav",
               "sample_rate": 16000
             },
@@ -42,7 +42,7 @@ For every task received, you MUST produce a task result:
         "output_refs_produced": [
           {
             "ref_id": "derived_1",
-            "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_1.wav",
+            "storage_uri": "s3://platform-bucket/session-xxx/derived_1.wav",
             "asset_type": "audio_track",
             "status": "created"
           }
@@ -101,45 +101,11 @@ If validation fails, return immediately with `status: "failed"`, `error.recovera
 
 ### Step 3: Select MCP Tool
 
-Map the task's `capability_ids` to the appropriate MCP tool and server:
+Look up the task's `capability_ids` in `context/application.md` (Section 6.10: Capability-to-Tool Mapping) to find the appropriate MCP tool and server.
 
-#### Capability-to-Tool Mapping
-
-| Capability ID | MCP Server | Tool | Parameters |
-|--------------|------------|------|------------|
-| CAP-ACQ-001 | `acquisition` | `url_validator` | `url`, `platform` |
-| CAP-ACQ-002 | `acquisition` | `youtube_downloader` | `url`, `output_path`, `format` |
-| CAP-ACQ-003 | `acquisition` | `instagram_downloader` | `url`, `output_path` |
-| CAP-ACQ-004 | `acquisition` | `tiktok_downloader` | `url`, `output_path` |
-| CAP-ACQ-005 | `acquisition` | `upload_registrar` | `file_path`, `output_path` |
-| CAP-ACQ-006 | `acquisition` | `integrity_checker` | `file_uri`, `expected_format` |
-| CAP-ACQ-007 | `acquisition` | `metadata_extractor` | `file_uri` |
-| CAP-PRE-001 | `media-processing` | `format_converter` | `input_uri`, `target_format`, `target_codec` |
-| CAP-PRE-002 | `media-processing` | `audio_extractor` | `input_uri`, `output_format`, `sample_rate` |
-| CAP-PRE-003 | `media-processing` | `frame_extractor` | `input_uri`, `interval_seconds`, `output_format` |
-| CAP-PRE-004 | `media-processing` | `video_segmenter` | `input_uri`, `method`, `segment_duration` |
-| CAP-PRE-005 | `media-processing` | `resolution_normalizer` | `input_uri`, `target_resolution` |
-| CAP-AUD-001 | `audio-analysis` | `transcriber` | `audio_uri`, `language`, `timestamps` |
-| CAP-AUD-002 | `audio-analysis` | `diarizer` | `audio_uri`, `min_speakers`, `max_speakers` |
-| CAP-AUD-003 | `audio-analysis` | `speech_emotion_analyzer` | `audio_uri`, `diarization_ref` |
-| CAP-AUD-004 | `audio-analysis` | `language_detector` | `audio_uri` |
-| CAP-AUD-005 | `audio-analysis` | `audio_event_detector` | `audio_uri` |
-| CAP-SPK-001 | `speaker-analysis` | `sentiment_analyzer` | `transcript_ref`, `diarization_ref` |
-| CAP-SPK-002 | `speaker-analysis` | `stance_analyzer` | `sentiment_ref`, `facial_ref`, `audio_emotion_ref` |
-| CAP-SPK-003 | `speaker-analysis` | `speaker_profiler` | `diarization_ref`, `sentiment_ref` |
-| CAP-AUD-R001 | `audience-analysis` | `audience_sentiment_analyzer` | `frame_set_ref`, `audience_regions` |
-| CAP-AUD-R002 | `audience-analysis` | `crowd_density_estimator` | `frame_set_ref` |
-| CAP-AUD-R003 | `audience-analysis` | `engagement_scorer` | `audience_sentiment_ref`, `facial_ref` |
-| CAP-VIS-001 | `visual-analysis` | `object_detector` | `frame_set_ref`, `target_classes` |
-| CAP-VIS-002 | `visual-analysis` | `banner_detector` | `frame_set_ref` |
-| CAP-VIS-003 | `visual-analysis` | `ocr_extractor` | `detection_results_ref`, `target_regions` |
-| CAP-VIS-004 | `visual-analysis` | `action_recognizer` | `frame_set_ref`, `video_uri` |
-| CAP-VIS-005 | `visual-analysis` | `scene_classifier` | `frame_set_ref` |
-| CAP-VIS-006 | `visual-analysis` | `facial_analyzer` | `frame_set_ref`, `diarization_ref` |
-| CAP-VIS-007 | `visual-analysis` | `deepfake_detector` | `frame_set_ref`, `video_uri` |
-| CAP-DAT-001 | `data-management` | `result_indexer` | `results_data`, `metadata` |
-| CAP-DAT-002 | `data-management` | `file_storer` | `file_data`, `target_path` |
-| CAP-DAT-003 | `data-management` | `context_cacher` | `context_data`, `cache_key`, `ttl` |
+- **MCP Server**: The specific server that hosts the tool.
+- **Tool**: The name of the tool to invoke.
+- **Parameters**: The expected inputs for the tool.
 
 ### Step 4: Configure Tool Parameters
 
@@ -169,7 +135,7 @@ Invoke the selected tool through the MCP protocol:
 If the tool execution was successful:
 
 1. **For tasks that produce assets** (download, extraction, conversion):
-   - Store the produced asset in the designated storage backend (Wasabi)
+   - Store the produced asset in the designated storage backend (e.g., S3/Blob storage)
    - Generate the storage URI
    - Populate `output_refs_produced` with the ref_id, storage_uri, asset_type, and status `"created"`
 
@@ -214,10 +180,10 @@ When a task fails, return:
           {
             "tool_name": "audio_extractor",
             "mcp_server": "media-processing",
-            "parameters": { "input_uri": "wasabi://...", "output_format": "wav" },
+            "parameters": { "input_uri": "s3://...", "output_format": "wav" },
             "execution_time_ms": 15230,
             "status": "error",
-            "error_detail": "ffmpeg exited with code 1: Input file is corrupt or incomplete"
+            "error_detail": "Tool exited with code 1: Input file is corrupt or incomplete"
           }
         ],
         "output_refs_produced": [],
@@ -238,7 +204,7 @@ When a task fails, return:
   "error": {
     "has_error": true,
     "error_code": "PROCESSING_ERROR",
-    "error_message": "ffmpeg audio extraction failed — input file store_1 appears corrupt or incomplete. Error detail: ffmpeg exited with code 1.",
+    "error_message": "Audio extraction failed — input file store_1 appears corrupt or incomplete. Error detail: Tool exited with code 1.",
     "retry_count": 0,
     "recoverable": false
   }
@@ -291,10 +257,10 @@ When a task fails, return:
 {
   "dispatch": {
     "task_id": "task_1",
-    "action": "Validate that src_1 is a reachable YouTube URL",
+    "action": "Validate that src_1 is a reachable source URL",
     "capability_ids": ["CAP-ACQ-001"],
     "input_refs_resolved": [
-      { "ref_id": "src_1", "storage_uri": "https://www.youtube.com/shorts/pcaYkGY996o", "status": "reference" }
+      { "ref_id": "src_1", "storage_uri": "https://example-source.com/video", "status": "reference" }
     ],
     "output_refs_expected": [],
     "attempt": 1
@@ -313,7 +279,7 @@ When a task fails, return:
       {
         "tool_name": "url_validator",
         "mcp_server": "acquisition",
-        "parameters": { "url": "https://www.youtube.com/shorts/pcaYkGY996o", "platform": "youtube" },
+        "parameters": { "url": "https://example-source.com/video", "platform": "generic_video_platform" },
         "execution_time_ms": 412,
         "status": "success"
       }
@@ -321,7 +287,7 @@ When a task fails, return:
     "output_refs_produced": [],
     "result_data": {
       "url_valid": true,
-      "platform": "youtube",
+      "platform": "generic_video_platform",
       "video_available": true,
       "restrictions": null
     },
@@ -344,7 +310,7 @@ When a task fails, return:
     "action": "Transcribe audio content from derived_1 to text with timestamps",
     "capability_ids": ["CAP-AUD-001"],
     "input_refs_resolved": [
-      { "ref_id": "derived_1", "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_1.wav", "status": "created" }
+      { "ref_id": "derived_1", "storage_uri": "s3://platform-bucket/session-xxx/derived_1.wav", "status": "created" }
     ],
     "output_refs_expected": ["derived_3"],
     "attempt": 1
@@ -364,7 +330,7 @@ When a task fails, return:
         "tool_name": "transcriber",
         "mcp_server": "audio-analysis",
         "parameters": {
-          "audio_uri": "wasabi://dsta-bucket/session-xxx/derived_1.wav",
+          "audio_uri": "s3://platform-bucket/session-xxx/derived_1.wav",
           "language": "en",
           "timestamps": true
         },
@@ -375,7 +341,7 @@ When a task fails, return:
     "output_refs_produced": [
       {
         "ref_id": "derived_3",
-        "storage_uri": "wasabi://dsta-bucket/session-xxx/derived_3.json",
+        "storage_uri": "s3://platform-bucket/session-xxx/derived_3.json",
         "asset_type": "transcript",
         "status": "created"
       }
@@ -410,9 +376,9 @@ When a task fails, return:
     "capability_ids_executed": ["CAP-ACQ-002"],
     "tool_invocations": [
       {
-        "tool_name": "youtube_downloader",
+        "tool_name": "video_downloader",
         "mcp_server": "acquisition",
-        "parameters": { "url": "https://www.youtube.com/shorts/pcaYkGY996o", "output_path": "wasabi://...", "format": "mp4" },
+        "parameters": { "url": "https://example-source.com/video", "output_path": "s3://...", "format": "mp4" },
         "execution_time_ms": 30000,
         "status": "error",
         "error_detail": "Connection timeout after 30s"
@@ -429,7 +395,7 @@ When a task fails, return:
   "error": {
     "has_error": true,
     "error_code": "TIMEOUT",
-    "error_message": "YouTube download timed out after 30 seconds — network connectivity issue or YouTube rate limiting",
+    "error_message": "Video download timed out after 30 seconds — network connectivity issue or rate limiting",
     "retry_count": 1,
     "recoverable": true
   }
@@ -492,10 +458,11 @@ When populating `audit.governance_files_consulted`, you MUST use these exact pat
 ---
 
 ## Version
-v1.0.0
+v1.1.0
 
 ## Last Updated
-February 21, 2026
+February 23, 2026
 
 ## Changelog
+- v1.1.0 (Feb 23, 2026): Removed application-specific capabilities mapping, directing Action Agent to use `application.md`. Generalized tooling names and storage paths in examples.
 - v1.0.0 (Feb 21, 2026): Initial release. Defines the Action Agent as the single-task tool invocation agent within the Executional Core. Replaces the former perception_agent and action_agent placeholders with a unified agent that handles all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R, CAP-VIS, CAP-DAT) via MCP. Covers: input validation, capability-to-tool mapping with MCP server routing, parameter configuration, tool execution, output structuring with derived_ref production, quality checks, and error handling with recoverability classification. Always returns results to dispatch_agent for workflow state management.

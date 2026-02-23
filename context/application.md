@@ -221,6 +221,46 @@ The following capabilities produce or consume specific asset types. These asset 
 - **Goal Agent**: When decomposing objectives, verify that goals exist for all prerequisite capabilities in the chain, not just the target capability.
 - **Planning Agent**: When creating tasks and registering `derived_refs`, use the Output Asset and Output Ref Type columns to assign the correct `asset_type` to each `derived_ref`.
 
+### 6.10 Capability-to-Tool Mapping
+
+This mapping defines which MCP servers and tools correspond to each capability. The Action Agent uses this table to select the correct tool for execution.
+
+| Capability ID | MCP Server | Tool | Parameters |
+|--------------|------------|------|------------|
+| CAP-ACQ-001 | `acquisition` | `url_validator` | `url`, `platform` |
+| CAP-ACQ-002 | `acquisition` | `youtube_downloader` | `url`, `output_path`, `format` |
+| CAP-ACQ-003 | `acquisition` | `instagram_downloader` | `url`, `output_path` |
+| CAP-ACQ-004 | `acquisition` | `tiktok_downloader` | `url`, `output_path` |
+| CAP-ACQ-005 | `acquisition` | `upload_registrar` | `file_path`, `output_path` |
+| CAP-ACQ-006 | `acquisition` | `integrity_checker` | `file_uri`, `expected_format` |
+| CAP-ACQ-007 | `acquisition` | `metadata_extractor` | `file_uri` |
+| CAP-PRE-001 | `media-processing` | `format_converter` | `input_uri`, `target_format`, `target_codec` |
+| CAP-PRE-002 | `media-processing` | `audio_extractor` | `input_uri`, `output_format`, `sample_rate` |
+| CAP-PRE-003 | `media-processing` | `frame_extractor` | `input_uri`, `interval_seconds`, `output_format` |
+| CAP-PRE-004 | `media-processing` | `video_segmenter` | `input_uri`, `method`, `segment_duration` |
+| CAP-PRE-005 | `media-processing` | `resolution_normalizer` | `input_uri`, `target_resolution` |
+| CAP-AUD-001 | `audio-analysis` | `transcriber` | `audio_uri`, `language`, `timestamps` |
+| CAP-AUD-002 | `audio-analysis` | `diarizer` | `audio_uri`, `min_speakers`, `max_speakers` |
+| CAP-AUD-003 | `audio-analysis` | `speech_emotion_analyzer` | `audio_uri`, `diarization_ref` |
+| CAP-AUD-004 | `audio-analysis` | `language_detector` | `audio_uri` |
+| CAP-AUD-005 | `audio-analysis` | `audio_event_detector` | `audio_uri` |
+| CAP-SPK-001 | `speaker-analysis` | `sentiment_analyzer` | `transcript_ref`, `diarization_ref` |
+| CAP-SPK-002 | `speaker-analysis` | `stance_analyzer` | `sentiment_ref`, `facial_ref`, `audio_emotion_ref` |
+| CAP-SPK-003 | `speaker-analysis` | `speaker_profiler` | `diarization_ref`, `sentiment_ref` |
+| CAP-AUD-R001 | `audience-analysis` | `audience_sentiment_analyzer` | `frame_set_ref`, `audience_regions` |
+| CAP-AUD-R002 | `audience-analysis` | `crowd_density_estimator` | `frame_set_ref` |
+| CAP-AUD-R003 | `audience-analysis` | `engagement_scorer` | `audience_sentiment_ref`, `facial_ref` |
+| CAP-VIS-001 | `visual-analysis` | `object_detector` | `frame_set_ref`, `target_classes` |
+| CAP-VIS-002 | `visual-analysis` | `banner_detector` | `frame_set_ref` |
+| CAP-VIS-003 | `visual-analysis` | `ocr_extractor` | `detection_results_ref`, `target_regions` |
+| CAP-VIS-004 | `visual-analysis` | `action_recognizer` | `frame_set_ref`, `video_uri` |
+| CAP-VIS-005 | `visual-analysis` | `scene_classifier` | `frame_set_ref` |
+| CAP-VIS-006 | `visual-analysis` | `facial_analyzer` | `frame_set_ref`, `diarization_ref` |
+| CAP-VIS-007 | `visual-analysis` | `deepfake_detector` | `frame_set_ref`, `video_uri` |
+| CAP-DAT-001 | `data-management` | `result_indexer` | `results_data`, `metadata` |
+| CAP-DAT-002 | `data-management` | `file_storer` | `file_data`, `target_path` |
+| CAP-DAT-003 | `data-management` | `context_cacher` | `context_data`, `cache_key`, `ttl` |
+
 ---
 
 ## Section 7: Supported Sources [APPLICATION-SPECIFIC]
