@@ -1,5 +1,9 @@
 # CLAUDE.md — Carbon Amber ADL
 
+## Session Startup
+
+At the beginning of every morning working session, read and follow `.claude/startup.md` before doing anything else.
+
 ## Project Overview
 
 Carbon Amber is a **prompt engineering architecture** (Agent Definition Layer / ADL) that defines how multiple AI agents collaborate to process user requests. It is the "agent brain" that the Agent Runtime Layer (ARL) orchestration engine (n8n) dynamically loads and executes at runtime.
