@@ -84,7 +84,7 @@ The `audit` field is part of the standard message format defined in `message_for
 
 ## Log Storage and Retention
 
-Logs are stored in daily files at `system/logs/YYYYMMDD.log` (reverse date format). For example, January 27, 2026 → `20260127.log`, February 15, 2026 → `20260215.log`. A new log file is created daily at the start of each calendar day.
+Logs are stored as markdown files at `system/logs/YYYYMMDD-N.md` (where N is the sequence number for the day). For example, the first run on January 27, 2026 → `20260127-1.md`, the second run on February 15, 2026 → `20260215-2.md`. A new log file sequence is created for each distinct user request session.
 
 For complete details on how the orchestration layer extracts audit data from JSON messages, the fields that are logged, and the log entry format, refer to the "Orchestration Layer: Audit Log Extraction" section in `message_format.md`.
 
