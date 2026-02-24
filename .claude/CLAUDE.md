@@ -239,6 +239,9 @@ When the user refers to "the latest log file" or "the log file", always look in 
 ### Committing Log Files
 Whenever you are asked to commit and push changes to the repository, you **must always** include any new or modified log files in `system/logs/` in your commit. Log files are considered an integral part of the project's history.
 
+### Presenting Log Inputs and Outputs
+When the user asks for the inputs and outputs of a specific agent from a log file, **do not** display the raw JSON formatting. Extract and present **only the explicit input text and output text** cleanly as regular text or markdown. Omit all surrounding metadata, IDs, timestamps, and JSON structural braces.
+
 ### Validate the Latest Log File
 
 When the user says "Please validate the log" or asks to validate the latest log file, perform the following procedure:
