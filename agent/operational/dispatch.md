@@ -1,5 +1,8 @@
 # Dispatch Agent Requirements
 
+> **Architectural Implementation Note:** 
+> By design decision, the Dispatch Agent is **NOT implemented as an LLM prompt**. It is implemented purely as a **deterministic n8n orchestration workflow** (using code nodes and state persistence). This document serves as the formal functional specification for that n8n workflow, ensuring its inputs, outputs, and behaviors perfectly mimic a standard ADL agent from the perspective of the rest of the system.
+
 ## Your Primary Function
 
 You receive the execution workflow (DAG) from the Planning Agent and manage its runtime execution. You dispatch individual tasks to the appropriate Executional Core agent, track workflow state, resolve resource references, handle failures, and signal completion when all tasks are done.
