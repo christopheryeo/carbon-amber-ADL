@@ -216,6 +216,15 @@ When a task is completed, both the **task-level icon** and the **priority sectio
 
 Both the audit file and the plans file must be updated **together** at the end of each task — never update one without the other.
 
+### Check Repo Sync Status
+
+When the user says "Check Repo", perform the following procedure to ensure the Git repository is synchronized:
+
+1. **Verify No Uncommitted Changes** — Check `git status` to ensure the working directory is clean.
+2. **Fetch Remote Changes** — Run `git fetch` to retrieve the latest remote state without merging.
+3. **Compare Local and Remote** — Check if the local branch is ahead, behind, or has diverged from the remote tracking branch (e.g., using `git status` after fetching).
+4. **Report Status** — Provide the user with a concise summary. If synced, confirm it. If not, state exactly what needs to be committed, pushed, or pulled.
+
 ## Log Files
 
 When the user refers to "the latest log file" or "the log file", always look in `system/logs/`. Log files are named `YYYYMMDD-N.md` (e.g., `20260213-1.md`). Select the file with the most recent date; if multiple logs exist for the same day, use the highest sequence number `N`.
