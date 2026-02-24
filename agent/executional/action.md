@@ -20,6 +20,28 @@ For every task received, you MUST produce a task result:
 
 ```json
 {
+  "message_id": "msg-act-20260224-100000",
+  "timestamp": {
+    "executed_at": "2026-02-24T10:00:00.000+08:00",
+    "timezone": "Asia/Singapore"
+  },
+  "agent": {
+    "name": "action_agent",
+    "type": "executional"
+  },
+  "input": {
+    "source": "dispatch_agent",
+    "content": {
+      "task_id": "task_5",
+      "action": "Extract audio content from store_1 and save as derived_1",
+      "capability_ids": ["CAP-PRE-002"],
+      "input_refs_resolved": [
+        { "ref_id": "store_1", "storage_uri": "s3://platform-bucket/session-xxx/store_1.mp4", "status": "stored" }
+      ],
+      "output_refs_expected": ["derived_1"],
+      "attempt": 1
+    }
+  },
   "output": {
     "content": {
       "task_result": {
@@ -56,15 +78,54 @@ For every task received, you MUST produce a task result:
       }
     },
     "content_type": "task_result"
+  },
+  "next_agent": {
+    "name": "dispatch_agent",
+    "reason": "Task execution complete. Returning to dispatch agent for workflow state update."
+  },
+  "status": {
+    "code": "success",
+    "message": "Task 5 completed successfully"
+  },
+  "error": {
+    "has_error": false,
+    "error_code": null,
+    "error_message": null,
+    "retry_count": 0,
+    "recoverable": false
+  },
+  "metadata": {
+    "session_id": "sess-20260224-1000",
+    "request_id": "req-20260224-100000",
+    "sequence_number": 5,
+    "parent_message_id": "msg-disp-20260224-095955"
+  },
+  "resources": {
+    "source_refs": [],
+    "storage_refs": [],
+    "derived_refs": []
+  },
+  "audit": {
+    "compliance_notes": "Input parsed successfully. Execution of CAP-PRE-002 completed within quality constraints. Ref derived_1 successfully produced.",
+    "governance_files_consulted": [
+      "context/application.md",
+      "context/governance/message_format.md",
+      "context/governance/audit.md",
+      "agent/executional/action.md"
+    ],
+    "reasoning": "Received task_5 from dispatch_agent. Resolved input_ref store_1. Mapped CAP-PRE-002 to audio_extractor tool. Executed tool successfully. Verified output file exists and is non-empty. Wrote derived_1 to output_refs_produced and returning control to dispatch_agent."
   }
 }
 ```
 
 ### Output Fields
 
+You MUST wrap your `task_result` inside the standard `message_format.md` JSON structure. Do NOT just return the `task_result` object.
+
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `task_id` | string | Yes | The task ID received from the Dispatch Agent |
+| `message_id` | string | Yes | Unique ID prefixed with `msg-act-` followed by timestamp |
+| `task_result.task_id` | string | Yes | The task ID received from the Dispatch Agent |
 | `status` | string | Yes | One of: `"complete"`, `"failed"` |
 | `capability_ids_executed` | array | Yes | The CAP-IDs that were actually exercised during execution |
 | `tool_invocations` | array | Yes | Record of each MCP tool call made, including parameters and timing |
@@ -162,21 +223,41 @@ Before returning results, perform these post-execution validations:
 
 ### Error Response Format
 
-When a task fails, return:
+When a task fails, return the standard `message_format.md` structure with the error details populated in both the standard `error` block and the `task_result`:
 
 ```json
 {
+  "message_id": "msg-act-20260224-100000",
+  "timestamp": {
+    "executed_at": "2026-02-24T10:00:00.000+08:00",
+    "timezone": "Asia/Singapore"
+  },
+  "agent": {
+    "name": "action_agent",
+    "type": "executional"
+  },
+  "input": {
+    "source": "dispatch_agent",
+    "content": {
+      "task_id": "task_2",
+      "action": "Download video",
+      "capability_ids": ["CAP-ACQ-002"],
+      "input_refs_resolved": [],
+      "output_refs_expected": ["store_1"],
+      "attempt": 1
+    }
+  },
   "output": {
     "content": {
       "task_result": {
-        "task_id": "task_5",
+        "task_id": "task_2",
         "status": "failed",
-        "capability_ids_executed": ["CAP-PRE-002"],
+        "capability_ids_executed": ["CAP-ACQ-002"],
         "tool_invocations": [
           {
-            "tool_name": "audio_extractor",
-            "mcp_server": "media-processing",
-            "parameters": { "input_uri": "s3://...", "output_format": "wav" },
+            "tool_name": "video_downloader",
+            "mcp_server": "acquisition",
+            "parameters": { "url": "...", "output_path": "..." },
             "execution_time_ms": 15230,
             "status": "error",
             "error_detail": "Tool exited with code 1: Input file is corrupt or incomplete"
@@ -193,6 +274,10 @@ When a task fails, return:
     },
     "content_type": "task_result"
   },
+  "next_agent": {
+    "name": "dispatch_agent",
+    "reason": "Task failed. Returning to dispatch agent for error handling."
+  },
   "status": {
     "code": "failed",
     "message": "Audio extraction failed: input file corrupt"
@@ -203,6 +288,99 @@ When a task fails, return:
     "error_message": "Audio extraction failed — input file store_1 appears corrupt or incomplete. Error detail: Tool exited with code 1.",
     "retry_count": 0,
     "recoverable": false
+  },
+  "metadata": {
+    "session_id": "sess-20260224-1000",
+    "request_id": "req-20260224-100000",
+    "sequence_number": 5,
+    "parent_message_id": "msg-disp-20260224-095955"
+  },
+  "resources": {
+    "source_refs": [],
+    "storage_refs": [],
+    "derived_refs": []
+  },
+  "audit": {
+    "compliance_notes": "Task execution failed during quality checks.",
+    "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/executional/action.md"],
+    "reasoning": "Attempted audio extraction but file was corrupt."
+  }
+}
+```{
+  "message_id": "msg-act-20260224-100002",
+  "timestamp": {
+    "executed_at": "2026-02-24T10:00:30.000+08:00",
+    "timezone": "Asia/Singapore"
+  },
+  "agent": {
+    "name": "action_agent",
+    "type": "executional"
+  },
+  "input": {
+    "source": "dispatch_agent",
+    "content": {
+      "task_id": "task_2",
+      "action": "Download video",
+      "capability_ids": ["CAP-ACQ-002"]
+    }
+  },
+  "output": {
+    "content": {
+      "task_result": {
+        "task_id": "task_2",
+        "status": "failed",
+        "capability_ids_executed": ["CAP-ACQ-002"],
+        "tool_invocations": [
+          {
+            "tool_name": "video_downloader",
+            "mcp_server": "acquisition",
+            "parameters": { "url": "...", "output_path": "..." },
+            "execution_time_ms": 15230,
+            "status": "error",
+            "error_detail": "Tool exited with code 1: Input file is corrupt or incomplete"
+          }
+        ],
+        "output_refs_produced": [],
+        "result_data": null,
+        "quality_checks": {
+          "output_exists": false,
+          "output_non_empty": false,
+          "format_valid": false
+        }
+      }
+    },
+    "content_type": "task_result"
+  },
+  "next_agent": {
+    "name": "dispatch_agent",
+    "reason": "Task failed. Returning to dispatch agent for error handling."
+  },
+  "status": {
+    "code": "failed",
+    "message": "Audio extraction failed: input file corrupt"
+  },
+  "error": {
+    "has_error": true,
+    "error_code": "PROCESSING_ERROR",
+    "error_message": "Audio extraction failed — input file store_1 appears corrupt or incomplete. Error detail: Tool exited with code 1.",
+    "retry_count": 0,
+    "recoverable": false
+  },
+  "metadata": {
+    "session_id": "sess-20260224-1000",
+    "request_id": "req-20260224-100000",
+    "sequence_number": 5,
+    "parent_message_id": "msg-disp-20260224-095955"
+  },
+  "resources": {
+    "source_refs": [],
+    "storage_refs": [],
+    "derived_refs": []
+  },
+  "audit": {
+    "compliance_notes": "Task execution failed during quality checks.",
+    "governance_files_consulted": ["context/application.md", "context/governance/message_format.md", "context/governance/audit.md", "agent/executional/action.md"],
+    "reasoning": "Attempted audio extraction but file was corrupt."
   }
 }
 ```
@@ -231,6 +409,7 @@ When a task fails, return:
 - Tasks with CAP-SYN-* capabilities — these must be routed to the Reasoning Agent
 - Tasks without capability IDs
 - Tasks with capability IDs not listed in the Capability-to-Tool Mapping
+- Receiving multiple tasks, an array of tasks, or a full workflow DAG at once — you must only process ONE assigned task.
 
 ### Error Conditions:
 
@@ -239,6 +418,7 @@ When a task fails, return:
 | No `capability_ids` in task | INVALID_INPUT | Return `status: "failed"` immediately |
 | Capability ID not in mapping table | VALIDATION_ERROR | Return `status: "failed"` — unknown capability |
 | CAP-SYN-* capability received | VALIDATION_ERROR | Return `status: "failed"` — misrouted task; should go to reasoning_agent |
+| Multiple tasks or full DAG received | VALIDATION_ERROR | Return `status: "failed"` — you only process ONE task at a time |
 | Input ref has null storage_uri | DEPENDENCY_ERROR | Return `status: "failed"` — unresolved input reference |
 | MCP server unreachable | PROCESSING_ERROR | Return `status: "failed"`, `recoverable: true` |
 

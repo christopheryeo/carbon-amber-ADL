@@ -51,6 +51,9 @@ Each concatenated file must be wrapped in the marker format below:
 ### Step 4 — Send one merged prompt to the target LLM
 Do not ask the LLM to fetch files dynamically. The orchestration layer must provide all required context in the concatenated prompt.
 
+### Step 5 — Validate the LLM Output
+After receiving the JSON response from the LLM, the orchestration layer must validate it against `schema/message_schema.json` before routing it to the next agent. This ensures structural compliance with the `message_format.md` specification. If validation fails, the orchestration layer handles the error (e.g., triggering a retry or aborting the transaction).
+
 ---
 
 ## Executing LLM Responsibilities
