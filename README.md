@@ -277,9 +277,7 @@ Mid-level agents that manage planning, reasoning, learning, and memory:
 Specialized agents that produce deliverables. **These agents are application-specific** — different applications define different executional agents based on their capabilities.
 
 For the current DSTA Video Analysis application (see `context/application.md`):
-- **perception.md** — Identifies speakers, analyzes expressions/gestures, detects objects, analyzes audio
-- **interpretation.md** — Processes analysis requests and contextualizes results
-- **action.md** — Executes analysis models and generates structured outputs
+- **action.md** — Invokes MCP tools for all tool-calling capabilities (e.g., CAP-ACQ, CAP-PRE, CAP-AUD, CAP-VIS), executes the tools, validates outputs, and routes back to the Dispatch Agent. (This unified interface replaces the former Perception, Interpretation, and Action agents.)
 
 ---
 

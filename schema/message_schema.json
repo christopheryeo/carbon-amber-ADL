@@ -123,77 +123,7 @@
             },
             {
               "type": "object",
-              "properties": {
-                "tasks": {
-                  "type": "array",
-                  "description": "Optional DAG tasks schema for planning outputs",
-                  "items": {
-                    "type": "object",
-                    "required": [
-                      "id",
-                      "action",
-                      "capability_ids",
-                      "weight",
-                      "dependencies"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "pattern": "^task_[0-9]+$"
-                      },
-                      "action": {
-                        "type": "string"
-                      },
-                      "capability_ids": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "pattern": "^CAP-[A-Z]{3}-[A-Z]?\\d{3}$"
-                        }
-                      },
-                      "weight": {
-                        "type": "integer"
-                      },
-                      "dependencies": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "pattern": "^task_[0-9]+$"
-                        }
-                      }
-                    }
-                  }
-                },
-                "execution_groups": {
-                  "type": "object",
-                  "description": "Optional DAG execution groups schema for planning outputs",
-                  "patternProperties": {
-                    "^[0-9]+$": {
-                      "type": "object",
-                      "required": [
-                        "tasks",
-                        "description",
-                        "parallel"
-                      ],
-                      "properties": {
-                        "tasks": {
-                          "type": "array",
-                          "items": {
-                            "type": "string",
-                            "pattern": "^task_[0-9]+$"
-                          }
-                        },
-                        "description": {
-                          "type": "string"
-                        },
-                        "parallel": {
-                          "type": "boolean"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+              "description": "Structured output payloads (e.g., workflow, task_result, dispatch_task, goals map)"
             },
             {
               "type": "null"
