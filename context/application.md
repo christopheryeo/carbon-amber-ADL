@@ -96,7 +96,7 @@ The platform supports ONLY the following two capabilities. When decomposing user
 
 | ID | Capability | Description | Tools/Models |
 |----|------------|-------------|--------------|
-| CAP-AUD-001 | Media Transcription | Takes a pre-signed URI pointing to a media file in Wasabi, extracts/transcribes the audio, and returns the transcription as structured JSON. | transcribe_video_tool |
+| CAP-AUD-001 | Media Transcription | Given a video URL, directly extracts and transcribes the audio, returning the transcription as structured JSON without storing the file in Wasabi. | transcribe_video_direct_tool |
 
 ### 6.9 Capability Dependencies and I/O Reference
 
@@ -106,14 +106,14 @@ This section defines mandatory prerequisites and input/output asset types.
 
 | Capability | Prerequisite(s) | Reason |
 |-----------|-----------------|--------|
-| CAP-AUD-001 (Transcription) | CAP-ACQ-001 (Media Download) | The transcriber requires a pre-signed URI to a file in Wasabi, which must be acquired via the download capability first. |
+| *(None)* | *(None)* | Both capabilities currently operate independently on source URLs. |
 
 #### I/O Asset Types
 
 | Capability | Input Asset | Input Ref Type | Output Asset | Output Ref Type |
 |-----------|-------------|---------------|-------------|----------------|
 | CAP-ACQ-001 | Source URL | `src_N` | Wasabi Pre-signed URI | `store_N` |
-| CAP-AUD-001 | Wasabi Pre-signed URI | `store_N` | JSON Transcript | `derived_N` (transcript) |
+| CAP-AUD-001 | Source URL | `src_N` | JSON Transcript | `derived_N` (transcript) |
 
 
 ### 6.10 Capability-to-Tool Mapping
@@ -123,20 +123,26 @@ This mapping defines which MCP servers and tools correspond to each capability. 
 | Capability ID | MCP Server | Tool | Parameters |
 |--------------|------------|------|------------|
 | CAP-ACQ-001 | `acquisition` | `download_to_wasabi_tool` | `url` |
-| CAP-AUD-001 | `audio-analysis` | `transcribe_video_tool` | `presigned_uri` |
+| CAP-AUD-001 | `audio-analysis` | `transcribe_video_direct_tool` | `url` |
 
 
 ### 6.11 Capability-to-Goal Decomposition Patterns
 
 Use these patterns as templates when decomposing requests for this demo application.
 
-#### Pattern A: Transcribe Video from URL
+#### Pattern A: Download Video to Wasabi
 
-**Trigger:** Objectives asking to download, transcribe, or read a video from a URL.
+**Trigger:** Objectives specifically asking to download, store, or archive a video from a URL.
 
 **Goal pattern:**
 1. Download video content from src_N to Wasabi file storage and generate a pre-signed URI as store_N (CAP-ACQ-001).
-2. Transcribe the video file at store_N (acquired from src_N) using its pre-signed URI and output structured JSON (CAP-AUD-001).
+
+#### Pattern B: Transcribe Video directly from URL
+
+**Trigger:** Objectives asking to transcribe or read a video from a URL.
+
+**Goal pattern:**
+1. Directly extract and transcribe the audio from the video URL at src_N, returning structured JSON (CAP-AUD-001).
 
 ---
 
@@ -174,7 +180,7 @@ Use these patterns as templates when decomposing requests for this demo applicat
 ### Executional Core [APPLICATION-SPECIFIC]
 | Agent | Role |
 |-------|------|
-| Action Agent | Invokes MCP tools (`download_to_wasabi_tool` and `transcribe_video_tool`) and returns standard JSON responses |
+| Action Agent | Invokes MCP tools (`download_to_wasabi_tool` and `transcribe_video_direct_tool`) and returns standard JSON responses |
 
 ---
 
@@ -190,7 +196,7 @@ When processing requests, the system follows this execution flow:
 3. **Plan Execution (Planning Agent)**: Produce a DAG-based execution plan, deduping goals and assigning execution groups.
 
 ### Phase 3: Execution
-4. **Dispatch and Execute (Dispatch Agent → Action Agent)**: The Dispatch Agent manages runtime execution, resolving `src_N` to actual URLs, and `store_N` to pre-signed URIs when feeding parameters to the Action Agent.
+4. **Dispatch and Execute (Dispatch Agent → Action Agent)**: The Dispatch Agent manages runtime execution, resolving `src_N` to actual URLs when feeding parameters to the Action Agent.
 
 ---
 
@@ -199,4 +205,4 @@ When processing requests, the system follows this execution flow:
 | Constraint | Description |
 |------------|-------------|
 | **Strict Scope** | Only video acquisition and transcription are supported. Reject anything else. |
-| **Storage Binding** | Transcription MUST read from Wasabi via a pre-signed URI. |
+| **Storage Bypass** | Transcription MUST operate directly on the source URL (`src_N`) and MUST NOT store or read anything from Wasabi file storage. |
