@@ -222,25 +222,11 @@ When the user refers to "the latest log file" or "the log file", always look in 
 
 ### Validate the Latest Log File
 
-When the user asks to "validate the latest log file", perform the following procedure:
+When the user says "Please validate the log" or asks to validate the latest log file, perform the following procedure:
 
 1. **Locate the latest log file** — List all files in `system/logs/` and select the one with the most recent date (filename format `YYYYMMDD-N.md`). If multiple logs exist for the same day, use the highest sequence number.
 
-2. **Read the log file** — Parse every execution log entry, extracting each agent's JSON message output.
-
-3. **Cross-reference against agent definitions** — For each logged agent invocation, read the corresponding agent definition from `agent/` (e.g., `agent/governance/objective.md` for `objective_agent`) and verify:
-   - **Message schema compliance** — All required top-level fields (`message_id`, `timestamp`, `agent`, `input`, `output`, `next_agent`, `status`, `error`, `metadata`, `resources`, `audit`) are present and correctly structured per `context/governance/message_format.md` and `schema/message_schema.json`.
-   - **Agent routing correctness** — The `next_agent.name` value matches the canonical Agent Chain Flow sequence (Objective → Goal → Planning → Dispatch → Action/Reasoning → Memory). Flag any unexpected routing.
-   - **Sequence number accuracy** — The `metadata.sequence_number` matches the agent's defined position in the chain.
-   - **Agent type consistency** — The `agent.type` field (governance, operational, executional) matches the agent's directory location in `agent/`.
-   - **Output content type alignment** — The `output.content_type` matches what the agent definition specifies as its required output type (e.g., `objectives` for Objective Agent, `goals` for Goal Agent, `execution_plan` for Planning Agent).
-   - **Governance compliance** — The `audit` field references the correct governance files using full repository-root-relative paths.
-   - **Resource reference integrity** — All `src_N`, `store_N`, and `derived_N` references in the `resources` field are consistent across the chain (no orphaned or unresolved refs).
-   - **Agent-application separation** — Agent outputs do not embed application-specific content that should only exist in `context/application.md` (verify the Core Principle of Agent Genericity is upheld in agent behavior).
-
-4. **Present a validation report** — Summarize findings in a table with columns: `Agent`, `Check`, `Status` (✅ Pass / ⚠️ Warning / ❌ Fail), `Details`. Group by agent in chain order. Include a summary count of passes, warnings, and failures at the bottom.
-
-5. **Flag actionable issues** — If any failures are found, provide specific remediation steps referencing the relevant agent definition file and governance document.
+2. **Execute Validation Instructions** — Read and strictly follow the analysis and formatting instructions defined in `.claude/log_validation.md`. Generate your report using the exact structure specified in that template.
 
 ## Version
 
