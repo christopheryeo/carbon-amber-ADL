@@ -2,15 +2,11 @@
 
 <!--
 ================================================================================
-APPLICATION.MD TEMPLATE STRUCTURE
+APPLICATION.MD TEMPLATE STRUCTURE (DEMO VERSION)
 ================================================================================
 This file follows a standardized template format. When creating a new application,
 replace the content in sections marked [APPLICATION-SPECIFIC] while keeping
 sections marked [STANDARD] unchanged.
-
-Section Reference:
-- [STANDARD]              = Do not modify — same for all applications
-- [APPLICATION-SPECIFIC]  = Customize for each application
 ================================================================================
 -->
 
@@ -58,7 +54,7 @@ Governance files are **authoritative** and take precedence over any conflicting 
 - **Objective Agent** (Governance Core): Receives user requests and outputs one or more strategic objectives required to fulfill the request. Objectives define *what* needs to be achieved.
 - **Goal Agent** (Governance Core): Takes each objective from the Objective Agent and decomposes it into a series of goals and sub-goals. Goals define *how* to achieve each objective.
 - **Planning Agent** (Operational Core): Takes the complete set of goals from the Goal Agent and produces an executable workflow plan — a directed acyclic graph (DAG) of deduplicated tasks organized into execution groups with registered `derived_refs` for all intermediate assets.
-- All objectives, goals, and plans must align with the Capabilities defined in Section 6 (including the Capability Dependencies in Section 6.9) and stay within the application scope.
+- All objectives, goals, and plans must align with the Capabilities defined in Section 6 and stay within the application scope.
 
 ---
 
@@ -66,160 +62,59 @@ Governance files are **authoritative** and take precedence over any conflicting 
 
 | Field | Value |
 |-------|-------|
-| **Application Name** | DSTA Video Analysis Platform |
-| **Customer** | DSTA (Defence Science and Technology Agency) |
+| **Application Name** | ADL Demo Platform (Reduced Capabilities) |
+| **Customer** | Internal Demonstration |
 | **Deployment** | Sentient Agentic AI Platform |
-| **Version** | 1.5 |
-| **Last Updated** | February 23, 2026 |
+| **Version** | 1.0-DEMO |
+| **Last Updated** | February 24, 2026 |
 
 ### Description
 
-This application enables comprehensive video content analysis through autonomous AI agents that collaborate to extract insights from audio, visual, and contextual elements of video content from generalized source URLs and direct file uploads.
-
-The platform integrates an orchestration engine and leverages multiple AI agents organized into Governance, Operational, and Executional cores to perform sophisticated multi-modal video analysis tasks autonomously.
+This is a reduced-capability demonstration environment designed to showcase the agentic workflow pipeline. It supports only two distinct functions: downloading video from URLs to Wasabi cloud storage, and transcribing those videos into JSON format.
 
 ---
 
 ## Section 5: Primary Objective [APPLICATION-SPECIFIC]
 
-The platform transforms raw video inputs into actionable intelligence covering:
-- Speaker sentiment and stance
-- Audience reactions
-- Object and text detection
-- Content understanding and scene classification
+The platform transforms raw video inputs at given URLs into structured text transcripts.
 
-**Scope Statement**: All tasks processed by this application must relate to video content analysis and insight generation. Requests outside this scope must be rejected.
+**Scope Statement**: All tasks processed by this application MUST relate exclusively to acquiring video and generating transcripts. Any request outside this narrow scope MUST be rejected.
 
 ---
 
 ## Section 6: Capabilities Matrix [APPLICATION-SPECIFIC]
 
-The platform supports the following capability categories. When decomposing user requests, agents must map requests to these capabilities. Each capability has a unique identifier (CAP-XXX) used for traceability across the agent chain.
+The platform supports ONLY the following two capabilities. When decomposing user requests, agents MUST map requests to these capabilities.
 
 ### 6.1 Video Acquisition
 
 | ID | Capability | Description | Tools/Models |
 |----|------------|-------------|--------------|
-| CAP-ACQ-001 | URL Validation | Validate that a provided URL belongs to a supported source and is reachable | Custom URL validator, platform API checks |
-| CAP-ACQ-002 | Video Download (Platform A) | Download video content from Platform A given a valid URL | video-downloader-cli |
-| CAP-ACQ-003 | Video Download (Platform B) | Download video content from Platform B given a valid URL | video-downloader-cli |
-| CAP-ACQ-004 | Video Download (Platform C) | Download video content from Platform C given a valid URL | video-downloader-cli, Platform API |
-| CAP-ACQ-005 | Direct Upload Ingestion | Accept and register video files uploaded directly by users | Platform upload handler (MP4, MOV, AVI, WEBM) |
-| CAP-ACQ-006 | File Integrity Verification | Verify that downloaded or uploaded video files are complete, uncorrupted, and in a supported format | ffprobe, file checksum validation |
-| CAP-ACQ-007 | Metadata Extraction | Extract video metadata including duration, resolution, codec, frame rate, and file size | ffprobe, downloader metadata |
+| CAP-ACQ-001 | Media Download | Given a URL, downloads the video, stores it in Wasabi file storage, and returns a pre-signed URI specifically for the stored object. | download_to_wasabi_tool |
 
-### 6.2 Video Pre-Processing
+### 6.2 Audio Analysis
 
 | ID | Capability | Description | Tools/Models |
 |----|------------|-------------|--------------|
-| CAP-PRE-001 | Format Conversion | Convert video files to a standardised processing format if the source format is unsupported | ffmpeg |
-| CAP-PRE-002 | Audio Track Extraction | Separate the audio track from the video file for independent audio analysis | ffmpeg |
-| CAP-PRE-003 | Frame Extraction | Extract individual frames or frame sequences at configurable intervals for visual analysis | ffmpeg, OpenCV |
-| CAP-PRE-004 | Video Segmentation | Split long videos into temporal segments for parallel or sequential processing | ffmpeg, scene detection (PySceneDetect) |
-| CAP-PRE-005 | Resolution Normalisation | Resize or normalise video resolution to meet model input requirements | ffmpeg |
-
-### 6.3 Audio Analysis
-
-| ID | Capability | Description | Tools/Models |
-|----|------------|-------------|--------------|
-| CAP-AUD-001 | Audio Transcription | Accurate conversion of spoken words into text with timestamps | OpenAI Whisper-X |
-| CAP-AUD-002 | Speaker Identification/Diarization | Identify distinct speakers and segment the audio by who is speaking and when | Whisper-X diarization, pyannote.audio |
-| CAP-AUD-003 | Speech Emotion Recognition | Analyse vocal characteristics (pitch, tempo, intensity, tone) to infer emotional states | Sentient speech emotion models |
-| CAP-AUD-004 | Language Detection | Detect the language(s) spoken in the audio track | Whisper-X language detection |
-| CAP-AUD-005 | Audio Event Detection | Detect non-speech audio events (applause, crowd noise, music, silence) | Audio classification models |
-
-### 6.4 Speaker Analysis
-
-| ID | Capability | Description | Tools/Models |
-|----|------------|-------------|--------------|
-| CAP-SPK-001 | Speaker Sentiment Analysis | Determine the emotional tone or sentiment expressed by speakers using transcript text and vocal features | Sentient sentiment models, Gemini/Llama 4 |
-| CAP-SPK-002 | Speaker Stance Analysis | Multi-modal analysis combining words, visual appearance, expressions, and vocal sentiment to determine speaker stance on topics | Sentient multi-modal stance models |
-| CAP-SPK-003 | Speaker Profiling | Build a speaker profile including speaking duration, frequency of turns, and emotional arc across the video | Derived from CAP-AUD-001, CAP-AUD-002, CAP-SPK-001 |
-
-### 6.5 Audience Analysis
-
-| ID | Capability | Description | Tools/Models |
-|----|------------|-------------|--------------|
-| CAP-AUD-R001 | Audience Sentiment Analysis | Assess overall sentiment or reaction of visible audiences through facial expressions and body language | Sentient audience sentiment models |
-| CAP-AUD-R002 | Crowd Density Estimation | Estimate the number and density of people visible in audience shots | Object detection models |
-| CAP-AUD-R003 | Audience Engagement Scoring | Score audience engagement level based on facial attention, gestures, and reactions over time | Derived from CAP-AUD-R001, CAP-VIS-006 |
-
-### 6.6 Visual Analysis
-
-| ID | Capability | Description | Tools/Models |
-|----|------------|-------------|--------------|
-| CAP-VIS-001 | Object Detection | Detect and identify objects within video frames | Mistral (image analysis), YOLO |
-| CAP-VIS-002 | Banner and Placard Detection | Specifically detect banners, signs, placards, and protest materials within frames | Mistral, custom object detection |
-| CAP-VIS-003 | Text-in-Video Extraction (OCR) | Extract and recognise text appearing within video frames, on banners, placards, screens, etc. | OCR models (Tesseract, PaddleOCR) |
-| CAP-VIS-004 | Action Recognition | Identify specific human actions or events occurring within the video (e.g., walking, running, gesturing, fighting) | Video classification models, Flux AI |
-| CAP-VIS-005 | Scene Understanding | Classify the environment, setting, or context of video scenes (indoor/outdoor, day/night, location type) | Gemini/Llama 4 multi-modal, scene classification models |
-| CAP-VIS-006 | Facial Attribute Analysis | Analyse visible faces for expressions, estimated demographics, and emotional states (subject to privacy constraints) | Face detection/analysis models |
-| CAP-VIS-007 | Deepfake Detection | Assess video authenticity by detecting manipulation artefacts, synthetic generation signatures, or inconsistencies | Deepfake detection models |
-
-### 6.7 Content Synthesis and Reporting
-
-| ID | Capability | Description | Tools/Models |
-|----|------------|-------------|--------------|
-| CAP-SYN-001 | Multi-Modal Fusion | Combine outputs from audio, visual, and text analyses into a unified, correlated insight set | Gemini/Llama 4, custom fusion logic |
-| CAP-SYN-002 | Timeline Reconstruction | Build a chronological timeline of events, speaker turns, and key moments across the video | Derived from temporal outputs of all analysis capabilities |
-| CAP-SYN-003 | Structured Report Generation | Generate structured JSON or Markdown reports summarising all analysis findings | Gemini/Llama 4 |
-
-### 6.8 Data Management
-
-| ID | Capability | Description | Tools/Models |
-|----|------------|-------------|--------------|
-| CAP-DAT-001 | Result Indexing | Index analysis results and metadata for search and retrieval | Elasticsearch (Vector Core) |
-| CAP-DAT-002 | File Storage | Store downloaded video files, extracted assets, and generated reports | S3-compatible File Storage |
-| CAP-DAT-003 | Context Caching | Cache intermediate results and agent context for session continuity | Redis |
+| CAP-AUD-001 | Media Transcription | Takes a pre-signed URI pointing to a media file in Wasabi, extracts/transcribes the audio, and returns the transcription as structured JSON. | transcribe_video_tool |
 
 ### 6.9 Capability Dependencies and I/O Reference
 
-This section defines mandatory prerequisites and input/output asset types for capabilities that have them. Agents MUST respect these dependencies when decomposing goals and planning execution workflows.
+This section defines mandatory prerequisites and input/output asset types.
 
 #### Prerequisite Rules
 
-The following capabilities have **mandatory prerequisites** — they MUST NOT be invoked until their prerequisite capabilities have completed successfully:
-
 | Capability | Prerequisite(s) | Reason |
 |-----------|-----------------|--------|
-| CAP-AUD-001 (Transcription) | CAP-AUD-004 (Language Detection) | Language must be detected before transcription model can be configured for the correct language |
-| CAP-AUD-002 (Diarization) | CAP-PRE-002 (Audio Extraction) | Diarization operates on extracted audio, not raw video |
-| CAP-AUD-003 (Speech Emotion) | CAP-PRE-002 (Audio Extraction) | Emotion recognition operates on extracted audio |
-| CAP-AUD-004 (Language Detection) | CAP-PRE-002 (Audio Extraction) | Language detection operates on extracted audio |
-| CAP-AUD-005 (Audio Event Detection) | CAP-PRE-002 (Audio Extraction) | Audio event classification operates on extracted audio, not raw video |
-| CAP-SPK-001 (Speaker Sentiment) | CAP-AUD-001 (Transcription), CAP-AUD-002 (Diarization) | Requires transcript segments mapped to identified speakers |
-| CAP-SPK-002 (Speaker Stance) | CAP-SPK-001 (Speaker Sentiment), CAP-VIS-006 (Facial Attributes) | Multi-modal stance requires both text sentiment and visual expression data |
-| CAP-VIS-001 through CAP-VIS-006 | CAP-PRE-003 (Frame Extraction) | Visual analysis operates on extracted frames, not raw video |
-| CAP-VIS-003 (OCR) | CAP-VIS-001 or CAP-VIS-002 (Object/Banner Detection) | OCR targets detected text-bearing objects |
-| CAP-SYN-001 (Multi-Modal Fusion) | At least two analysis capabilities from different modalities (audio, visual, text) | Fusion requires multiple modality outputs to correlate |
-
-**Transitive Chain Example (Audio Transcription):**
-`CAP-PRE-002 → CAP-AUD-004 → CAP-AUD-001` (extract audio → detect language → transcribe)
+| CAP-AUD-001 (Transcription) | CAP-ACQ-001 (Media Download) | The transcriber requires a pre-signed URI to a file in Wasabi, which must be acquired via the download capability first. |
 
 #### I/O Asset Types
 
-The following capabilities produce or consume specific asset types. These asset types map to ref ID categories used by the Planning Agent when registering `derived_refs`:
-
 | Capability | Input Asset | Input Ref Type | Output Asset | Output Ref Type |
 |-----------|-------------|---------------|-------------|----------------|
-| CAP-ACQ-002/003/004 | Source URL | `src_N` | Video file | `store_N` |
-| CAP-ACQ-005 | Uploaded file | `src_N` | Video file | `store_N` |
-| CAP-PRE-002 | Video file | `store_N` | Audio track | `derived_N` (audio_track) |
-| CAP-PRE-003 | Video file | `store_N` | Frame set | `derived_N` (frame_set) |
-| CAP-AUD-004 | Audio track | `derived_N` | Language tag | (metadata, no new ref) |
-| CAP-AUD-001 | Audio track | `derived_N` | Transcript | `derived_N` (transcript) |
-| CAP-AUD-002 | Audio track | `derived_N` | Diarization map | `derived_N` (diarization_map) |
-| CAP-AUD-003 | Audio track | `derived_N` | Emotion scores | `derived_N` (emotion_scores) |
-| CAP-AUD-005 | Audio track | `derived_N` | Audio event labels | `derived_N` (audio_events) |
-| CAP-SPK-001 | Transcript + Diarization map | `derived_N` + `derived_N` | Sentiment scores | `derived_N` (sentiment_scores) |
-| CAP-VIS-001/002 | Frame set | `derived_N` | Detection results | `derived_N` (detection_results) |
-| CAP-VIS-003 | Detection results | `derived_N` | OCR text | `derived_N` (ocr_text) |
-| CAP-VIS-006 | Frame set | `derived_N` | Facial attributes | `derived_N` (facial_attributes) |
-| CAP-SYN-001 | Multiple analysis outputs | `derived_N` (various) | Fused insight set | `derived_N` (fused_insights) |
+| CAP-ACQ-001 | Source URL | `src_N` | Wasabi Pre-signed URI | `store_N` |
+| CAP-AUD-001 | Wasabi Pre-signed URI | `store_N` | JSON Transcript | `derived_N` (transcript) |
 
-**How agents use this table:**
-- **Goal Agent**: When decomposing objectives, verify that goals exist for all prerequisite capabilities in the chain, not just the target capability.
-- **Planning Agent**: When creating tasks and registering `derived_refs`, use the Output Asset and Output Ref Type columns to assign the correct `asset_type` to each `derived_ref`.
 
 ### 6.10 Capability-to-Tool Mapping
 
@@ -227,305 +122,42 @@ This mapping defines which MCP servers and tools correspond to each capability. 
 
 | Capability ID | MCP Server | Tool | Parameters |
 |--------------|------------|------|------------|
-| CAP-ACQ-001 | `acquisition` | `url_validator` | `url`, `platform` |
-| CAP-ACQ-002 | `acquisition` | `platform_a_downloader` | `url`, `output_path`, `format` |
-| CAP-ACQ-003 | `acquisition` | `platform_b_downloader` | `url`, `output_path` |
-| CAP-ACQ-004 | `acquisition` | `platform_c_downloader` | `url`, `output_path` |
-| CAP-ACQ-005 | `acquisition` | `upload_registrar` | `file_path`, `output_path` |
-| CAP-ACQ-006 | `acquisition` | `integrity_checker` | `file_uri`, `expected_format` |
-| CAP-ACQ-007 | `acquisition` | `metadata_extractor` | `file_uri` |
-| CAP-PRE-001 | `media-processing` | `format_converter` | `input_uri`, `target_format`, `target_codec` |
-| CAP-PRE-002 | `media-processing` | `audio_extractor` | `input_uri`, `output_format`, `sample_rate` |
-| CAP-PRE-003 | `media-processing` | `frame_extractor` | `input_uri`, `interval_seconds`, `output_format` |
-| CAP-PRE-004 | `media-processing` | `video_segmenter` | `input_uri`, `method`, `segment_duration` |
-| CAP-PRE-005 | `media-processing` | `resolution_normalizer` | `input_uri`, `target_resolution` |
-| CAP-AUD-001 | `audio-analysis` | `transcriber` | `audio_uri`, `language`, `timestamps` |
-| CAP-AUD-002 | `audio-analysis` | `diarizer` | `audio_uri`, `min_speakers`, `max_speakers` |
-| CAP-AUD-003 | `audio-analysis` | `speech_emotion_analyzer` | `audio_uri`, `diarization_ref` |
-| CAP-AUD-004 | `audio-analysis` | `language_detector` | `audio_uri` |
-| CAP-AUD-005 | `audio-analysis` | `audio_event_detector` | `audio_uri` |
-| CAP-SPK-001 | `speaker-analysis` | `sentiment_analyzer` | `transcript_ref`, `diarization_ref` |
-| CAP-SPK-002 | `speaker-analysis` | `stance_analyzer` | `sentiment_ref`, `facial_ref`, `audio_emotion_ref` |
-| CAP-SPK-003 | `speaker-analysis` | `speaker_profiler` | `diarization_ref`, `sentiment_ref` |
-| CAP-AUD-R001 | `audience-analysis` | `audience_sentiment_analyzer` | `frame_set_ref`, `audience_regions` |
-| CAP-AUD-R002 | `audience-analysis` | `crowd_density_estimator` | `frame_set_ref` |
-| CAP-AUD-R003 | `audience-analysis` | `engagement_scorer` | `audience_sentiment_ref`, `facial_ref` |
-| CAP-VIS-001 | `visual-analysis` | `object_detector` | `frame_set_ref`, `target_classes` |
-| CAP-VIS-002 | `visual-analysis` | `banner_detector` | `frame_set_ref` |
-| CAP-VIS-003 | `visual-analysis` | `ocr_extractor` | `detection_results_ref`, `target_regions` |
-| CAP-VIS-004 | `visual-analysis` | `action_recognizer` | `frame_set_ref`, `video_uri` |
-| CAP-VIS-005 | `visual-analysis` | `scene_classifier` | `frame_set_ref` |
-| CAP-VIS-006 | `visual-analysis` | `facial_analyzer` | `frame_set_ref`, `diarization_ref` |
-| CAP-VIS-007 | `visual-analysis` | `deepfake_detector` | `frame_set_ref`, `video_uri` |
-| CAP-DAT-001 | `data-management` | `result_indexer` | `results_data`, `metadata` |
-| CAP-DAT-002 | `data-management` | `file_storer` | `file_data`, `target_path` |
-| CAP-DAT-003 | `data-management` | `context_cacher` | `context_data`, `cache_key`, `ttl` |
+| CAP-ACQ-001 | `acquisition` | `download_to_wasabi_tool` | `url` |
+| CAP-AUD-001 | `audio-analysis` | `transcribe_video_tool` | `presigned_uri` |
 
-#### Default Execution Parameters
-
-When invoking tools, the Action Agent should apply the following default parameters if they are not explicitly specified in the task:
-
-| Tool | Default Parameters |
-|------|--------------------|
-| `audio_extractor` | `output_format: "wav"`, `sample_rate: 16000` |
-| `frame_extractor` | `interval_seconds: 1.0`, `output_format: "jpg"` |
-| `transcriber` | `timestamps: true` |
-| `object_detector` | `confidence_threshold: 0.5` |
 
 ### 6.11 Capability-to-Goal Decomposition Patterns
 
-Use these patterns as templates when decomposing common objective types for this application. Adapt and extend based on the specific objective context.
+Use these patterns as templates when decomposing requests for this demo application.
 
-#### Pattern A: Video Acquisition Objectives
+#### Pattern A: Transcribe Video from URL
 
-**Trigger:** Objectives containing "obtain", "download", "get", "access", or "process" with src_N and store_N ref IDs.
-
-**Goal pattern:**
-1. Validate that src_N is a reachable URL from a supported source or is a valid uploaded file
-2. Download video content from src_N to platform file storage as store_N / Register uploaded file src_N in platform file storage as store_N
-3. Verify downloaded/uploaded file integrity and format compatibility for store_N
-4. Extract video metadata (duration, resolution, codec, frame rate) from store_N
-
-**Note:** This is the ONLY pattern where src_N appears in goals. All subsequent patterns operate on store_N.
-
-#### Pattern B: Audio Transcription Objectives
-
-**Trigger:** Objectives referencing store_N with "transcribe", "transcript", "what is said", or "spoken words".
+**Trigger:** Objectives asking to download, transcribe, or read a video from a URL.
 
 **Goal pattern:**
-1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Detect language(s) spoken in the audio
-3. Transcribe audio content to text with timestamps
-4. Identify and label distinct speakers (diarization)
-
-#### Pattern C: Speaker Sentiment/Emotion Objectives
-
-**Trigger:** Objectives referencing store_N with "sentiment", "emotion", "how do they feel", "tone", or "mood" of speakers.
-
-**Goal pattern:**
-1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Detect language(s) spoken in the audio
-3. Transcribe audio content to text with timestamps
-4. Identify and label distinct speakers
-5. Analyse vocal characteristics for speech emotion recognition
-6. Run sentiment analysis on transcript segments per speaker
-7. Extract video frames from store_N at regular intervals for visual analysis
-8. Correlate text sentiment, vocal emotion, and facial expression results per speaker
-
-#### Pattern D: Speaker Stance Objectives
-
-**Trigger:** Objectives referencing store_N with "stance", "position", "opinion", or "viewpoint" of speakers.
-
-**Goal pattern:**
-1. Extract audio track from store_N (acquired from src_N) — *first mention provenance*
-2. Detect language(s) spoken in the audio
-3. Transcribe audio content to text with timestamps
-4. Identify and label distinct speakers
-5. Run sentiment analysis on transcript segments per speaker
-6. Analyse vocal characteristics for emotional indicators
-7. Extract video frames from store_N for speaker visual appearance and expression analysis
-8. Perform multi-modal stance analysis combining text, vocal, and visual features
-
-#### Pattern E: Audience Reaction Objectives
-
-**Trigger:** Objectives referencing store_N with "audience", "crowd", "reaction", or "spectator" sentiment.
-
-**Goal pattern:**
-1. Extract video frames from store_N (acquired from src_N) at regular intervals focusing on audience-visible segments — *first mention provenance*
-2. Detect and localise audience members in frames
-3. Analyse audience facial expressions and body language for sentiment
-4. Estimate crowd density and engagement levels
-5. Score audience engagement over time
-
-#### Pattern F: Visual Detection Objectives
-
-**Trigger:** Objectives referencing store_N with "detect", "identify", "find" objects, banners, placards, or specific visual elements.
-
-**Goal pattern:**
-1. Extract video frames from store_N (acquired from src_N) at configurable intervals — *first mention provenance*
-2. Run object detection on extracted frames for [specified target objects]
-3. For detected text-bearing objects (banners, placards, signs): extract text using OCR
-4. Compile detection results with frame timestamps and bounding box locations
-
-#### Pattern G: Scene and Action Understanding Objectives
-
-**Trigger:** Objectives referencing store_N with "scene", "environment", "setting", "action", or "what is happening".
-
-**Goal pattern:**
-1. Extract video frames from store_N (acquired from src_N) at regular intervals — *first mention provenance*
-2. Segment video into scenes based on visual transitions
-3. Classify scene environment and context (indoor/outdoor, location type, day/night)
-4. Identify actions and events occurring within each scene segment
-
-#### Pattern H: Multi-Modal Comprehensive Analysis
-
-**Trigger:** Objectives requiring combined analysis across audio, visual, and text domains.
-
-**Goal pattern:**
-1. [Include all relevant pre-condition and acquisition goals]
-2. [Include all relevant individual analysis goals from applicable patterns]
-3. Fuse multi-modal analysis outputs into correlated insight set
-4. Reconstruct a chronological timeline of events, speaker turns, and key moments
-5. Generate a structured report summarising all findings
-
-#### Pattern I: Video Pre-Processing Objectives
-
-**Trigger:** Objectives explicitly requiring format conversion, segmentation, or normalisation before analysis can proceed (typically generated as sub-goals within other patterns, but may appear as a standalone objective for long or non-standard videos).
-
-**Goal pattern:**
-1. Assess video format and codec compatibility for store_N (acquired from src_N) — *first mention provenance*
-2. Convert store_N to standardised processing format if required
-3. Normalise video resolution for store_N to meet model input requirements if required
-4. Segment store_N into temporal segments for parallel processing (for long-duration videos)
-5. Extract audio track and/or video frames from store_N as required by downstream objectives
-
-#### Pattern J: Data Management and Reporting Objectives
-
-**Trigger:** Objectives involving result storage, indexing, or structured report generation (typically the final stage after analysis is complete).
-
-**Goal pattern:**
-1. Index analysis results and metadata in the search and retrieval system
-2. Store generated assets (extracted frames, audio tracks, reports) in file storage
-3. Cache intermediate results for session continuity
-4. Generate structured report summarising all analysis findings
-
-### 6.12 Content Synthesis Output Schemas
-
-When the Reasoning Agent performs CAP-SYN capabilities, it MUST structure its `result_data` according to these application-specific schemas.
-
-#### CAP-SYN-001: Multi-Modal Fusion Schema
-```json
-{
-  "synthesis_type": "multi_modal_fusion",
-  "findings": [
-    {
-      "speaker_id": "SPEAKER_00",
-      "segments": [
-        {
-          "time_range": { "start": 0.0, "end": 3.2 },
-          "text": "Good morning everyone",
-          "text_sentiment": { "label": "neutral", "score": 0.72 },
-          "vocal_emotion": { "label": "calm", "score": 0.85 },
-          "facial_expression": { "label": "neutral", "score": 0.68 },
-          "fused_assessment": {
-            "emotional_state": "calm-neutral",
-            "confidence": "high",
-            "cross_modal_agreement": true,
-            "notes": "All three modalities consistently indicate calm, neutral delivery"
-          }
-        }
-      ],
-      "overall_assessment": {
-        "dominant_emotion": "calm",
-        "sentiment_trajectory": "stable-neutral",
-        "congruence_score": 0.88
-      }
-    }
-  ],
-  "cross_modal_conflicts": [],
-  "global_summary": "Single speaker detected with consistent calm-neutral delivery across all modalities. No cross-modal conflicts identified."
-}
-```
-
-#### CAP-SYN-002: Timeline Reconstruction Schema
-```json
-{
-  "synthesis_type": "timeline_reconstruction",
-  "timeline": [
-    {
-      "timestamp": 0.0,
-      "event_type": "speaker_start",
-      "description": "SPEAKER_00 begins speaking",
-      "source_modalities": ["audio"],
-      "confidence": "high"
-    },
-    {
-      "timestamp": 12.5,
-      "event_type": "visual_event",
-      "description": "Visual event detected: 'Signage reading Welcome'",
-      "source_modalities": ["visual"],
-      "confidence": "medium"
-    },
-    {
-      "timestamp": 25.0,
-      "event_type": "state_shift",
-      "description": "Entity state shifts from neutral to active",
-      "source_modalities": ["audio", "visual", "text"],
-      "confidence": "high"
-    }
-  ],
-  "total_duration_seconds": 45.2,
-  "key_moments": [
-    { "timestamp": 25.0, "reason": "Significant emotional shift detected across all modalities" }
-  ]
-}
-```
-
-#### CAP-SYN-003: Structured Report Generation Schema
-```json
-{
-  "synthesis_type": "structured_report",
-  "report": {
-    "executive_summary": "Analysis of the content reveals one primary entity with neutral properties...",
-    "sections": [
-      {
-        "title": "Speaker Analysis",
-        "findings": [
-          { "finding": "One speaker identified (SPEAKER_00)", "confidence": "high", "sources": ["CAP-AUD-002"] }
-        ]
-      },
-      {
-        "title": "Sentiment Analysis",
-        "findings": [
-          { "finding": "Overall sentiment: neutral with slight positive trend", "confidence": "high", "sources": ["CAP-SPK-001", "CAP-AUD-003"] }
-        ]
-      }
-    ],
-    "methodology": "Multi-modal analysis combining multiple operational outputs.",
-    "limitations": [],
-    "source_capabilities_used": ["CAP-AUD-001", "CAP-AUD-002", "CAP-SPK-001", "CAP-VIS-006", "CAP-SYN-001"]
-  }
-}
-```
+1. Download video content from src_N to Wasabi file storage and generate a pre-signed URI as store_N (CAP-ACQ-001).
+2. Transcribe the video file at store_N (acquired from src_N) using its pre-signed URI and output structured JSON (CAP-AUD-001).
 
 ---
 
 ## Section 7: Supported Sources [APPLICATION-SPECIFIC]
 
-The application can process inputs from the following sources:
-
 | Source Type | Examples |
 |-------------|----------|
-| Social Media / Web Platforms | Generic video platforms, internal enterprise video domains |
-| Direct Upload | Video file uploads (MP4, MOV, AVI, WEBM) |
+| Generic web URLs | YouTube, Instagram, direct MP4 links |
 
 ---
 
 ## Section 8: Technology Stack [APPLICATION-SPECIFIC]
 
-The platform leverages these technologies (for agent awareness when planning tasks):
-
 | Category | Technologies |
 |----------|--------------|
-| Orchestration | Flow engine, Model Context Protocol (MCP) |
-| LLMs | Phase 1: Gemini (online API); Phase 2: Llama 4 (on-premise) |
-| Transcription & Diarization | OpenAI Whisper-X, pyannote.audio |
-| Video Processing | ffmpeg, ffprobe, OpenCV, PySceneDetect |
-| Video Download | video-downloader-cli |
-| Image & Visual Analysis | Mistral (image analysis), YOLO (object detection) |
-| Video Analysis | Flux AI |
-| OCR | Tesseract, PaddleOCR |
-| Database | Elasticsearch (Vector Core) |
-| Cache | Redis |
-| Data Collection | SERP API, Firecrawl |
-| File Storage | S3-compatible object storage |
-| Specialized Models | Sentient-developed sentiment models, speech emotion models, multi-modal stance models, deepfake detection models |
+| Storage | Wasabi S3-compatible object storage |
+| Transcription | OpenAI Whisper (JSON output) |
 
 ---
 
 ## Section 9: Agent Architecture [STANDARD WITH APPLICATION-SPECIFIC EXECUTIONAL AGENTS]
-
-The platform utilizes a three-core agent architecture. User requests should be decomposed with awareness of which agents will execute the work:
 
 ### Governance Core [STANDARD]
 | Agent | Role |
@@ -536,16 +168,13 @@ The platform utilizes a three-core agent architecture. User requests should be d
 ### Operational Core [STANDARD]
 | Agent | Role |
 |-------|------|
-| Planning Agent | Receives all goals from the Goal Agent and produces a DAG-based execution plan: (1) semantically deduplicates equivalent goals across objectives, (2) organizes tasks into parallelizable execution groups respecting capability prerequisite chains (Section 6.9), (3) registers `derived_refs` with correct `asset_type` for every intermediate output, and (4) validates workflow completeness to ensure all goals are covered |
-| Dispatch Agent | Manages runtime execution of the workflow DAG produced by the Planning Agent: resolves ref dependencies, dispatches tasks to the appropriate executional agent (Action Agent for tool-calling tasks, Reasoning Agent for synthesis tasks), tracks workflow state, handles failures with downstream impact analysis, and coordinates parallel execution within groups |
-| Reasoning Agent | Performs multi-modal synthesis tasks (CAP-SYN capabilities): fuses cross-modal analysis results into unified assessments (CAP-SYN-001), reconstructs event timelines from timestamped evidence (CAP-SYN-002), and generates structured reports with sourced claims (CAP-SYN-003) |
-| Learning Agent | Adapts analysis models based on feedback and new data patterns |
-| Memory Agent | Captures audit log data, distills institutional knowledge (patterns, decision history, error prevention, quality benchmarks), and files it in `context/memory/` for inclusion in the master prompt |
+| Planning Agent | Produces a DAG-based execution plan from goals, matching them to CAP-IDs and sequencing execution |
+| Dispatch Agent | Manages runtime execution of the workflow DAG, resolving refs and dispatching tasks |
 
 ### Executional Core [APPLICATION-SPECIFIC]
 | Agent | Role |
 |-------|------|
-| Action Agent | Invokes MCP tools for all tool-calling capabilities (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-AUD-R001/R002/R003, CAP-VIS, CAP-DAT): maps each capability to the appropriate MCP server and tool, executes the tool call, validates output quality, and registers output refs. Replaces the former Perception, Interpretation, and Action agents with a unified tool-execution interface |
+| Action Agent | Invokes MCP tools (`download_to_wasabi_tool` and `transcribe_video_tool`) and returns standard JSON responses |
 
 ---
 
@@ -554,54 +183,20 @@ The platform utilizes a three-core agent architecture. User requests should be d
 When processing requests, the system follows this execution flow:
 
 ### Phase 1: Governance Decomposition
-1. **Receive Request**: User submits a request via the platform interface
-2. **Define Objectives (Objective Agent)**: Translate the user request into strategic objectives (*what* needs to be achieved), applying the acquisition-first pattern and ref ID annotations (see `agent/governance/objective.md`)
-3. **Decompose into Goals (Goal Agent)**: For each objective, create an ordered set of goals respecting capability prerequisite chains from Section 6.9 (*how* to achieve it; see `agent/governance/goal.md`)
+1. **Define Objectives (Objective Agent)**: Translate the user request into strategic objectives.
+2. **Decompose into Goals (Goal Agent)**: Decompose objectives into an ordered set of goals respecting capability prerequisite chains from Section 6.9.
 
 ### Phase 2: Operational Planning
-4. **Plan Execution (Planning Agent)**: Receive all goals across all objectives and produce a DAG-based execution plan:
-   - **Semantic deduplication**: Merge identical or equivalent goals that appear across multiple objectives into single tasks
-   - **Execution grouping**: Organize tasks into numbered execution groups where tasks within a group can run in parallel, and groups execute sequentially (Group 1 → Group 2 → …)
-   - **Derived ref registration**: Register `derived_refs` with correct `asset_type` for every intermediate output produced by each task
-   - **Completeness validation**: Verify every goal from every objective maps to at least one task in the DAG
+3. **Plan Execution (Planning Agent)**: Produce a DAG-based execution plan, deduping goals and assigning execution groups.
 
 ### Phase 3: Execution
-5. **Dispatch and Execute DAG (Dispatch Agent → Action Agent / Reasoning Agent)**: The Dispatch Agent manages runtime execution of the workflow DAG:
-   - Initializes workflow state from the Planning Agent's execution plan and resolves ref dependencies
-   - Dispatches ready tasks group-by-group: all tasks in Group 1 execute in parallel, Group N+1 begins after Group N completes
-   - Routes tool-calling tasks (CAP-ACQ, CAP-PRE, CAP-AUD, CAP-SPK, CAP-VIS, CAP-DAT) to the **Action Agent**, which invokes the appropriate MCP tools
-   - Routes synthesis tasks (CAP-SYN) to the **Reasoning Agent**, which fuses cross-modal results into unified assessments, timelines, or structured reports
-   - Handles failures with retry logic, downstream impact analysis, and escalation
-6. **Complete Workflow**: Once all tasks are complete (or terminal), the Dispatch Agent emits a workflow_complete summary with final status and output refs
-
-### Phase 4: Post-Processing
-7. **Facilitate Reporting**: Generate structured reports and present results through the conversational interface
-8. **Monitor and Adapt**: Learn from feedback via the Learning Agent and capture institutional knowledge via the Memory Agent
+4. **Dispatch and Execute (Dispatch Agent → Action Agent)**: The Dispatch Agent manages runtime execution, resolving `src_N` to actual URLs, and `store_N` to pre-signed URIs when feeding parameters to the Action Agent.
 
 ---
 
 ## Section 11: Constraints and Boundaries [APPLICATION-SPECIFIC]
 
-When decomposing requests, agents must observe these boundaries:
-
 | Constraint | Description |
 |------------|-------------|
-| **Scope** | All tasks must relate to video content analysis and insight generation |
-| **Privacy** | Facial attribute analysis must respect privacy considerations |
-| **Data Handling** | Analysis results and metadata must be properly indexed and stored |
-| **Authenticity** | Consider deepfake detection for verifying video source integrity when relevant |
-| **Governance** | All operations must comply with policies in `context/governance/` |
-
-### In-Scope Requests
-- Video download from supported sources
-- Audio transcription and speaker identification
-- Sentiment analysis (speaker and audience)
-- Visual element detection (objects, banners, placards, text)
-- Scene and action recognition
-- Multi-modal stance analysis
-
-### Out-of-Scope Requests (Reject or Escalate)
-- Video editing or generation
-- Real-time streaming analysis
-- Tasks unrelated to video content analysis
-- Analysis of unsupported video sources
+| **Strict Scope** | Only video acquisition and transcription are supported. Reject anything else. |
+| **Storage Binding** | Transcription MUST read from Wasabi via a pre-signed URI. |
