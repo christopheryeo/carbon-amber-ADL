@@ -225,6 +225,13 @@ When the user says "Check Repo", perform the following procedure to ensure the G
 3. **Compare Local and Remote** — Check if the local branch is ahead, behind, or has diverged from the remote tracking branch (e.g., using `git status` after fetching).
 4. **Report Status** — Provide the user with a concise summary. If synced, confirm it. If not, state exactly what needs to be committed, pushed, or pulled.
 
+### Check Git Versions
+
+When the user says "Git Versions" or asks for recent versions, perform the following procedure:
+
+1. **Run Git Log** — Execute `git log --oneline -n 5` to fetch the last 5 commits in the repository.
+2. **Present to User** — Display the list directly to the user as a bulleted list or code block.
+
 ## Log Files
 
 When the user refers to "the latest log file" or "the log file", always look in `system/logs/`. Log files are named `YYYYMMDD-N.md` (e.g., `20260213-1.md`). Select the file with the most recent date; if multiple logs exist for the same day, use the highest sequence number `N`.
