@@ -229,6 +229,9 @@ When the user says "Check Repo", perform the following procedure to ensure the G
 
 When the user refers to "the latest log file" or "the log file", always look in `system/logs/`. Log files are named `YYYYMMDD-N.md` (e.g., `20260213-1.md`). Select the file with the most recent date; if multiple logs exist for the same day, use the highest sequence number `N`.
 
+### Committing Log Files
+Whenever you are asked to commit and push changes to the repository, you **must always** include any new or modified log files in `system/logs/` in your commit. Log files are considered an integral part of the project's history.
+
 ### Validate the Latest Log File
 
 When the user says "Please validate the log" or asks to validate the latest log file, perform the following procedure:
