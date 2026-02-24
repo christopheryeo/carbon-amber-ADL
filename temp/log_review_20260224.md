@@ -121,3 +121,40 @@ The supplemental log contains **9 agent executions** across **3 complex video an
 
 **Recommendations:** 
 To verify the Action Agent JSON fix, a complete end-to-end execution that triggers the Action tool-calling phase is required.
+
+---
+
+## Part 3: Demo Application Verification (`20260224-4.md`)
+
+### Log File Summary
+
+This log was generated against the heavily reduced demo `application.md` configuration. It contains **3 agent executions** (Objective, Goal, Planning) for a **single user request**. It again omits the Action and Dispatch agents.
+
+#### The Demo User Request
+
+| # | Request Details | Time Range | Output Stats |
+|---|---|---|---|
+| 1 | "Transcribe this video [Instagram URL]" | 16:17:34 - 16:18:06 | 1 Objective, 3 Goals, 1 Task |
+
+### Compliance Assessment
+
+#### ✅ What's Working Well
+
+**Flawless Capability Adoption & Constraint Enforcement**
+- **Objective Agent:** Perfectly recognized the new `Storage Bypass` constraint. The audit explicitly states: *"Adhered to 'Storage Bypass' constraint for transcription, ensuring no Wasabi storage ref was created."* It dropped the storage requirement and correctly referenced the raw URL `src_1` for transcription.
+- **Goal Agent:** Correctly decomposed the goal using the new **Pattern B** (direct extraction from URL) and injected the mandatory `Language Detection` precondition.
+- **Planning Agent:** Flawlessly mapped the goal to `CAP-AUD-001`, assigning `src_1` as the `input_ref`, and registering the JSON `transcript` as `derived_1`. The output DAG is absolutely clean, accurate, and completely respects the absence of Wasabi storage.
+
+#### ⚠️ Issues Identified
+
+**Issue 1: Missing Execution Core Logs (Action/Dispatch Agents absent)**
+- Same as Part 2. The pipeline terminated at the Planning Agent. The new `transcribe_video_direct_tool` mapped in `application.md` could not be tested.
+
+**Issue 2: Stale Parent Message IDs in Planning Agent (Still hallucinating)**
+- The Goal message ID was `msg-goal-20260224-161748`, but the Planning Agent hallucinated the parent ID as `msg-goal-20240730-115959` (an entirely different date from the prompt examples). This confirms the LLM anchoring issue remains active.
+
+### Verdict
+
+**Overall Assessment:** The Governance Core instantly and flawlessly adapted to the new `application.md` rules. They successfully restricted their output to the narrowed capability scope and strictly obeyed the new `Storage Bypass` constraint for transcribing directly from URLs.
+
+**Status:** The demo architecture configuration works perfectly up to the Planning phase. A full execution run through the Action Agent is still needed to test tool invocation.
