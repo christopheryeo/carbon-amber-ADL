@@ -62,29 +62,29 @@ Governance files are **authoritative** and take precedence over any conflicting 
 
 | Field | Value |
 |-------|-------|
-| **Application Name** | ADL Demo Platform (Reduced Capabilities) |
+| **Application Name** | ADL Demo Platform |
 | **Customer** | Internal Demonstration |
 | **Deployment** | Sentient Agentic AI Platform |
-| **Version** | 1.0-DEMO |
-| **Last Updated** | February 24, 2026 |
+| **Version** | 1.1-DEMO |
+| **Last Updated** | February 26, 2026 |
 
 ### Description
 
-This is a reduced-capability demonstration environment designed to showcase the agentic workflow pipeline. It supports only two distinct functions: downloading video from URLs to Wasabi cloud storage, and transcribing those videos into JSON format.
+This is a demonstration environment designed to showcase the agentic workflow pipeline. It supports three distinct functions: downloading video from URLs to Wasabi cloud storage, transcribing those videos into JSON format, and profiling individuals from images using visual identification and open-source intelligence techniques.
 
 ---
 
 ## Section 5: Primary Objective [APPLICATION-SPECIFIC]
 
-The platform transforms raw video inputs at given URLs into structured text transcripts.
+The platform transforms raw video inputs at given URLs into structured text transcripts, and identifies individuals from images using visual search and open-source intelligence profiling.
 
-**Scope Statement**: All tasks processed by this application MUST relate exclusively to acquiring video and generating transcripts. Any request outside this narrow scope MUST be rejected.
+**Scope Statement**: All tasks processed by this application MUST relate exclusively to video acquisition, transcript generation, or visual person profiling. Any request outside this scope MUST be rejected.
 
 ---
 
 ## Section 6: Capabilities Matrix [APPLICATION-SPECIFIC]
 
-The platform supports ONLY the following two capabilities. When decomposing user requests, agents MUST map requests to these capabilities.
+The platform supports ONLY the following three capabilities. When decomposing user requests, agents MUST map requests to these capabilities.
 
 ### 6.1 Video Acquisition
 
@@ -98,6 +98,12 @@ The platform supports ONLY the following two capabilities. When decomposing user
 |----|------------|-------------|--------------|
 | CAP-AUD-001 | Media Transcription | Given a video URL, directly extracts and transcribes the audio, returning the transcription as structured JSON without storing the file in Wasabi. | transcribe_video_direct_tool |
 
+### 6.3 Visual Profiling
+
+| ID | Capability | Description | Tools/Models |
+|----|------------|-------------|--------------|
+| CAP-PRF-001 | Person Profiling | Given an image, identifies individuals through reverse image search (Google Lens via SerpAPI), hosts the image for search engine consumption (imgbb), and uses LLM analysis (OpenRouter, Perplexity) to extract identity, role, and biographical information. Returns a structured profile as JSON. | profiler_tool |
+
 ### 6.9 Capability Dependencies and I/O Reference
 
 This section defines mandatory prerequisites and input/output asset types.
@@ -106,7 +112,9 @@ This section defines mandatory prerequisites and input/output asset types.
 
 | Capability | Prerequisite(s) | Reason |
 |-----------|-----------------|--------|
-| *(None)* | *(None)* | Both capabilities currently operate independently on source URLs. |
+| CAP-PRF-001 | *(None)* | Profiler operates independently on a source image. Can optionally consume face images extracted by CAP-ACQ-001 pipeline. |
+| CAP-ACQ-001 | *(None)* | Operates independently on source URLs. |
+| CAP-AUD-001 | *(None)* | Operates independently on source URLs. |
 
 #### I/O Asset Types
 
@@ -114,6 +122,7 @@ This section defines mandatory prerequisites and input/output asset types.
 |-----------|-------------|---------------|-------------|----------------|
 | CAP-ACQ-001 | Source URL | `src_N` | Wasabi Pre-signed URI | `store_N` |
 | CAP-AUD-001 | Source URL | `src_N` | JSON Transcript | `derived_N` (transcript) |
+| CAP-PRF-001 | Image URL or file | `src_N` | JSON Profile | `derived_N` (profile) |
 
 
 ### 6.10 Capability-to-Tool Mapping
@@ -124,6 +133,7 @@ This mapping defines which MCP servers and tools correspond to each capability. 
 |--------------|------------|------|------------|
 | CAP-ACQ-001 | `acquisition` | `download_to_wasabi_tool` | `url` |
 | CAP-AUD-001 | `audio-analysis` | `transcribe_video_direct_tool` | `url` |
+| CAP-PRF-001 | `profiler` | `profiler_tool` | `image_url` |
 
 
 ### 6.11 Capability-to-Goal Decomposition Patterns
@@ -143,6 +153,13 @@ Use these patterns as templates when decomposing requests for this demo applicat
 
 **Goal pattern:**
 1. Directly extract and transcribe the audio from the video URL at src_N, returning structured JSON (CAP-AUD-001).
+
+#### Pattern C: Profile Person from Image
+
+**Trigger:** Objectives asking to identify, profile, or investigate a person from an image.
+
+**Goal pattern:**
+1. Submit the image at src_N to the Profiler for reverse image search, visual identification, and biographical profiling, returning a structured JSON profile as derived_N (CAP-PRF-001).
 
 ---
 
@@ -180,7 +197,7 @@ Use these patterns as templates when decomposing requests for this demo applicat
 ### Executional Core [APPLICATION-SPECIFIC]
 | Agent | Role |
 |-------|------|
-| Action Agent | Invokes MCP tools (`download_to_wasabi_tool` and `transcribe_video_direct_tool`) and returns standard JSON responses |
+| Action Agent | Invokes MCP tools (`download_to_wasabi_tool`, `transcribe_video_direct_tool`, and `profiler_tool`) and returns standard JSON responses |
 
 ---
 
@@ -204,5 +221,6 @@ When processing requests, the system follows this execution flow:
 
 | Constraint | Description |
 |------------|-------------|
-| **Strict Scope** | Only video acquisition and transcription are supported. Reject anything else. |
+| **Strict Scope** | Only video acquisition, transcription, and visual person profiling are supported. Reject anything else. |
 | **Storage Bypass** | Transcription MUST operate directly on the source URL (`src_N`) and MUST NOT store or read anything from Wasabi file storage. |
+| **Profiler Input** | Profiler MUST receive a valid image URL or file reference. It MUST NOT be used for non-person identification tasks. |

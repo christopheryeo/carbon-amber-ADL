@@ -158,3 +158,43 @@ This log was generated against the heavily reduced demo `application.md` configu
 **Overall Assessment:** The Governance Core instantly and flawlessly adapted to the new `application.md` rules. They successfully restricted their output to the narrowed capability scope and strictly obeyed the new `Storage Bypass` constraint for transcribing directly from URLs.
 
 **Status:** The demo architecture configuration works perfectly up to the Planning phase. A full execution run through the Action Agent is still needed to test tool invocation.
+
+---
+
+## Part 4: Final Demo End-to-End Verification (`20260224-5.md`)
+
+### Log File Summary
+
+This log represents a complete end-to-end run across the demo architecture, testing both capabilities (Download and Transcribe) across **8 agent executions** for **2 user requests**. For the first time, this log includes the **Action Agent** executions.
+
+#### The User Requests
+
+| # | Request Details | Time Range | Output Tasks |
+|---|---|---|---|
+| 1 | "download video [Instagram URL]" | 16:20:53 - 16:21:31 | 1 Task (`CAP-ACQ-001`) |
+| 2 | "transcribe video [Instagram URL] 08:20" | 16:23:25 - 16:24:51 | 1 Task (`CAP-AUD-001`) |
+
+### Compliance Assessment
+
+#### ✅ What's Working Well
+
+**Perfect Orchestration & Adaptation**
+- The Governance Pipeline (Objective -> Goal -> Planning) flawlessly routed Request 1 to the Wasabi download pathway (`CAP-ACQ-001`) and Request 2 to the direct-to-JSON transcription pathway (`CAP-AUD-001`). 
+- It accurately adhered to the strict storage bypass constraint for transcription while correctly enforcing Wasabi storage for the download request.
+- The Planning Agent correctly formulated single-node execution DAGs for both requests.
+
+#### ⚠️ Issues Identified
+
+**Issue 1: Critical Action Agent Format Non-Compliance (Persistent)**
+- **Severity: High**
+- **Evidence:** The Action Agent successfully utilized the MCP tools (it generated a working Wasabi pre-signed URL and a correct JSON transcript), but the outer wrapper of the AI's response is completely unusable by the system.
+  - The Action Agent wrapped the transcript JSON in conversational text: *"The audio from the Instagram video has been successfully extracted... Here's the structured JSON..."*
+  - It failed to include the mandatory ADL envelope fields (`message_id`, `input`, `status`, `error`, `metadata`, `resources`, `audit`).
+  - The timestamp format is completely non-compliant (`"executed_at": "2026-02-24T08:21:31.480Z", "timezone": "Asia/Singapore"`).
+- **Impact:** The workflow breaks here. The system cannot parse the `action_result` to map the final derived refs correctly.
+
+### Verdict
+
+**Overall Assessment:** The orchestration intelligence of the carbon-amber-ADL platform is rock solid. It adapts to configuration file changes instantly and logically. However, the last mile of execution—the Action Agent—is persistently violating output formatting rules. 
+
+**Conclusion:** The prompt for the Action Agent in the n8n orchestrator is likely not enforcing the `message_format.md` policy or the `schema.json` format accurately. Fixing the Action Agent node in n8n is the final blocker for a fully functional pipeline.
